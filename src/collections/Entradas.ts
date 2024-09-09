@@ -7,12 +7,12 @@ const Entradas: CollectionConfig = {
         create: ({ req }) => !!req.user,
         read: ({ req }) => !!req.user,
         // update if logged in and is author
-        update: ({ req:{user}, data }) => {
+        update: ({ req:{user} }) => {
             if (!user) return false;
             if (user.isAdmin) return true;
             return {
                 'autor': {
-                  equals: user.id,
+                    equals: user.id,
                 },
             };
         },

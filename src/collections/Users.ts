@@ -95,11 +95,12 @@ const Users: CollectionConfig = {
         }
       }
     },
-    // {
-    //   name: 'grupos',
-    //   type: 'relationship',
-    //   relationTo: 'grupos',
-    // }
+    {
+      name: 'grupos',
+      type: 'relationship',
+      relationTo: 'grupos',
+      hasMany: true,
+    }
   ],
 }
 

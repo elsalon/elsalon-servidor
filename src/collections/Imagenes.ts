@@ -6,13 +6,24 @@ const Imagenes: CollectionConfig = {
         create: ({ req }) => !!req.user,
         read: () => true,
     },
+    hooks:{
+        beforeChange: [
+            async ({ operation, data, req }) => {
+                if(operation === 'create'){
+                    // console.log('New entry created', data);
+                    data.uploader = req.user.id; // El autor es el usuario actual
+                    return data;
+                }
+            }
+        ]
+    },
     upload: {
         staticURL: '/imagenes',
         staticDir: 'imagenes',
         imageSizes: [
             {
-                name: 'medium',
-                width: 500,
+                name: 'thumbnail',
+                width: 250,
                 // By specifying `undefined` or leaving a height undefined,
                 // the image will be sized to a certain width,
                 // but it will retain its original aspect ratio
@@ -21,15 +32,8 @@ const Imagenes: CollectionConfig = {
                 position: 'centre',
                 withoutEnlargement: true,
             },
-            {
-                name: 'high',
-                width: undefined,
-                height: 1000,
-                position: 'centre',
-                withoutEnlargement: true,
-            }
         ],
-        adminThumbnail: 'medium',
+        adminThumbnail: 'thumbnail',
         mimeTypes: ['image/*'],
         
     },

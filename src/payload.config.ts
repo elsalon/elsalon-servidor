@@ -7,6 +7,7 @@ import { slateEditor } from '@payloadcms/richtext-slate'
 import { buildConfig } from 'payload/config'
 
 import Users from './collections/Users';
+import Grupos from './collections/Grupos';
 import Entradas from './collections/Entradas';
 import Salones from './collections/Salones';
 import Imagenes from './collections/Imagenes';
@@ -20,8 +21,9 @@ export default buildConfig({
   },
   editor: slateEditor({}),
   collections: [
-    Salones,
     Users,
+    Grupos,
+    Salones,
     Entradas,
     Imagenes,
     Archivos,
