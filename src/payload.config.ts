@@ -9,6 +9,7 @@ import { buildConfig } from 'payload/config'
 import Users from './collections/Users'
 import Entradas from './collections/Entradas'
 import Avatares from './collections/Avatares'
+import Salones from './collections/Salones'
 
 export default buildConfig({
   admin: {
@@ -17,9 +18,10 @@ export default buildConfig({
   },
   editor: slateEditor({}),
   collections: [
-    Users, 
-    Entradas,
+    Salones,
+    Users,
     Avatares,
+    Entradas,
   ],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),
