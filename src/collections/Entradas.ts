@@ -47,6 +47,28 @@ const Entradas: CollectionConfig = {
             type: 'textarea',
         },
         {
+            name: 'imagenes',
+            type: 'array',
+            fields: [
+                {
+                    name: 'imagen',
+                    type: 'upload',
+                    relationTo: 'imagenes',
+                }
+            ]
+        },
+        {
+            name: 'archivos',
+            type: 'array',
+            fields: [
+                {
+                    name: 'archivo',
+                    type: 'upload',
+                    relationTo: 'archivos',
+                }
+            ]
+        },
+        {
             name: 'sala',
             type: 'relationship',
             relationTo: 'salones',

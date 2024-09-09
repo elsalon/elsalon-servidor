@@ -6,10 +6,12 @@ import { webpackBundler } from '@payloadcms/bundler-webpack'
 import { slateEditor } from '@payloadcms/richtext-slate'
 import { buildConfig } from 'payload/config'
 
-import Users from './collections/Users'
-import Entradas from './collections/Entradas'
-import Avatares from './collections/Avatares'
-import Salones from './collections/Salones'
+import Users from './collections/Users';
+import Entradas from './collections/Entradas';
+import Salones from './collections/Salones';
+import Imagenes from './collections/Imagenes';
+import Archivos from './collections/Archivos';
+import Avatares from './collections/Avatares';
 
 export default buildConfig({
   admin: {
@@ -20,8 +22,10 @@ export default buildConfig({
   collections: [
     Salones,
     Users,
-    Avatares,
     Entradas,
+    Imagenes,
+    Archivos,
+    Avatares,
   ],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),

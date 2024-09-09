@@ -12,13 +12,13 @@ const Avatares: CollectionConfig = {
         imageSizes: [
           {
             name: 'thumbnail',
-            width: 40,
-            height: 40,
+            width: 48,
+            height: 48,
             position: 'centre',
             withoutEnlargement: true,
           },
           {
-            name: 'tablet',
+            name: 'medium',
             width: 500,
             // By specifying `undefined` or leaving a height undefined,
             // the image will be sized to a certain width,
@@ -29,7 +29,7 @@ const Avatares: CollectionConfig = {
             withoutEnlargement: true,
           },
         ],
-        adminThumbnail: 'tablet',
+        adminThumbnail: 'medium',
         mimeTypes: ['image/*'],
         
     },
