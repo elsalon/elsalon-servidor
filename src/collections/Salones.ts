@@ -10,13 +10,13 @@ const Salones: CollectionConfig = {
     access: {
         create: ({ req }) => {
             if (req.user) {
-              return req.user.rol === 'admin'
+              return req.user.isAdmin
             }
             return false
         },
         update: ({ req }) => {
             if (req.user) {
-              return req.user.rol === 'admin'
+              return req.user.isAdmin
             }
             return false
         },

@@ -55,21 +55,10 @@ const Users: CollectionConfig = {
           label: 'Docente',
           value: 'docente',
         },
-        {
-          label: 'Admin',
-          value: 'admin',
-        },
       ],
       defaultValue: 'alumno',
-      access:{
-        update: ({ req }) => {
-          if (req.user) {
-            return req.user.rol === 'admin'
-          }
-          return false
-        }
-      }
     },
+    
     {
       name: 'nombre',
       type: 'text',
@@ -91,6 +80,21 @@ const Users: CollectionConfig = {
           useFields: ['nombre'],
       },
     ),
+    {
+      name: 'isAdmin',
+      type: 'checkbox',
+      admin: {
+        position: 'sidebar',
+      },
+      access:{
+        update: ({ req }) => {
+          if (req.user) {
+            return req.user.isAdmin
+          }
+          return false
+        }
+      }
+    },
     // {
     //   name: 'grupos',
     //   type: 'relationship',

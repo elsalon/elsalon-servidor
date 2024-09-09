@@ -7,7 +7,15 @@ const Entradas: CollectionConfig = {
         create: ({ req }) => !!req.user,
         read: ({ req }) => !!req.user,
         // update if logged in and is author
-        update: ({ req, data }) => !!req.user && req.user.id === data.autor,
+        update: ({ req:{user}, data }) => {
+            if (!user) return false;
+            if (user.isAdmin) return true;
+            return {
+                'autor': {
+                  equals: user.id,
+                },
+            };
+        },
         // delete if logged in and is author
         delete: ({ req, data }) => !!req.user && req.user.id === data.autor,
     },
@@ -27,6 +35,7 @@ const Entradas: CollectionConfig = {
             name: 'autoriaGrupal',
             type: 'checkbox',
         },
+        // todo: grupo
         {
             name: 'autor',
             type: 'relationship',
@@ -36,6 +45,11 @@ const Entradas: CollectionConfig = {
         {
             name: 'contenido',
             type: 'textarea',
+        },
+        {
+            name: 'sala',
+            type: 'relationship',
+            relationTo: 'salones',
         }
     ]
 }
