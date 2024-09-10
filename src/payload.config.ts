@@ -9,6 +9,7 @@ import { buildConfig } from 'payload/config'
 import Users from './collections/Users';
 import Grupos from './collections/Grupos';
 import Entradas from './collections/Entradas';
+import Comentarios from './collections/Comentarios'
 import Salones from './collections/Salones';
 import Imagenes from './collections/Imagenes';
 import Archivos from './collections/Archivos';
@@ -25,6 +26,7 @@ export default buildConfig({
     Grupos,
     Salones,
     Entradas,
+    Comentarios,
     Imagenes,
     Archivos,
     Avatares,
