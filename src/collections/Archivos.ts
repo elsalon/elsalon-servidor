@@ -3,7 +3,6 @@ import { CollectionConfig } from 'payload/types'
 const Archivos: CollectionConfig = {
     slug: 'archivos',
     access: {
-        create: ({ req }) => !!req.user,
         read: () => true,
     },
     upload: {

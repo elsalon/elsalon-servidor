@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload/types'
+import { isAdminOrIntegrante } from '../helper'
 
 const Grupos: CollectionConfig = {
     slug: 'grupos',
@@ -6,26 +7,8 @@ const Grupos: CollectionConfig = {
         useAsTitle: 'nombre',
     },
     access: {
-        create: ({ req }) => !!req.user,
-        read: ({ req }) => !!req.user,
-        update: ({ req:{user} }) => {
-            if (!user) return false;
-            if (user.isAdmin) return true;
-            return {
-                'integrantes': {
-                    contains: user.id,
-                },
-            }
-        },
-        delete: ({ req:{user} }) => {
-            if (!user) return false;
-            if (user.isAdmin) return true;
-            return {
-                'integrantes': {
-                    contains: user.id,
-                },
-            }
-        }
+        update: isAdminOrIntegrante,
+        delete: isAdminOrIntegrante,
     },
     fields: [
         {

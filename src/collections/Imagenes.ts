@@ -3,7 +3,6 @@ import { CollectionConfig } from 'payload/types'
 const Imagenes: CollectionConfig = {
     slug: 'imagenes',
     access: {
-        create: ({ req }) => !!req.user,
         read: () => true,
     },
     hooks:{

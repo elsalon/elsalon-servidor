@@ -1,23 +1,11 @@
 import { CollectionConfig } from 'payload/types'
+import { isAdminOrAutor } from '../helper'
 
 const Entradas: CollectionConfig = {
     slug: 'entradas',
     access:{
-        // create if logged in
-        create: ({ req }) => !!req.user,
-        read: ({ req }) => !!req.user,
-        // update if logged in and is author
-        update: ({ req:{user} }) => {
-            if (!user) return false;
-            if (user.isAdmin) return true;
-            return {
-                'autor': {
-                    equals: user.id,
-                },
-            };
-        },
-        // delete if logged in and is author
-        delete: ({ req, data }) => !!req.user && req.user.id === data.autor,
+        update: isAdminOrAutor,
+        delete: isAdminOrAutor,
     },
     hooks: {
         beforeChange: [

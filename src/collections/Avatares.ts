@@ -3,7 +3,6 @@ import { CollectionConfig } from 'payload/types'
 const Avatares: CollectionConfig = {
     slug: 'avatares',
     access: {
-        create: ({ req }) => !!req.user,
         read: () => true,
     },
     upload: {

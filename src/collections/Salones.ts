@@ -1,6 +1,7 @@
 import { CollectionConfig } from 'payload/types';
 import { ColourPickerField } from '@nouance/payload-better-fields-plugin';
 import { SlugField } from '@nouance/payload-better-fields-plugin'
+import { isAdmin } from '../helper'
 
 const Salones: CollectionConfig = {
     slug: 'salones',
@@ -8,18 +9,8 @@ const Salones: CollectionConfig = {
         useAsTitle: 'nombre',
     },
     access: {
-        create: ({ req }) => {
-            if (req.user) {
-              return req.user.isAdmin
-            }
-            return false
-        },
-        update: ({ req }) => {
-            if (req.user) {
-              return req.user.isAdmin
-            }
-            return false
-        },
+        create: isAdmin,
+        update: isAdmin,
         read: () => true,
     },
     fields: [
