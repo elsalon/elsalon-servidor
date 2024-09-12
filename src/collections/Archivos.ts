@@ -5,6 +5,10 @@ const Archivos: CollectionConfig = {
     access: {
         read: () => true,
     },
+    
+    admin: {
+        group: 'Medios',
+    },
     upload: {
         staticURL: '/archivos',
         staticDir: 'archivos',

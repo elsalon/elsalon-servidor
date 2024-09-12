@@ -15,6 +15,7 @@ import Imagenes from './collections/Imagenes';
 import Archivos from './collections/Archivos';
 import Avatares from './collections/Avatares';
 import Colaboraciones from './collections/Colaboraciones';
+import Apreciaciones from './collections/Apreciaciones'
 
 export default buildConfig({
   admin: {
@@ -29,6 +30,7 @@ export default buildConfig({
     Entradas,
     Comentarios,
     Colaboraciones,
+    Apreciaciones,
     Imagenes,
     Archivos,
     Avatares,

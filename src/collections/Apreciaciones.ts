@@ -1,14 +1,14 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrAutor } from '../helper'
 
-const Colaboraciones: CollectionConfig = {
-    slug: 'colaboraciones',
+const Apreciaciones: CollectionConfig = {
+    slug: 'apreciaciones',
+    admin: {
+        group: 'Interacciones',
+    },
     access:{
         update: isAdminOrAutor,
         delete: isAdminOrAutor,
-    },
-    admin: {
-        group: 'Interacciones',
     },
     fields: [
         {
@@ -17,12 +17,12 @@ const Colaboraciones: CollectionConfig = {
             relationTo: 'users',
         },
         {
-            name: 'colaborador',
+            name: 'entrada',
             type: 'relationship',
-            relationTo: 'users',
+            relationTo: 'entradas',
 
         }
     ]
 }
 
-export default Colaboraciones
+export default Apreciaciones

@@ -16,6 +16,9 @@ const Imagenes: CollectionConfig = {
             }
         ]
     },
+    admin: {
+        group: 'Medios',
+    },
     upload: {
         staticURL: '/imagenes',
         staticDir: 'imagenes',

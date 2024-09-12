@@ -18,6 +18,9 @@ const Comentarios: CollectionConfig = {
             }
         ]
     },
+    admin: {
+        group: 'Interacciones',
+    },
     fields: [
         {
             name: 'entrada',

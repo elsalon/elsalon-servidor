@@ -5,6 +5,10 @@ const Avatares: CollectionConfig = {
     access: {
         read: () => true,
     },
+    
+    admin: {
+      group: 'Medios',
+  },
     upload: {
         staticURL: '/avatares',
         staticDir: 'avatares',
