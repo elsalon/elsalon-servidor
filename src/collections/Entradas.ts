@@ -61,7 +61,7 @@ const Entradas: CollectionConfig = {
             type: 'relationship',
             relationTo: 'salones',
         }
-    ]
+    ],
 }
 
 export default Entradas

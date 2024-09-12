@@ -22,6 +22,51 @@ const Apreciaciones: CollectionConfig = {
             relationTo: 'entradas',
 
         }
+    ],
+    endpoints: [
+        {
+            path: '/:entradaid', 
+            method: 'get',
+            handler: async (req, res, next) => {
+                console.log('GET /apreciaciones/:entradaid');
+                if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
+
+                try {
+                  const { entradaid } = req.params;
+                  const userId = req.user?.id; // Obteniendo el ID del usuario actual
+                  console.log('userId', userId);
+                  console.log('entradaid', entradaid);
+                  // Obtener si el usuario actual ha apreciado esta entrada
+                  const hasApreciado = await req.payload.find({
+                    collection: 'apreciaciones',
+                    where: {
+                      entrada: { equals: entradaid },
+                      autor: { equals: userId },
+                    },
+                    limit: 1,
+                  });
+                  
+                  // Obtener los últimos 5 aprecios para esta entrada
+                  const aprecios = await req.payload.find({
+                    collection: 'apreciaciones',
+                    where: {
+                      entrada: { equals: entradaid },
+                    },
+                    limit: 5,
+                  });
+              
+                  // Retornar siempre arrays vacíos si no hay documentos
+                  res.status(200).json({
+                    docs: aprecios.docs || [],  // Si no hay documentos, devolver un array vacío
+                    totalDocs: aprecios.totalDocs || 0,  // Si no hay aprecios, devolver 0
+                    haApreciado: (hasApreciado.docs && hasApreciado.docs.length > 0) ? true : false,  // True si el usuario ha apreciado
+                  });
+                } catch (error) {
+                    console.error('Error fetching aprecios', error);
+                    res.status(500).json({ error: 'Error fetching aprecios' });
+                }
+              }              
+        }
     ]
 }
 
