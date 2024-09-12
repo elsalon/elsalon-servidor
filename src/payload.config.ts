@@ -14,6 +14,7 @@ import Salones from './collections/Salones';
 import Imagenes from './collections/Imagenes';
 import Archivos from './collections/Archivos';
 import Avatares from './collections/Avatares';
+import Colaboraciones from './collections/Colaboraciones';
 
 export default buildConfig({
   admin: {
@@ -27,6 +28,7 @@ export default buildConfig({
     Salones,
     Entradas,
     Comentarios,
+    Colaboraciones,
     Imagenes,
     Archivos,
     Avatares,
