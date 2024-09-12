@@ -14,6 +14,16 @@ export const isAdminOrAutor: Access = ({ req: { user }, id }) => {
     };
 };
 
+export const isAdminOrIntegrante: Access = ({ req: { user }, id }) => {
+    if (!user) return false;
+    if (user.isAdmin) return true;
+    return {
+        'integrantes': {
+            contains: user.id,
+        },
+    };
+};
+
 export const isAdminOrSelf: Access = ({ req: { user }, id }) => {
     if (!user) return false;
     if (user.isAdmin) return true;

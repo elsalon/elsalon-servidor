@@ -73,6 +73,10 @@ const Users: CollectionConfig = {
       type: 'upload',
       relationTo: 'avatares',
     },
+    {
+      name: 'bio',
+      type: 'textarea',
+    },
     ...SlugField(
       {
         name: 'slug',

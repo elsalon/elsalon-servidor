@@ -7,6 +7,17 @@ const Comentarios: CollectionConfig = {
         update: isAdminOrAutor,
         delete: isAdminOrAutor,
     },
+    hooks: {
+        beforeChange: [
+            async ({ operation, data, req }) => {
+                if(operation === 'create'){
+                    // console.log('New entry created', data);
+                    data.autor = req.user.id; // El autor es el usuario actual
+                    return data;
+                }
+            }
+        ]
+    },
     fields: [
         {
             name: 'entrada',
