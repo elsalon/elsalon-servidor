@@ -20,15 +20,19 @@ const Entradas: CollectionConfig = {
     },
     fields: [
         {
-            name: 'autoriaGrupal',
-            type: 'checkbox',
-        },
-        // todo: grupo
-        {
             name: 'autor',
             type: 'relationship',
             relationTo: 'users',
             hasMany: false,
+        },
+        {
+            name: 'autoriaGrupal',
+            type: 'checkbox',
+        },
+        {
+            name: 'grupo',
+            type: 'relationship',
+            relationTo: 'grupos',
         },
         {
             name: 'contenido',

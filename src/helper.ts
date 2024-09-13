@@ -34,3 +34,10 @@ export const isAdmin: Access = ({ req: { user } }) => {
     if (!user) return false;
     return user.isAdmin;
 };
+
+export const afterCreateAssignAutorToUser = async ({ operation, data, req }) => {
+    if(operation === 'create'){
+        data.autor = req.user.id; // El autor es el usuario actual
+        return data;
+    }
+}

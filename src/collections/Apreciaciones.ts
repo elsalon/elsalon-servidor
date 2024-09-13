@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor } from '../helper'
+import { isAdminOrAutor, afterCreateAssignAutorToUser } from '../helper'
 
 const Apreciaciones: CollectionConfig = {
     slug: 'apreciaciones',
@@ -9,6 +9,9 @@ const Apreciaciones: CollectionConfig = {
     access:{
         update: isAdminOrAutor,
         delete: isAdminOrAutor,
+    },
+    hooks: {
+        beforeChange: [afterCreateAssignAutorToUser]
     },
     fields: [
         {
@@ -59,7 +62,7 @@ const Apreciaciones: CollectionConfig = {
                   res.status(200).json({
                     docs: aprecios.docs || [],  // Si no hay documentos, devolver un array vacío
                     totalDocs: aprecios.totalDocs || 0,  // Si no hay aprecios, devolver 0
-                    haApreciado: (hasApreciado.docs && hasApreciado.docs.length > 0) ? true : false,  // True si el usuario ha apreciado
+                    haApreciado: (hasApreciado.docs && hasApreciado.docs.length > 0) ? hasApreciado.docs[0].id : false,  // True si el usuario ha apreciado
                   });
                 } catch (error) {
                     console.error('Error fetching aprecios', error);
