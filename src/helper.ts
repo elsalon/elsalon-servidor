@@ -4,6 +4,15 @@ import { Access, FieldAccess } from 'payload/types';
 
 
 // Helper acces function
+export const isAutor: Access = ({ req: { user }, id }) => {
+    if (!user) return false;
+    return {
+        'autor': {
+            equals: user.id,
+        },
+    };
+};
+
 export const isAdminOrAutor: Access = ({ req: { user }, id }) => {
     if (!user) return false;
     if (user.isAdmin) return true;

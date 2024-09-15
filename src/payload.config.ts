@@ -16,6 +16,7 @@ import Archivos from './collections/Archivos';
 import Avatares from './collections/Avatares';
 import Colaboraciones from './collections/Colaboraciones';
 import Apreciaciones from './collections/Apreciaciones'
+import Notificaciones from './collections/Notificaciones'
 
 export default buildConfig({
   admin: {
@@ -34,6 +35,7 @@ export default buildConfig({
     Imagenes,
     Archivos,
     Avatares,
+    Notificaciones
   ],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),
