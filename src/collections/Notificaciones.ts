@@ -30,6 +30,11 @@ const Notificaciones: CollectionConfig = {
             type: 'text',
         },
         {
+            name: 'linkTo',
+            type: 'relationship',
+            relationTo: 'entradas',
+        },
+        {
             name: 'leida',
             type: 'checkbox',
         }

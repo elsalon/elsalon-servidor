@@ -50,3 +50,25 @@ export const afterCreateAssignAutorToUser = async ({ operation, data, req }) => 
         return data;
     }
 }
+
+
+export const AddNotificationAprecio = async ({ 
+    doc,
+    req, // full express request
+    previousDoc, // document data before updating the collection
+    operation, // name of the operation ie. 'create', 'update'
+    }) => {
+    if(operation === 'create'){
+        console.log("***", doc.entrada.autor.nombre); // El autor de la entrada que fue apreciada
+        await req.payload.create({
+            collection: 'notificaciones',
+            data: {
+                autor: doc.entrada.autor.id, // El autor de la entrada que fue apreciada
+                tipoNotificacion: 'apreciacion',
+                mensaje: `Apreciaron tu entrada <strong>${doc.entrada.extracto}</strong>`,
+                leida: false,
+                linkTo: doc.entrada.id,
+            },
+        });
+    }
+}
