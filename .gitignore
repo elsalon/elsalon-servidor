@@ -6,3 +6,4 @@ node_modules
 .env
 /src/avatares
 /src/imagenes
+/src/archivos

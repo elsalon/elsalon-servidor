@@ -12,29 +12,15 @@ const Archivos: CollectionConfig = {
     upload: {
         staticURL: '/archivos',
         staticDir: 'archivos',
-        imageSizes: [
-            {
-                name: 'medium',
-                width: 500,
-                // By specifying `undefined` or leaving a height undefined,
-                // the image will be sized to a certain width,
-                // but it will retain its original aspect ratio
-                // and calculate a height automatically.
-                height: undefined,
-                position: 'centre',
-                withoutEnlargement: true,
-            },
-            {
-                name: 'high',
-                width: undefined,
-                height: 1000,
-                position: 'centre',
-                withoutEnlargement: true,
-            }
+        mimeTypes: [
+            'application/zip',
+            'application/x-zip-compressed',
+            'application/vnd.rar',
+            'application/x-rar-compressed',
+            'application/pdf',
+            'application/x-7z-compressed',
+            'application/x-tar',
         ],
-        adminThumbnail: 'medium',
-        mimeTypes: ['image/*'],
-        
     },
     fields: []
 }

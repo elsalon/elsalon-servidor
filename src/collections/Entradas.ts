@@ -12,7 +12,7 @@ const Entradas: CollectionConfig = {
             async ({ operation, data, req }) => {
                 if(operation === 'create'){
                     // remove html and get 20 first characters
-                    data.extracto = data.contenido.replace(/<[^>]*>?/gm, '').substring(0, 40);
+                    data.extracto = data.contenido?.replace(/<[^>]*>?/gm, '').substring(0, 40);
                     // console.log('New entry created', data);
                     data.autor = req.user.id; // El autor es el usuario actual
                     return data;
