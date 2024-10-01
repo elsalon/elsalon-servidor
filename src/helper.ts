@@ -1,5 +1,4 @@
 // Helper functions
-
 import { Access, FieldAccess } from 'payload/types';
 
 
@@ -72,3 +71,21 @@ export const AddNotificationAprecio = async ({
         });
     }
 }
+
+const { Parser } = require('htmlparser2');
+
+export const ConvertMentionsToUsers = async ({ operation, data, req }) => {
+    const htmlContent = data.contenido;
+    let mentions  = [];
+    const parser = new Parser({
+        onopentag(name, attribs) {
+          if (name === "span" && attribs.class === "mention") {
+            mentions.push(attribs['data-id']);
+          }
+        }
+      });
+      
+    parser.write(htmlContent);
+    parser.end();
+    data.mencionados = mentions;
+};
