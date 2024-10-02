@@ -1,5 +1,6 @@
 // Helper functions
 import { Access, FieldAccess } from 'payload/types';
+import payload from 'payload';
 
 
 // Helper acces function
@@ -74,7 +75,7 @@ export const AddNotificationAprecio = async ({
 
 const { Parser } = require('htmlparser2');
 
-export const ConvertMentionsToUsers = async ({ operation, data, req }) => {
+export const DetectarMenciones = async ({ operation, data, req }) => {
     const htmlContent = data.contenido;
     let mentions  = [];
     const parser = new Parser({
@@ -87,5 +88,40 @@ export const ConvertMentionsToUsers = async ({ operation, data, req }) => {
       
     parser.write(htmlContent);
     parser.end();
+
     data.mencionados = mentions;
+    return data;
 };
+
+export const NotificarMencionados = async ({
+    doc, // full document data
+    req, // full express request
+    previousDoc, // document data before updating the collection
+    operation, // name of the operation ie. 'create', 'update'
+}) => {
+    if(operation === 'create'){
+        // console.log('NotificarMencionados', doc);
+        doc.mencionados.forEach(async (mencionado) => {
+            CrearNotificacionMencion(mencionado, doc)
+        });
+    }else if (operation === 'update'){
+        let viejosMencionados = previousDoc.mencionados.map(m => m.id);
+        let nuevosMencionados = doc.mencionados.map(m => m.id).filter(m => !viejosMencionados.includes(m));
+        nuevosMencionados.forEach(async (mencionado) => {
+            CrearNotificacionMencion(mencionado, doc)
+        });
+    }
+};
+
+const CrearNotificacionMencion = async(mencionado, doc) => {
+    await payload.create({
+        collection: 'notificaciones',
+        data: {
+            autor: mencionado.id,
+            tipoNotificacion: 'mencion',
+            mensaje: `<strong>${doc.autor.nombre }</strong> te mencionó en su entrada <strong>${doc.extracto}</strong>`,
+            leida: false,
+            linkTo: doc.id,
+        },
+    });
+}

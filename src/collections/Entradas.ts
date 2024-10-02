@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, ConvertMentionsToUsers } from '../helper'
+import { isAdminOrAutor, DetectarMenciones, NotificarMencionados } from '../helper'
 
 const Entradas: CollectionConfig = {
     slug: 'entradas',
@@ -9,7 +9,7 @@ const Entradas: CollectionConfig = {
     },
     hooks: {
         beforeChange: [
-            ConvertMentionsToUsers,
+            DetectarMenciones,
             async ({ operation, data, req }) => {
                 if(operation === 'create'){
                     // remove html and get 20 first characters
@@ -19,6 +19,9 @@ const Entradas: CollectionConfig = {
                     return data;
                 }
             }
+        ],
+        afterChange: [
+            NotificarMencionados,
         ]
     },
     fields: [
