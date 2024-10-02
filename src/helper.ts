@@ -114,14 +114,20 @@ export const NotificarMencionados = async ({
 };
 
 const CrearNotificacionMencion = async(mencionado, doc) => {
+    let mensaje = doc.extracto 
+        ? `<strong>${doc.autor.nombre}</strong> te mencionó en su entrada <strong>${doc.extracto}</strong>` // es una entrada
+        : `<strong>${doc.autor.nombre}</strong> te mencionó en su comentario a <strong>${doc.entrada.extracto}</strong>`; // es un comentario
+    
+    let linkTo = doc.extracto ? doc.id : doc.entrada.id;
+    
     await payload.create({
         collection: 'notificaciones',
         data: {
             autor: mencionado.id,
             tipoNotificacion: 'mencion',
-            mensaje: `<strong>${doc.autor.nombre }</strong> te mencionó en su entrada <strong>${doc.extracto}</strong>`,
+            mensaje,
             leida: false,
-            linkTo: doc.id,
+            linkTo,
         },
     });
 }

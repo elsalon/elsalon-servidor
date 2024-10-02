@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor } from '../helper'
+import { isAdminOrAutor, DetectarMenciones, NotificarMencionados } from '../helper'
 
 const Comentarios: CollectionConfig = {
     slug: 'comentarios',
@@ -9,6 +9,7 @@ const Comentarios: CollectionConfig = {
     },
     hooks: {
         beforeChange: [
+            DetectarMenciones,
             async ({ operation, data, req }) => {
                 if(operation === 'create'){
                     // console.log('New entry created', data);
@@ -16,6 +17,9 @@ const Comentarios: CollectionConfig = {
                     return data;
                 }
             }
+        ],
+        afterChange: [
+            NotificarMencionados,
         ]
     },
     admin: {
@@ -58,6 +62,12 @@ const Comentarios: CollectionConfig = {
                     relationTo: 'archivos',
                 }
             ]
+        },
+        {
+            name: 'mencionados',
+            type: 'relationship',
+            relationTo: 'users',
+            hasMany: true,
         },
     ]
 }
