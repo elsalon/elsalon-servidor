@@ -18,7 +18,8 @@ const Entradas: CollectionConfig = {
                     data.autor = req.user.id; // El autor es el usuario actual
                     return data;
                 }
-            }
+            },
+            // TODO revisar que si se esta fijando/desfijando o destacando/desdestacando, se chequee que el usuario sea admin o docente
         ],
         afterChange: [
             NotificarMencionados,
@@ -80,6 +81,14 @@ const Entradas: CollectionConfig = {
             name: 'sala',
             type: 'relationship',
             relationTo: 'salones',
+        },
+        {
+            name: 'destacada',
+            type: 'checkbox',
+        },
+        {
+            name: 'fijada',
+            type: 'checkbox',
         }
     ],
 }
