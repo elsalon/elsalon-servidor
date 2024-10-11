@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor } from '../helper'
+import { isAdminOrAutor, AddNotificationColaboracion } from '../helper'
 
 const Colaboraciones: CollectionConfig = {
     slug: 'colaboraciones',
@@ -11,7 +11,7 @@ const Colaboraciones: CollectionConfig = {
         group: 'Interacciones',
     },
     hooks: {
-        // afterChange: [AddNotificationColaboracion] // TODO
+        afterChange: [AddNotificationColaboracion]
     },
     fields: [
         {

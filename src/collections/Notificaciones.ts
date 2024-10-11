@@ -30,9 +30,13 @@ const Notificaciones: CollectionConfig = {
             type: 'text',
         },
         {
+            name: 'linkType',
+            type: 'select',
+            options: ['entrada', 'grupo', 'salon', 'usuario'],
+        },
+        {
             name: 'linkTo',
-            type: 'relationship',
-            relationTo: 'entradas',
+            type: 'text',
         },
         {
             name: 'leida',

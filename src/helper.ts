@@ -59,7 +59,7 @@ export const AddNotificationAprecio = async ({
     operation, // name of the operation ie. 'create', 'update'
     }) => {
     if(operation === 'create'){
-        console.log("***", doc.entrada.autor.nombre); // El autor de la entrada que fue apreciada
+        // console.log("***", doc.entrada.autor.nombre); // El autor de la entrada que fue apreciada
         await req.payload.create({
             collection: 'notificaciones',
             data: {
@@ -67,11 +67,69 @@ export const AddNotificationAprecio = async ({
                 tipoNotificacion: 'apreciacion',
                 mensaje: `Apreciaron tu entrada <strong>${doc.entrada.extracto}</strong>`,
                 leida: false,
+                linkType: 'entrada',
                 linkTo: doc.entrada.id,
             },
         });
     }
 }
+
+export const AddNotificationColaboracion = async ({
+    doc, // full document data
+    req, // full express request
+    previousDoc, // document data before updating the collection
+    operation, // name of the operation ie. 'create', 'update'
+}) => {
+    if(operation === 'create'){
+        console.log("Usuario que empezo a colaborar:", req.user.slug)
+        console.log("Tipo de colaboracion:", doc.tipo);
+        console.log("Objeto con el que colabora:", doc.idColaborador);
+
+        switch(doc.tipo){
+            case 'salon':
+                // Nadie a quien notificar :)
+                break;
+            case 'bitacora':
+                // Notifico al usuario de la bitacora
+                await req.payload.create({
+                    collection: 'notificaciones',
+                    data: {
+                        autor: doc.idColaborador,
+                        tipoNotificacion: 'colaboracion',
+                        mensaje: `<strong>${req.user.nombre}</strong> Empezó a colaborar con vos`,
+                        leida: false,
+                        linkType: 'usuario',
+                        linkTo: req.user.id,
+                    },
+                });
+                break;
+            case 'grupo':
+                // console.log('Colaboracion en grupo');
+                const grupo = await req.payload.findByID({
+                    collection: 'grupos',
+                    id: doc.idColaborador,
+                });
+                if(grupo){
+                    // Notificar a cada integrante del grupo
+                    grupo.integrantes.forEach(async (integrante) => {
+                        await req.payload.create({
+                            collection: 'notificaciones',
+                            data: {
+                                autor: integrante.id,
+                                tipoNotificacion: 'colaboracion',
+                                mensaje: `<strong>${req.user.nombre}</strong> empezó a colaborar con tu grupo <strong>${grupo.nombre}</strong>`,
+                                leida: false,
+                                linkType: 'grupo',
+                                linkTo: req.user.id,
+                            },
+                        });
+                    });
+                }
+                break;
+        }
+    }
+}
+
 
 const { Parser } = require('htmlparser2');
 
@@ -127,6 +185,7 @@ const CrearNotificacionMencion = async(mencionado, doc) => {
             tipoNotificacion: 'mencion',
             mensaje,
             leida: false,
+            linkType: 'entrada',
             linkTo,
         },
     });
