@@ -20,7 +20,11 @@ const Colaboraciones: CollectionConfig = {
             name: 'colaborador',
             type: 'relationship',
             relationTo: 'users',
-
+        },
+        {
+            name: 'salon',
+            type: 'relationship',
+            relationTo: 'salones',
         }
     ]
 }

@@ -72,6 +72,75 @@ const Salones: CollectionConfig = {
                 position: 'sidebar',
             }
         }
+    ],
+
+    endpoints: [
+        {
+            path: '/dashboard', 
+            method: 'get',
+            handler: async (req, res, next) => {
+                try{
+                    if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
+
+                    // Dashboard principal construido por los siguientes criterios:
+                    //   * Entradas de un salon con el que el usuario colabora
+                    //   * Entradas de usuarios con el que el usuario colabora
+                    //   * Entradas marcadas como destacadas
+                    
+                    const user = req.user;
+
+                    let idsMateriasColabora = [];
+                    let idsUsuariosColabora = [];
+
+                    const colaboraciones = await req.payload.find({
+                        collection: 'colaboraciones',
+                        where: {
+                            autor: { equals: user.id },
+                        },
+                    });
+
+                    colaboraciones.docs.forEach((colaboracion) => {
+                        console.log('colaboracion', colaboracion);
+                        if(colaboracion.salon != null){
+                            idsMateriasColabora.push(colaboracion.salon.id);
+                        }
+                        if(colaboracion.colaborador != null){
+                            idsUsuariosColabora.push(colaboracion.colaborador.id);
+                        }
+                    });
+
+                    // Parametros principales de busqueda
+                    const query = {
+                        or:[
+                            {
+                                sala: { in: idsMateriasColabora }
+                            },
+                            {
+                                autor: { in: idsUsuariosColabora }
+                            },
+                            {
+                                destacada: { equals: true }
+                            }
+                        ]
+                    }
+
+                    const entradas = await req.payload.find({
+                        collection: 'entradas',
+                        where: query,
+                        sort: "-createdAt",  // Ordenar por fecha de creación, de más reciente a más antigua
+                        limit: 5,
+                    });
+
+                    res.status(200).json({
+                        docs: entradas.docs || [],  // Si no hay documentos, devolver un array vacío
+                        totalDocs: entradas.totalDocs || 0,  // Si no hay aprecios, devolver 0
+                    });
+                } catch (error) {
+                    console.error('Error fetching dashboard', error);
+                    res.status(500).json({ error: 'Error fetching dashboard' });
+                }
+            }
+        }
     ]
 }
 
