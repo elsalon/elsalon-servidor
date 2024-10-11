@@ -86,10 +86,6 @@ const Entradas: CollectionConfig = {
             name: 'destacada',
             type: 'checkbox',
         },
-        {
-            name: 'fijada',
-            type: 'checkbox',
-        }
     ],
 }
 
