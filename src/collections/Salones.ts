@@ -2,6 +2,7 @@ import { CollectionConfig } from 'payload/types';
 import { ColourPickerField } from '@nouance/payload-better-fields-plugin';
 import { SlugField } from '@nouance/payload-better-fields-plugin'
 import { isAdmin } from '../helper'
+import Grupos from './Grupos';
 
 const Salones: CollectionConfig = {
     slug: 'salones',
@@ -76,7 +77,7 @@ const Salones: CollectionConfig = {
 
     endpoints: [
         {
-            path: '/dashboard', 
+            path: '/feed', 
             method: 'get',
             handler: async (req, res, next) => {
                 try{
@@ -85,12 +86,15 @@ const Salones: CollectionConfig = {
                     // Dashboard principal construido por los siguientes criterios:
                     //   * Entradas de un salon con el que el usuario colabora
                     //   * Entradas de usuarios con el que el usuario colabora
+                    //   * Entradas de grupos con el que el usuario colabora
                     //   * Entradas marcadas como destacadas
+                    //   * TODO Agregar entradas de grupos en los que el usuario es miembro
                     
                     const user = req.user;
 
                     let idsMateriasColabora = [];
                     let idsUsuariosColabora = [];
+                    let idsGruposColabora = [];
 
                     const colaboraciones = await req.payload.find({
                         collection: 'colaboraciones',
@@ -100,12 +104,16 @@ const Salones: CollectionConfig = {
                     });
 
                     colaboraciones.docs.forEach((colaboracion) => {
-                        console.log('colaboracion', colaboracion);
-                        if(colaboracion.salon != null){
-                            idsMateriasColabora.push(colaboracion.salon.id);
-                        }
-                        if(colaboracion.colaborador != null){
-                            idsUsuariosColabora.push(colaboracion.colaborador.id);
+                        switch(colaboracion.tipo){
+                            case 'salon':
+                                idsMateriasColabora.push(colaboracion.idColaborador);
+                                break;
+                            case 'usuario':
+                                idsUsuariosColabora.push(colaboracion.idColaborador);
+                                break;
+                            case 'grupo':
+                                idsGruposColabora.push(colaboracion.idColaborador);
+                                break;
                         }
                     });
 
@@ -117,6 +125,9 @@ const Salones: CollectionConfig = {
                             },
                             {
                                 autor: { in: idsUsuariosColabora }
+                            },
+                            {
+                                grupo: { in: idsGruposColabora }
                             },
                             {
                                 destacada: { equals: true }

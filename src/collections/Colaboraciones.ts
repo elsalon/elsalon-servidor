@@ -10,6 +10,9 @@ const Colaboraciones: CollectionConfig = {
     admin: {
         group: 'Interacciones',
     },
+    hooks: {
+        // afterChange: [AddNotificationColaboracion] // TODO
+    },
     fields: [
         {
             name: 'autor',
@@ -17,15 +20,24 @@ const Colaboraciones: CollectionConfig = {
             relationTo: 'users',
         },
         {
-            name: 'colaborador',
-            type: 'relationship',
-            relationTo: 'users',
+            name: 'tipo',
+            type: 'select',
+            options: ['bitacora', 'salon', 'grupo'], // Tipos de colaboraciones
         },
         {
-            name: 'salon',
-            type: 'relationship',
-            relationTo: 'salones',
-        }
+            name: 'idColaborador', // ID de quien colabora
+            type: 'text',
+        },
+        // {
+        //     name: 'colaborador',
+        //     type: 'relationship',
+        //     relationTo: 'users',
+        // },
+        // {
+        //     name: 'salon',
+        //     type: 'relationship',
+        //     relationTo: 'salones',
+        // }
     ]
 }
 
