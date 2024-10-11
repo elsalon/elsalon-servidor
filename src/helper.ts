@@ -99,7 +99,7 @@ export const AddNotificationColaboracion = async ({
                         mensaje: `<strong>${req.user.nombre}</strong> Empezó a colaborar con vos`,
                         leida: false,
                         linkType: 'usuario',
-                        linkTo: req.user.id,
+                        linkTo: req.user.slug,
                     },
                 });
                 break;
@@ -119,8 +119,8 @@ export const AddNotificationColaboracion = async ({
                                 tipoNotificacion: 'colaboracion',
                                 mensaje: `<strong>${req.user.nombre}</strong> empezó a colaborar con tu grupo <strong>${grupo.nombre}</strong>`,
                                 leida: false,
-                                linkType: 'grupo',
-                                linkTo: req.user.id,
+                                linkType: 'usuario',
+                                linkTo: req.user.slug,
                             },
                         });
                     });
