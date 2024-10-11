@@ -90,6 +90,8 @@ const Salones: CollectionConfig = {
                     //   * Entradas marcadas como destacadas
                     //   * TODO Agregar entradas de grupos en los que el usuario es miembro
                     
+                    const page = req.query.page || 1;
+                    // todo createdGreaterThan = req.query.createdGreaterThan || null;
                     const user = req.user;
 
                     let idsMateriasColabora = [];
@@ -135,17 +137,15 @@ const Salones: CollectionConfig = {
                         ]
                     }
 
-                    const entradas = await req.payload.find({
+                    const feed = await req.payload.find({
                         collection: 'entradas',
                         where: query,
                         sort: "-createdAt",  // Ordenar por fecha de creación, de más reciente a más antigua
                         limit: 5,
+                        page: parseInt(page),
                     });
 
-                    res.status(200).json({
-                        docs: entradas.docs || [],  // Si no hay documentos, devolver un array vacío
-                        totalDocs: entradas.totalDocs || 0,  // Si no hay aprecios, devolver 0
-                    });
+                    res.status(200).json(feed);
                 } catch (error) {
                     console.error('Error fetching dashboard', error);
                     res.status(500).json({ error: 'Error fetching dashboard' });
