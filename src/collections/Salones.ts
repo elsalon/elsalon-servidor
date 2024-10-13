@@ -91,7 +91,7 @@ const Salones: CollectionConfig = {
                     //   * TODO Agregar entradas de grupos en los que el usuario es miembro
                     
                     const page = req.query.page || 1;
-                    // todo createdGreaterThan = req.query.createdGreaterThan || null;
+                    const createdGreaterThan = req.query.createdGreaterThan || null;
                     const user = req.user;
 
                     let idsMateriasColabora = [];
@@ -120,7 +120,7 @@ const Salones: CollectionConfig = {
                     });
 
                     // Parametros principales de busqueda
-                    const query = {
+                    let query = {
                         or:[
                             {
                                 sala: { in: idsMateriasColabora }
@@ -135,6 +135,18 @@ const Salones: CollectionConfig = {
                                 destacada: { equals: true }
                             }
                         ]
+                    }
+                    
+                    if(createdGreaterThan){
+                        // Agrego la fecha de creación como criterio de busqueda
+                        query = {
+                            and: [
+                                query,
+                                {
+                                    createdAt: { greater_than: new Date(createdGreaterThan) }
+                                }
+                            ]
+                        }
                     }
 
                     const feed = await req.payload.find({
