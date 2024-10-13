@@ -190,3 +190,15 @@ const CrearNotificacionMencion = async(mencionado, doc) => {
         },
     });
 }
+
+export const CrearExtracto = async ({ operation, data, req }) => {
+    if(operation === 'create' || operation === 'update'){
+        let text = data.contenido;
+        // remove custom images tag
+        text = text.replace(/\[image:[a-f0-9]+\]+/g, '');
+        // remove html and get 20 first characters
+        text = text?.replace(/<[^>]*>?/gm, '').substring(0, 40);
+        data.extracto = text;
+        return data;
+    }
+}

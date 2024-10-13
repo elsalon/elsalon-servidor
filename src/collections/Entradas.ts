@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, DetectarMenciones, NotificarMencionados } from '../helper'
+import { isAdminOrAutor, DetectarMenciones, NotificarMencionados, CrearExtracto } from '../helper'
 
 const Entradas: CollectionConfig = {
     slug: 'entradas',
@@ -10,11 +10,9 @@ const Entradas: CollectionConfig = {
     hooks: {
         beforeChange: [
             DetectarMenciones,
+            CrearExtracto,
             async ({ operation, data, req }) => {
                 if(operation === 'create'){
-                    // remove html and get 20 first characters
-                    data.extracto = data.contenido?.replace(/<[^>]*>?/gm, '').substring(0, 40);
-                    // console.log('New entry created', data);
                     data.autor = req.user.id; // El autor es el usuario actual
                     return data;
                 }
