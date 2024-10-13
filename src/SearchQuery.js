@@ -10,7 +10,6 @@ export const searchQuery = async (req, res, next) => {
     
     try {
         const results = {};
-        console.log("categorias", categorias)
 
         if (categorias.includes('entradas')) {
             results.entradas = await payload.find({
