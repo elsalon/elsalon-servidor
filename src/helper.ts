@@ -197,7 +197,7 @@ export const CrearExtracto = async ({ operation, data, req }) => {
         // remove custom images tag
         text = text.replace(/\[image:[a-f0-9]+\]+/g, '');
         // remove html and get 20 first characters
-        text = text?.replace(/<[^>]*>?/gm, '').substring(0, 40);
+        text = text?.replace(/<[^>]*>?/gm, '').substring(0, 120);
         data.extracto = text;
         return data;
     }

@@ -5,6 +5,7 @@ import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { webpackBundler } from '@payloadcms/bundler-webpack'
 import { slateEditor } from '@payloadcms/richtext-slate'
 import { buildConfig } from 'payload/config'
+import { searchQuery } from './SearchQuery'
 
 import Users from './collections/Users';
 import Grupos from './collections/Grupos';
@@ -49,4 +50,11 @@ export default buildConfig({
   db: mongooseAdapter({
     url: process.env.DATABASE_URI,
   }),
+  endpoints: [
+    {
+      path: '/busqueda',
+      method: 'get',
+      handler: searchQuery,
+    },
+  ]
 })
