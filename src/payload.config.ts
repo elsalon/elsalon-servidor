@@ -19,6 +19,7 @@ import Colaboraciones from './collections/Colaboraciones';
 import Apreciaciones from './collections/Apreciaciones'
 import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
+import Etiquetas from './collections/Etiquetas'
 
 export default buildConfig({
   admin: {
@@ -39,6 +40,7 @@ export default buildConfig({
     Avatares,
     Notificaciones,
     Fijadas,
+    Etiquetas,
   ],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),

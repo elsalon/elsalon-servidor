@@ -8,8 +8,8 @@ const Fijadas: CollectionConfig = {
         group: 'Interacciones',
     },
     labels: {
-        singular: 'Entrada Fijada',
-        plural: 'Entradas Fijadas',
+        singular: 'Entrada Fija',
+        plural: 'Entradas Fijas',
     },
     access: {
         // update: isAdminOrIntegrante,

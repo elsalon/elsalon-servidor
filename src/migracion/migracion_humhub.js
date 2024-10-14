@@ -52,6 +52,8 @@ const doAction = async () => {
     (etc)
   */
 
+    
+
   const humhubEntradas = await fetchHumhub('/post')
   const entradas = humhubEntradas.data.results
   console.log("entradas", entradas)
@@ -95,6 +97,9 @@ const doAction = async () => {
     topics
     files
   */
+
+    // MEssage con imagenes y mencion
+    // Buenas amigues de Salón!\r\n\r\nQueremos invitarles a la proyección de nuestro flamante _corto de palomas_ en el FicUBA. La cita es el miércoles 16 a las 19hs en la facu 🌸🤝🏼![IMG_8845.jpeg](file-guid:27c4f931-b06d-46b6-9634-10d66389322e \"IMG_8845.jpeg\")\r\n\r\n[Juan Ignacio Gonzalez](mention:428ba11c-055c-480b-985d-af2179e62773 \"/u/juanignacio5/\")
   
 
     // SPACES
