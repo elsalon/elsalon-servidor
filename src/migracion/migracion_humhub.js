@@ -8,12 +8,12 @@ dotenv.config({
 })
 
 const { PAYLOAD_SECRET } = process.env
+const { HUMHUB_TOKEN } = process.env
 
-const token = "XSKsjaD7cVqpPDTgwkWuUUzPMzp4ylmRHt0GgSUJEWrSgXQ-Oy8LnXipQfU7v_vLIxe-7QYzK5tJMH5XiPd2zr"
 const fetchHumhub = axios.create({
   baseURL: 'https://elsalon.org/api/v1',
   timeout: 1000,
-  headers: {'Authorization': `Bearer ${token}`}
+  headers: {'Authorization': `Bearer ${HUMHUB_TOKEN}`}
 });
 
 

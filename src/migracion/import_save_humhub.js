@@ -15,13 +15,12 @@ const args = process.argv;
 const endpoint = args[2] || "user";
 console.log("Import El Salon humhub. Descargando endpoint", endpoint);
 const filename = `humhub_${endpoint}.json`
+const { HUMHUB_TOKEN } = process.env
 
-
-const token = "XSKsjaD7cVqpPDTgwkWuUUzPMzp4ylmRHt0GgSUJEWrSgXQ-Oy8LnXipQfU7v_vLIxe-7QYzK5tJMH5XiPd2zr"
 const fetchHumhub = axios.create({
   baseURL: 'https://elsalon.org/api/v1',
   timeout: 100000,
-  headers: {'Authorization': `Bearer ${token}`}
+  headers: {'Authorization': `Bearer ${HUMHUB_TOKEN}`}
 });
 
 var documents = []
