@@ -22,6 +22,9 @@ const Entradas: CollectionConfig = {
             NotificarMencionados,
         ]
     },
+    admin: {
+        group: 'Interacciones',
+    },
     fields: [
         {
             name: 'autor',
