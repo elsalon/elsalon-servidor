@@ -84,6 +84,7 @@ const Salones: CollectionConfig = {
                     if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
                     // Dashboard principal construido por los siguientes criterios:
+                    //   * Entradas del usuario actual
                     //   * Entradas de un salon con el que el usuario colabora
                     //   * Entradas de usuarios con el que el usuario colabora
                     //   * Entradas de grupos con el que el usuario colabora
@@ -122,6 +123,9 @@ const Salones: CollectionConfig = {
                     // Parametros principales de busqueda
                     let query = {
                         or:[
+                            {
+                                autor: { equals: user.id }
+                            },
                             {
                                 sala: { in: idsMateriasColabora }
                             },

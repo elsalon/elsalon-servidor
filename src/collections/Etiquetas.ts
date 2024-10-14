@@ -8,7 +8,7 @@ const Etiquetas: CollectionConfig = {
   },
 
   admin: {
-    // group: 'Medios',
+    useAsTitle: 'nombre',
   },
   fields: [
     {

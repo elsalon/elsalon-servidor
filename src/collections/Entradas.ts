@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, DetectarMenciones, NotificarMencionados, CrearExtracto } from '../helper'
+import { isAdminOrAutor, NotificarMencionados, CrearExtracto } from '../helper'
 
 const Entradas: CollectionConfig = {
     slug: 'entradas',
@@ -9,7 +9,6 @@ const Entradas: CollectionConfig = {
     },
     hooks: {
         beforeChange: [
-            DetectarMenciones,
             CrearExtracto,
             async ({ operation, data, req }) => {
                 if(operation === 'create'){
@@ -73,6 +72,12 @@ const Entradas: CollectionConfig = {
             name: 'mencionados',
             type: 'relationship',
             relationTo: 'users',
+            hasMany: true,
+        },
+        {
+            name: 'etiquetas',
+            type: 'relationship',
+            relationTo: 'etiquetas',
             hasMany: true,
         },
         {

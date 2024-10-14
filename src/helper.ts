@@ -130,27 +130,6 @@ export const AddNotificationColaboracion = async ({
     }
 }
 
-
-const { Parser } = require('htmlparser2');
-
-export const DetectarMenciones = async ({ operation, data, req }) => {
-    const htmlContent = data.contenido;
-    let mentions  = [];
-    const parser = new Parser({
-        onopentag(name, attribs) {
-          if (name === "span" && attribs.class === "mention") {
-            mentions.push(attribs['data-id']);
-          }
-        }
-      });
-      
-    parser.write(htmlContent);
-    parser.end();
-
-    data.mencionados = mentions;
-    return data;
-};
-
 export const NotificarMencionados = async ({
     doc, // full document data
     req, // full express request
@@ -158,8 +137,7 @@ export const NotificarMencionados = async ({
     operation, // name of the operation ie. 'create', 'update'
 }) => {
     if(operation === 'create'){
-        // console.log('NotificarMencionados', doc);
-        doc.mencionados.forEach(async (mencionado) => {
+        doc.mencionados?.forEach(async (mencionado) => {
             CrearNotificacionMencion(mencionado, doc)
         });
     }else if (operation === 'update'){
@@ -190,14 +168,29 @@ const CrearNotificacionMencion = async(mencionado, doc) => {
         },
     });
 }
-
 export const CrearExtracto = async ({ operation, data, req }) => {
-    if(operation === 'create' || operation === 'update'){
+    if (operation === 'create' || operation === 'update') {
         let text = data.contenido;
-        // remove custom images tag
-        text = text.replace(/\[image:[a-f0-9]+\]+/g, '');
-        // remove html and get 20 first characters
+        
+        // Remove custom images tag
+        text = text.replace(/\[image:[a-f0-9]+\]/g, '');
+        
+        // Function to convert mentions and hashtags to plain text
+        const convertToPlainText = (content, regex, caracter) => {
+            return content.replace(regex, (match, name) => caracter + name);
+        }
+        
+        // Updated regex patterns
+        const mentionRegex = /\[([^\]]+)\]\(mencion:[a-zA-Z0-9]+\)/g;
+        const tagRegex = /\[([^\]]+)\]\(etiqueta:[a-zA-Z0-9]+\)/g;
+        
+        // Convert mentions and hashtags to plain text
+        text = convertToPlainText(text, mentionRegex, "@");
+        text = convertToPlainText(text, tagRegex, "#");
+
+        // Remove HTML tags and get first 120 characters
         text = text?.replace(/<[^>]*>?/gm, '').substring(0, 120);
+
         data.extracto = text;
         return data;
     }
