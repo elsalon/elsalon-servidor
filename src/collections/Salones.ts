@@ -20,6 +20,11 @@ const Salones: CollectionConfig = {
             type: 'text',
         },
         {
+            name: 'avatar',
+            type: 'upload',
+            relationTo: 'avatares',
+        },
+        {
             name: 'siglas',
             type: 'text',
         },

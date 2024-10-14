@@ -37,11 +37,6 @@ const Users: CollectionConfig = {
   },
 
   hooks: {
-    afterMe: [
-        ({response}) => {
-        response["grupos"] = ['PAV1 Grupo2', 'PAV2 Grupo 5'] //TODO
-        return response;
-    }]
   },
 
   fields: [
