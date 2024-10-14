@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, NotificarMencionados, CrearExtracto } from '../helper'
+import { isAdminOrAutor, NotificarMencionados, CrearExtracto, ValidarEntradaVacia } from '../helper'
 
 const Entradas: CollectionConfig = {
     slug: 'entradas',
@@ -9,6 +9,7 @@ const Entradas: CollectionConfig = {
     },
     hooks: {
         beforeChange: [
+            ValidarEntradaVacia,
             CrearExtracto,
             async ({ operation, data, req }) => {
                 if(operation === 'create'){

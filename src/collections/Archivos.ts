@@ -14,12 +14,16 @@ const Archivos: CollectionConfig = {
         staticDir: 'archivos',
         mimeTypes: [
             'application/zip',
+            'application/rar',
+            'application/7zip',
+            'application/gif',
             'application/x-zip-compressed',
             'application/vnd.rar',
             'application/x-rar-compressed',
             'application/pdf',
             'application/x-7z-compressed',
             'application/x-tar',
+            'application/octet-stream',
         ],
     },
     fields: []

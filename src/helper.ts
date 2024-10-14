@@ -195,3 +195,22 @@ export const CrearExtracto = async ({ operation, data, req }) => {
         return data;
     }
 }
+
+export const ValidarEntradaVacia = async ({ operation, data, req }) => {
+    var entradaVacia = true;
+    if (data.contenido == "<p><br></p>") {
+        data.contenido = "";
+    }else{
+        entradaVacia = false;
+    }
+    if(data.imagenes.length > 0){
+        entradaVacia = false;
+    }
+    if(data.archivos.length > 0){
+        entradaVacia = false;
+    }
+    if(entradaVacia){
+        throw new Error('La entrada no puede estar vacía');
+    }
+ 
+}
