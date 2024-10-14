@@ -1,5 +1,6 @@
 import express from 'express'
 import payload from 'payload'
+const path = require('path');
 
 var cors = require('cors');
 var corsOptions = {
@@ -18,6 +19,8 @@ app.use(express.urlencoded({limit: '100mb', extended: true, parameterLimit: 5000
 app.get('/', (_, res) => {
   res.redirect('/admin')
 })
+
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 
 const start = async () => {

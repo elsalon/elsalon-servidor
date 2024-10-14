@@ -7,6 +7,8 @@ import { slateEditor } from '@payloadcms/richtext-slate'
 import { buildConfig } from 'payload/config'
 import { searchQuery } from './SearchQuery'
 
+import Ajustes from './collections/Ajustes'
+
 import Users from './collections/Users';
 import Grupos from './collections/Grupos';
 import Entradas from './collections/Entradas';
@@ -42,6 +44,9 @@ export default buildConfig({
     Fijadas,
     Etiquetas,
   ],
+  globals: [
+    Ajustes,
+  ],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),
   },
@@ -52,6 +57,19 @@ export default buildConfig({
   db: mongooseAdapter({
     url: process.env.DATABASE_URI,
   }),
+  email: {
+    // transportOptions: {
+    //   host: 'smtp.ethereal.email',
+    //   port: 587,
+    //   auth: {
+    //       user: 'antone.streich@ethereal.email',
+    //       pass: 'UspHx1s8AKvK1Fn8Jj'
+    //   }
+    // },
+    fromName: 'hello',
+    fromAddress: 'hello@example.com',
+    logMockCredentials: true, // Optional
+  },
   endpoints: [
     {
       path: '/busqueda',
