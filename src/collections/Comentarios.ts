@@ -68,6 +68,12 @@ const Comentarios: CollectionConfig = {
             relationTo: 'users',
             hasMany: true,
         },
+        {
+            name: 'etiquetas',
+            type: 'relationship',
+            relationTo: 'etiquetas',
+            hasMany: true,
+        }
     ]
 }
 
