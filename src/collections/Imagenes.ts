@@ -24,6 +24,12 @@ const Imagenes: CollectionConfig = {
         staticDir: 'imagenes',
         imageSizes: [
             {
+                name: 'medium',
+                width: 500,
+                height: undefined,
+                withoutEnlargement: true,
+            },
+            {
                 name: 'thumbnail',
                 width: 250,
                 // By specifying `undefined` or leaving a height undefined,
@@ -36,8 +42,7 @@ const Imagenes: CollectionConfig = {
             },
         ],
         adminThumbnail: 'thumbnail',
-        mimeTypes: ['image/*'],
-        
+        mimeTypes: ['image/*'],        
     },
     fields: [
         {

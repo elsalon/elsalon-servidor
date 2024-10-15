@@ -17,11 +17,15 @@
     "payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.670.0",
+    "@aws-sdk/lib-storage": "^3.670.0",
     "@nouance/payload-better-fields-plugin": "^1.4.1",
     "@payloadcms/bundler-webpack": "^1.0.0",
     "@payloadcms/db-mongodb": "^1.0.0",
-    "@payloadcms/plugin-cloud": "^3.0.0",
+    "@payloadcms/plugin-cloud": "^3.0.2",
+    "@payloadcms/plugin-cloud-storage": "^1.2.0",
     "@payloadcms/richtext-slate": "^1.0.0",
+    "aws-crt": "^1.22.0",
     "axios": "^1.7.7",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",

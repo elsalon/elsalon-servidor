@@ -1,6 +1,8 @@
 import path from 'path'
 
 import { payloadCloud } from '@payloadcms/plugin-cloud'
+import { s3Adapter } from '@payloadcms/plugin-cloud-storage/s3'
+
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { webpackBundler } from '@payloadcms/bundler-webpack'
 import { slateEditor } from '@payloadcms/richtext-slate'
@@ -22,14 +24,28 @@ import Apreciaciones from './collections/Apreciaciones'
 import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
 import Etiquetas from './collections/Etiquetas'
+import { cloudStorage } from '@payloadcms/plugin-cloud-storage'
+
+// DigitalOcean Spaces
+const DOSpacesAdapter = s3Adapter({
+  config: {
+    endpoint: process.env.DO_SPACES_ENDPOINT,
+    forcePathStyle: true,
+    credentials: {
+      accessKeyId: process.env.DO_SPACES_ACCESS_KEY_ID,
+      secretAccessKey: process.env.DO_SPACES_SECRET_ACCESS_KEY,
+    },
+    region: process.env.DO_SPACES_REGION,
+  },
+  bucket: process.env.DO_SPACES_BUCKET,
+  acl: 'public-read',
+});
 
 export default buildConfig({
   admin: {
     user: Users.slug,
     bundler: webpackBundler(),
   },
-  
-
   editor: slateEditor({}),
   collections: [
     Users,
@@ -55,7 +71,28 @@ export default buildConfig({
   graphQL: {
     schemaOutputFile: path.resolve(__dirname, 'generated-schema.graphql'),
   },
-  plugins: [payloadCloud()],
+  plugins: [
+    cloudStorage({
+      collections: {
+        'imagenes': {
+          adapter: DOSpacesAdapter,
+          disableLocalStorage: true,
+          prefix: 'media/imagenes',
+          generateFileURL: ({ filename, prefix }) => {
+            const endpoint = process.env.DO_SPACES_ENDPOINT; // "https://nyc3.digitaloceanspaces.com"
+            const bucket = process.env.DO_SPACES_BUCKET; // "elsalon-test"
+            // Extract the region from the endpoint (in this case, "nyc3")
+            const url = new URL(endpoint);
+            const region = url.hostname.split('.')[0]; // Extract "nyc3"
+            // Create the new URL
+            const fullUrl = `https://${bucket}.${region}.digitaloceanspaces.com`;
+            return [fullUrl, prefix, filename].filter(Boolean).join('/')
+          },
+        }
+      }
+    }),
+    payloadCloud(),
+  ],
   db: mongooseAdapter({
     url: process.env.DATABASE_URI,
   }),
