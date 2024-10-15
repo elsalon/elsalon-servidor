@@ -9,18 +9,36 @@ const Users: CollectionConfig = {
     tokenExpiration: 1000 * 60 * 60 * 24 * 30,
     maxLoginAttempts: 7,
     lockTime: 1000 * 60, // 1 minute
+    verify: {
+      generateEmailSubject: ({ req, user }) => {
+        return `Verificá tu cuenta de El Salón`;
+      },
+      generateEmailHTML: ({ req, token, user }) => {
+        // Use the token provided to allow your user to verify their account
+        const backendUrl = `${req.protocol}://${req.get('host')}`; // Dynamically obtain the backend URL
+        const frontUrl = req.headers.origin;
+
+        return simpleEmailTemplate({
+          backendUrl: backendUrl,
+          title: `Hola ${user.nombre}, verifica tu cuenta`,
+          content: `<p>Para verificar tu cuenta de El Salón, clickeá en este link</p>
+          <p><a target="_blank" href="${frontUrl}/verificar?t=${token}">Verificar cuenta</a></p>`
+      });
+      },
+    },
     forgotPassword:{
       generateEmailSubject: ({ req, user }) => {
         return `Restablacé tu contraseña de El Salón`;
       },
       generateEmailHTML: ({ req, token, user }) => {
         const backendUrl = `${req.protocol}://${req.get('host')}`; // Dynamically obtain the backend URL
+        const frontUrl = req.headers.origin;
 
         return simpleEmailTemplate({
             backendUrl: backendUrl,
             title: `Hola ${user.nombre}, restablacé tu contraseña`,
-            content: `<p>Para restablecer tu contraseña de El Salón, haz clic en el siguiente enlace:</p>
-            <p><a target="_blank" href="${req.headers.origin}/recuperar?t=${token}">Restablecer contraseña</a></p>`
+            content: `<p>Para restablecer tu contraseña de El Salón, clickeá en este link</p>
+            <p><a target="_blank" href="${frontUrl}/recuperar?t=${token}">Restablecer contraseña</a></p>`
         });
       },
     }

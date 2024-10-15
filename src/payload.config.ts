@@ -28,6 +28,8 @@ export default buildConfig({
     user: Users.slug,
     bundler: webpackBundler(),
   },
+  
+
   editor: slateEditor({}),
   collections: [
     Users,
