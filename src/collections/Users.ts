@@ -48,6 +48,7 @@ const Users: CollectionConfig = {
   },
   // anyone can create user. data is only accessible to the user who created it
   access: {
+    admin: ({ req }) => req.user && (req.user.isAdmin || req.user.rol === 'docente'),
     create: () => { return true },
     read: ({ req }) => {
       if (req.user) {

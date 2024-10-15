@@ -39,6 +39,12 @@ export const isAdminOrSelf: Access = ({ req: { user }, id }) => {
     return user.id === id;
 }
 
+export const isAdminOrDocente: Access = ({ req: { user }, id }) => {
+    if (!user) return false;
+    if (user.isAdmin) return true;
+    if (user.rol == 'docente') return true;
+}
+
 export const isAdmin: Access = ({ req: { user } }) => {
     if (!user) return false;
     return user.isAdmin;
