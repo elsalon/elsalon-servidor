@@ -41,6 +41,17 @@ const DOSpacesAdapter = s3Adapter({
   acl: 'public-read',
 });
 
+const GenerateFileURL = ({ filename, prefix }) => {
+  const endpoint = process.env.DO_SPACES_ENDPOINT; // "https://nyc3.digitaloceanspaces.com"
+  const bucket = process.env.DO_SPACES_BUCKET; // "elsalon-test"
+  // Extract the region from the endpoint (in this case, "nyc3")
+  const url = new URL(endpoint);
+  const region = url.hostname.split('.')[0]; // Extract "nyc3"
+  // Create the new URL
+  const fullUrl = `https://${bucket}.${region}.digitaloceanspaces.com`;
+  return [fullUrl, prefix, filename].filter(Boolean).join('/')
+}
+
 export default buildConfig({
   admin: {
     user: Users.slug,
@@ -78,17 +89,20 @@ export default buildConfig({
           adapter: DOSpacesAdapter,
           disableLocalStorage: true,
           prefix: 'media/imagenes',
-          generateFileURL: ({ filename, prefix }) => {
-            const endpoint = process.env.DO_SPACES_ENDPOINT; // "https://nyc3.digitaloceanspaces.com"
-            const bucket = process.env.DO_SPACES_BUCKET; // "elsalon-test"
-            // Extract the region from the endpoint (in this case, "nyc3")
-            const url = new URL(endpoint);
-            const region = url.hostname.split('.')[0]; // Extract "nyc3"
-            // Create the new URL
-            const fullUrl = `https://${bucket}.${region}.digitaloceanspaces.com`;
-            return [fullUrl, prefix, filename].filter(Boolean).join('/')
-          },
-        }
+          generateFileURL: ({ filename, prefix }) => GenerateFileURL({ filename, prefix })
+        },
+        'avatares': {
+          adapter: DOSpacesAdapter,
+          disableLocalStorage: true,
+          prefix: 'media/avatares',
+          generateFileURL: ({ filename, prefix }) => GenerateFileURL({ filename, prefix })
+        },
+        'archivos': {
+          adapter: DOSpacesAdapter,
+          disableLocalStorage: true,
+          prefix: 'media/archivos',
+          generateFileURL: ({ filename, prefix }) => GenerateFileURL({ filename, prefix })
+        },
       }
     }),
     payloadCloud(),
