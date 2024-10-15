@@ -71,7 +71,7 @@ export const AddNotificationAprecio = async ({
             data: {
                 autor: doc.entrada.autor.id, // El autor de la entrada que fue apreciada
                 tipoNotificacion: 'apreciacion',
-                mensaje: `Apreciaron tu entrada <strong>${doc.entrada.extracto}</strong>`,
+                mensaje: `<strong>${req.user.nombre}</strong> apreció tu entrada <strong>${doc.entrada.extracto}</strong>`,
                 leida: false,
                 linkType: 'entrada',
                 linkTo: doc.entrada.id,
