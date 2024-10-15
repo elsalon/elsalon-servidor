@@ -56,6 +56,12 @@ const Salones: CollectionConfig = {
                     ],
                     defaultValue: 'anual',
                 },
+                {
+                    name: 'annoInicio',
+                    type: 'number',
+                    defaultValue: 2018,
+                    label: 'Año de inicio',
+                }
             ]
         },
         

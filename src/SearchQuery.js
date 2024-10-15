@@ -1,3 +1,5 @@
+// !!!!! TODO
+// Implementar con este plugin: https://payloadcms.com/docs/plugins/search
 export const searchQuery = async (req, res, next) => {
     const { payload } = req;
     let { query, categorias } = req.query;
