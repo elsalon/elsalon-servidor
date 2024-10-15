@@ -1,7 +1,7 @@
 import { CollectionConfig } from 'payload/types';
 import { ColourPickerField } from '@nouance/payload-better-fields-plugin';
 import { SlugField } from '@nouance/payload-better-fields-plugin'
-import { isAdmin } from '../helper'
+import { isAdmin, isAdminOrDocente } from '../helper'
 import Grupos from './Grupos';
 
 const Salones: CollectionConfig = {
@@ -11,7 +11,7 @@ const Salones: CollectionConfig = {
     },
     access: {
         create: isAdmin,
-        update: isAdmin,
+        update: isAdminOrDocente,
         read: () => true,
     },
     fields: [
@@ -33,6 +33,10 @@ const Salones: CollectionConfig = {
               name: 'color',
             },
         ),
+        {
+            name: 'aulas',
+            type: 'text',
+        },
         {
             name: 'archivo',
             type: 'group',
