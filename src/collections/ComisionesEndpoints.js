@@ -107,11 +107,20 @@ export const feed = async (req, res, next) => {
 
         /*
         Cosas que vamos a buscar en este feed:
+
+        SALA
         * Entradas al espacio donde está esta comision (comision.contexto)
-            * Que estén en el rango de fechas (startDate, endDate) que son del actual periodo (cuatri o anual)
-                * De usuarios que estén en la comisión (comision.integrantes & docentes)
-                ó
-                * De grupos cuyos integrantes estén en la comision 
+        ó 
+        * Entradas sin espacio, que son las bitácoras
+        
+        FECHA
+        * Que estén en el rango de fechas (startDate, endDate) que son del actual periodo (cuatri o anual)
+        
+        AUTOR
+        * De usuarios que estén en la comisión (comision.integrantes & docentes)
+        ó
+        * De grupos cuyos integrantes estén en la comision 
+        
         */
 
         let query = {
@@ -123,21 +132,28 @@ export const feed = async (req, res, next) => {
                     createdAt: { less_than_equal: endDate },
                 },
                 {
-                    sala: { equals: comision.contexto }
+                    or: [
+                        {
+                            sala: { equals: comision.contexto } // o fue publicado en la sala de la comisión
+                        },
+                        {
+                            sala: { exists: false } // O fue publicado en la bitacora
+                        },
+                    ]
                 },
                 {
                     or: [
                         {
-                            autor: { in: comision.integrantes }
+                            autor: { in: comision.integrantes } // escrito por alguien de la comisión
                         },
                         {
-                            'grupo.integrantes': { in: comision.integrantes }
+                            'grupo.integrantes': { in: comision.integrantes } // o publicado por un grupo de alguien que esta en la comision
                         },
                     ]
                 }
             ]
         }
-        
+
         if(createdGreaterThan){
             // Agrego la fecha de creación como criterio de busqueda
             query = {
