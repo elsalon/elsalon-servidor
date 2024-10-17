@@ -30,12 +30,12 @@ const Comisiones: CollectionConfig = {
             relationTo: 'users',
             hasMany: true,
         },
-        {
-            name: 'grupos',
-            type: 'relationship',
-            relationTo: 'grupos',
-            hasMany: true,
-        },
+        // {
+        //     name: 'grupos',
+        //     type: 'relationship',
+        //     relationTo: 'grupos',
+        //     hasMany: true,
+        // },
         {
             name: 'contexto',
             type: 'relationship',

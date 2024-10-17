@@ -1,11 +1,7 @@
-import create from "payload/dist/collections/operations/create";
-
 export const unirme = async (req, res, next) => {
     try {
-
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
         const { comisionid } = req.params;
-        const { grupoId } = req.body;
         const userId = req.user?.id; // Obteniendo el ID del usuario actual
         const comision = await req.payload.findByID({
             collection: 'comisiones',
@@ -14,25 +10,33 @@ export const unirme = async (req, res, next) => {
         });
 
         // TODO CHEQUEAR SI EL USUARIO YA ESTA EN OTRA COMISION DE ESTE CONTEXTO
+        const yaEstaEnOtraComision = await req.payload.find({
+            collection: 'comisiones',
+            where: {
+                and: [
+                    {
+                        contexto: { equals: comision.contexto }
+                    },
+                    {
+                        integrantes: { in: [userId] }
+                    },
+                ]
+            },
+        });
 
-        if (grupoId) {
-            // Quiere unir a su grupo
-            const grupo = await req.payload.findByID({
-                collection: 'grupos',
-                id: grupoId,
-            });
-            if (!grupo) return res.status(404).json({ error: 'Grupo no encontrado' });
-            comision.grupos.push(grupo.id);
+        if(yaEstaEnOtraComision.totalDocs > 0){
+            return res.status(208).json({error: `Para unirte tenés que dejar la comisión ${yaEstaEnOtraComision.docs[0].nombre}`});
+        }
+        
+        const esAlumno = req.user.rol === 'alumno';
+        if (esAlumno) {
+            // Si es alumno, se le agrega a los integrantes
+            if(!comision.integrantes){ comision.integrantes = [] }
+            comision.integrantes.push(userId);
         } else {
-            // Se quiere unir individualmente
-            const esAlumno = req.user.rol === 'alumno';
-            if (esAlumno) {
-                // Si es alumno, se le agrega a los integrantes
-                comision.integrantes.push(userId);
-            } else {
-                // Si es docente, se le agrega a los docentes
-                comision.docentes.push(userId);
-            }
+            // Si es docente, se le agrega a los docentes
+            if(!comision.docentes){ comision.docentes = [] }
+            comision.docentes.push(userId);
         }
 
         const update = await req.payload.update({
@@ -51,7 +55,6 @@ export const abandonar = async (req, res, next) => {
     try {
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
         const { comisionid } = req.params;
-        const { grupoId } = req.body;
         const userId = req.user?.id; // Obteniendo el ID del usuario actual
         const comision = await req.payload.findByID({
             collection: 'comisiones',
@@ -59,26 +62,16 @@ export const abandonar = async (req, res, next) => {
             depth: 0,
         });
 
-        if (grupoId) {
-            // Quiere abandonar un grupo
-            const grupo = await req.payload.findByID({
-                collection: 'grupos',
-                id: grupoId,
-            });
-            if (!grupo) return res.status(404).json({ error: 'Grupo no encontrado' });
-            comision.grupos = comision.grupos.filter(g => g !== grupo.id);
+        // Se quiere ir individualmente
+        const esAlumno = req.user.rol === 'alumno';
+        if (esAlumno) {
+            // Si es alumno, se lo saca de integrantes
+            comision.integrantes = comision.integrantes.filter(i => i !== userId);
         } else {
-            // Se quiere ir individualmente
-            const esAlumno = req.user.rol === 'alumno';
-            if (esAlumno) {
-                // Si es alumno, se lo saca de integrantes
-                comision.integrantes = comision.integrantes.filter(i => i !== userId);
-            } else {
-                // Si es docente, se lo saca de docentes
-                comision.docentes = comision.docentes.filter(d => d !== userId);
-            }
+            // Si es docente, se lo saca de docentes
+            comision.docentes = comision.docentes.filter(d => d !== userId);
         }
-
+        
         const update = await req.payload.update({
             collection: 'comisiones',
             id: comisionid,
@@ -105,6 +98,10 @@ export const feed = async (req, res, next) => {
 
         if (!comision) return res.status(404).json({ error: 'Comisión no encontrada' });
 
+        if(comision.integrantes.length === 0){
+            return res.status(200).json({docs: []}); // Si no hay integrantes, devolver un array vacío
+        }
+
         /*
         Cosas que vamos a buscar en este feed:
 
@@ -122,6 +119,7 @@ export const feed = async (req, res, next) => {
         * De grupos cuyos integrantes estén en la comision 
         
         */
+        const docentesYAlumnos = [...comision?.integrantes, ...comision?.docentes]
 
         let query = {
             and:[
@@ -144,10 +142,10 @@ export const feed = async (req, res, next) => {
                 {
                     or: [
                         {
-                            autor: { in: comision.integrantes } // escrito por alguien de la comisión
+                            autor: { in: docentesYAlumnos } // escrito por alguien de la comisión
                         },
                         {
-                            'grupo.integrantes': { in: comision.integrantes } // o publicado por un grupo de alguien que esta en la comision
+                            'grupo.integrantes': { in: comision?.integrantes } // o publicado por un grupo de alguien que esta en la comision
                         },
                     ]
                 }
