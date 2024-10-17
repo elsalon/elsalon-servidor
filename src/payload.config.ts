@@ -16,11 +16,12 @@ import Grupos from './collections/Grupos';
 import Entradas from './collections/Entradas';
 import Comentarios from './collections/Comentarios'
 import Salones from './collections/Salones';
+import Comisiones from './collections/Comisiones'
 import Imagenes from './collections/Imagenes';
 import Archivos from './collections/Archivos';
 import Avatares from './collections/Avatares';
 import Colaboraciones from './collections/Colaboraciones';
-import Apreciaciones from './collections/Apreciaciones'
+import Aprecio from './collections/Aprecio'
 import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
 import Etiquetas from './collections/Etiquetas'
@@ -62,10 +63,11 @@ export default buildConfig({
     Users,
     Grupos,
     Salones,
+    Comisiones,
     Entradas,
     Comentarios,
     Colaboraciones,
-    Apreciaciones,
+    Aprecio,
     Imagenes,
     Archivos,
     Avatares,

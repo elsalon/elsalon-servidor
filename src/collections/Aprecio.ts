@@ -1,8 +1,8 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrAutor, afterCreateAssignAutorToUser, AddNotificationAprecio } from '../helper'
 
-const Apreciaciones: CollectionConfig = {
-    slug: 'apreciaciones',
+const Aprecio: CollectionConfig = {
+    slug: 'aprecio',
     admin: {
         group: 'Interacciones',
     },
@@ -32,7 +32,7 @@ const Apreciaciones: CollectionConfig = {
             path: '/:entradaid', 
             method: 'get',
             handler: async (req, res, next) => {
-                // console.log('GET /apreciaciones/:entradaid');
+                // console.log('GET /aprecio/:entradaid');
                 if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
                 try {
@@ -40,7 +40,7 @@ const Apreciaciones: CollectionConfig = {
                   const userId = req.user?.id; // Obteniendo el ID del usuario actual
                   // Obtener si el usuario actual ha apreciado esta entrada
                   const hasApreciado = await req.payload.find({
-                    collection: 'apreciaciones',
+                    collection: 'aprecio',
                     where: {
                       entrada: { equals: entradaid },
                       autor: { equals: userId },
@@ -50,7 +50,7 @@ const Apreciaciones: CollectionConfig = {
                   
                   // Obtener los últimos 5 aprecios para esta entrada
                   const aprecios = await req.payload.find({
-                    collection: 'apreciaciones',
+                    collection: 'aprecio',
                     where: {
                       entrada: { equals: entradaid },
                     },
@@ -72,4 +72,4 @@ const Apreciaciones: CollectionConfig = {
     ]
 }
 
-export default Apreciaciones
+export default Aprecio
