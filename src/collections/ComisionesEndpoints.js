@@ -98,9 +98,6 @@ export const feed = async (req, res, next) => {
 
         if (!comision) return res.status(404).json({ error: 'Comisión no encontrada' });
 
-        if(comision.integrantes.length === 0){
-            return res.status(200).json({docs: []}); // Si no hay integrantes, devolver un array vacío
-        }
 
         /*
         Cosas que vamos a buscar en este feed:
