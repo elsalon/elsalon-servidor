@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { SlugField } from '@nouance/payload-better-fields-plugin'
+import { SlugField } from '../SlugField'
 import { simpleEmailTemplate } from '../emailTemplates'
 
 const Users: CollectionConfig = {
@@ -107,18 +107,7 @@ const Users: CollectionConfig = {
       name: 'bio',
       type: 'textarea',
     },
-    ...SlugField(
-      {
-        name: 'slug',
-        admin: {
-          position: 'sidebar',
-        },
-      },
-      {
-          appendOnDuplication : true,
-          useFields: ['nombre'],
-      },
-    ),
+    SlugField(),
     {
       name: 'isAdmin',
       type: 'checkbox',

@@ -1,4 +1,4 @@
-import { SlugField } from '@nouance/payload-better-fields-plugin'
+import { SlugField } from '../SlugField'
 import { CollectionConfig } from 'payload/types'
 
 const Etiquetas: CollectionConfig = {
@@ -16,15 +16,7 @@ const Etiquetas: CollectionConfig = {
       label: 'Nombre',
       type: 'text',
     },
-    ...SlugField(
-      {
-        name: 'slug',
-      },
-      {
-          appendOnDuplication : true,
-          useFields: ['nombre'],
-      },
-    ),
+    SlugField(),
   ]
 }
 

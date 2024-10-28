@@ -1,4 +1,4 @@
-import { SlugField } from '@nouance/payload-better-fields-plugin'
+import { SlugField } from '../SlugField'
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrDocente } from '../helper'
 import { unirme, abandonar, feed } from './ComisionesEndpoints'
@@ -41,18 +41,7 @@ const Comisiones: CollectionConfig = {
             type: 'relationship',
             relationTo: 'salones',
         },
-        ...SlugField(
-            {
-                name: 'slug',
-                admin: {
-                    position: 'sidebar',
-                },
-            },
-            {
-                appendOnDuplication: true,
-                useFields: ['nombre'],
-            },
-        ),
+        SlugField(),
     ],
     endpoints: [
         {

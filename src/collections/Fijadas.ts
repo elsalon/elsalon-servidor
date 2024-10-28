@@ -1,6 +1,4 @@
-import { SlugField } from '@nouance/payload-better-fields-plugin'
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrIntegrante } from '../helper'
 
 const Fijadas: CollectionConfig = {
     slug: 'fijadas',

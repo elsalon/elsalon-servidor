@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types';
-import { ColourPickerField } from '@nouance/payload-better-fields-plugin';
-import { SlugField } from '@nouance/payload-better-fields-plugin'
+import { colorPickerField } from '@innovixx/payload-color-picker-field';
+import { SlugField } from '../SlugField'
 import { isAdmin, isAdminOrDocente } from '../helper'
 import Grupos from './Grupos';
 
@@ -28,11 +28,10 @@ const Salones: CollectionConfig = {
             name: 'siglas',
             type: 'text',
         },
-        ...ColourPickerField(
-            {
-              name: 'color',
-            },
-        ),
+        colorPickerField({
+            name: 'color',
+            label: 'Color',
+        }),
         {
             name: 'aulas',
             type: 'text',
@@ -68,19 +67,7 @@ const Salones: CollectionConfig = {
                 }
             ]
         },
-        
-        ...SlugField(
-            {
-              name: 'slug',
-              admin: {
-                position: 'sidebar',
-              },
-            },
-            {
-                appendOnDuplication : true,
-                useFields: ['nombre'],
-            },
-        ),
+        SlugField(),
         {
             name: 'orden',
             type: 'number',
