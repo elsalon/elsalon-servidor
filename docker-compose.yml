@@ -6,19 +6,16 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - .:/home/node/app
+      - .:/home/node/app  # Only in dev, will override for production
       - node_modules:/home/node/app/node_modules
     working_dir: /home/node/app/
-    command: sh -c "yarn install && yarn dev"
     depends_on:
       - mongo
     env_file:
-      - .env
+      - .env  # Override this in production as needed
 
   mongo:
     image: mongo:latest
-    ports:
-      - '27017:27017'
     command:
       - --storageEngine=wiredTiger
     volumes:
@@ -29,3 +26,10 @@ services:
 volumes:
   data:
   node_modules:
+
+
+# For development run
+# docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# For production run
+# docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d

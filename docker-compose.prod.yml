@@ -1,0 +1,9 @@
+services:
+  payload:
+    command: sh -c "yarn install && yarn build && yarn serve"  # Production build
+    volumes: []  # Avoid code and node_modules mounting
+    user: node  # Run as non-root for better security
+
+  mongo:
+    # Optionally, remove port exposure for MongoDB
+    ports: []

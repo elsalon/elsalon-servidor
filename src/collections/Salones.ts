@@ -1,8 +1,8 @@
 import { CollectionConfig } from 'payload/types';
 import { colorPickerField } from '@innovixx/payload-color-picker-field';
-import { SlugField } from '../SlugField'
-import { isAdmin, isAdminOrDocente } from '../helper'
-import Grupos from './Grupos';
+import { SlugField } from '../SlugField';
+import { isAdmin, isAdminOrDocente } from '../helper';
+import { Where } from 'payload/types';
 
 const Salones: CollectionConfig = {
     slug: 'salones',
@@ -71,7 +71,7 @@ const Salones: CollectionConfig = {
         {
             name: 'orden',
             type: 'number',
-            admin:{
+            admin: {
                 position: 'sidebar',
             }
         }
@@ -79,27 +79,26 @@ const Salones: CollectionConfig = {
 
     endpoints: [
         {
-            path: '/feed', 
-            method: 'get',
+            path: '/feed',
+            method: 'get' as const,
             handler: async (req, res, next) => {
-                try{
-                    if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
+                try {
+                    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
-                    // Dashboard principal construido por los siguientes criterios:
-                    //   * Entradas del usuario actual
-                    //   * Entradas de un salon con el que el usuario colabora
-                    //   * Entradas de usuarios con el que el usuario colabora
-                    //   * Entradas de grupos con el que el usuario colabora
-                    //   * Entradas marcadas como destacadas
-                    //   * TODO Agregar entradas de grupos en los que el usuario es miembro
-                    
-                    const page = req.query.page || 1;
-                    const createdGreaterThan = req.query.createdGreaterThan || null;
+                    // Safely parse query parameters
+                    const page = typeof req.query.page === 'string' 
+                        ? parseInt(req.query.page, 10) 
+                        : 1;
+
+                    const createdGreaterThan = typeof req.query.createdGreaterThan === 'string'
+                        ? req.query.createdGreaterThan
+                        : null;
+
                     const user = req.user;
 
-                    let idsMateriasColabora = [];
-                    let idsUsuariosColabora = [];
-                    let idsGruposColabora = [];
+                    let idsMateriasColabora: string[] = [];
+                    let idsUsuariosColabora: string[] = [];
+                    let idsGruposColabora: string[] = [];
 
                     const colaboraciones = await req.payload.find({
                         collection: 'colaboraciones',
@@ -109,22 +108,21 @@ const Salones: CollectionConfig = {
                     });
 
                     colaboraciones.docs.forEach((colaboracion) => {
-                        switch(colaboracion.tipo){
+                        switch (colaboracion.tipo) {
                             case 'salon':
-                                idsMateriasColabora.push(colaboracion.idColaborador);
+                                idsMateriasColabora.push(colaboracion.idColaborador as string);
                                 break;
                             case 'usuario':
-                                idsUsuariosColabora.push(colaboracion.idColaborador);
+                                idsUsuariosColabora.push(colaboracion.idColaborador as string);
                                 break;
                             case 'grupo':
-                                idsGruposColabora.push(colaboracion.idColaborador);
+                                idsGruposColabora.push(colaboracion.idColaborador as string);
                                 break;
                         }
                     });
 
-                    // Parametros principales de busqueda
-                    let query = {
-                        or:[
+                    let query: Where = {
+                        or: [
                             {
                                 autor: { equals: user.id }
                             },
@@ -141,26 +139,31 @@ const Salones: CollectionConfig = {
                                 destacada: { equals: true }
                             }
                         ]
-                    }
-                    
-                    if(createdGreaterThan){
-                        // Agrego la fecha de creación como criterio de busqueda
+                    };
+
+                    if (createdGreaterThan) {
+                        // Validate the date string before creating Date object
+                        const dateValue = new Date(createdGreaterThan);
+                        if (isNaN(dateValue.getTime())) {
+                            return res.status(400).json({ error: 'Invalid date format for createdGreaterThan' });
+                        }
+
                         query = {
                             and: [
                                 query,
                                 {
-                                    createdAt: { greater_than: new Date(createdGreaterThan) }
+                                    createdAt: { greater_than: dateValue }
                                 }
                             ]
-                        }
+                        };
                     }
 
                     const feed = await req.payload.find({
                         collection: 'entradas',
                         where: query,
-                        sort: "-createdAt",  // Ordenar por fecha de creación, de más reciente a más antigua
+                        sort: "-createdAt",
                         limit: 5,
-                        page: parseInt(page),
+                        page: page,
                     });
 
                     res.status(200).json(feed);
@@ -171,6 +174,6 @@ const Salones: CollectionConfig = {
             }
         }
     ]
-}
+};
 
-export default Salones
+export default Salones;

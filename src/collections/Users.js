@@ -1,8 +1,7 @@
-import { CollectionConfig } from 'payload/types'
 import { SlugField } from '../SlugField'
 import { simpleEmailTemplate } from '../emailTemplates'
 
-const Users: CollectionConfig = {
+const Users = {
   slug: 'users',
   auth: {
     // 1 mes
@@ -123,12 +122,6 @@ const Users: CollectionConfig = {
         }
       }
     },
-    // {
-    //   name: 'grupos',
-    //   type: 'relationship',
-    //   relationTo: 'grupos',
-    //   hasMany: true,
-    // }
   ],
 }
 
