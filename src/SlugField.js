@@ -1,3 +1,5 @@
+import update from 'payload/dist/collections/operations/update';
+
 var slugify = require('slugify')
 
 /**
@@ -12,15 +14,17 @@ var slugify = require('slugify')
 export const SlugField = ({
     sourceField = 'nombre',
     slugField = 'slug',
-    slugify: slugifyOptions = {lower: true, strict: true, replacement: ''},
+    slugify: slugifyOptions = {lower: true, strict: true, replacement: '-'},
     admin = {}
 } = {}) => ({
     type: "text",
     name: slugField,
     admin: {
         position: "sidebar",
-        readOnly: true,
         ...admin
+    },
+    access: {
+        update: ({ req }) => {return req.user.isAdmin}
     },
     hooks: {
         beforeChange: [
@@ -28,8 +32,9 @@ export const SlugField = ({
                 if (!data[sourceField]) return data[slugField];
 
                 const baseSlug = slugify(data[sourceField], {
-                    lower: true,
-                    strict: true,
+                    replacement: '-',    // replace spaces with dashes
+                    lower: true,         // convert to lowercase
+                    strict: true,         // remove special characters
                     ...slugifyOptions
                 });
 
