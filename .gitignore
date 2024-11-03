@@ -7,3 +7,5 @@ node_modules
 /src/avatares
 /src/imagenes
 /src/archivos
+/src/migracion/logs
+/temp

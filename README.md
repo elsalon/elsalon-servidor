@@ -18,6 +18,13 @@ That's it! Changes made in `./src` will be reflected in your app.
 
 ### Docker
 
+*Para correr en desarrollo*
+`docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d`
+
+*Para correr en producción*
+`docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d`
+
+
 Alternatively, you can use [Docker](https://www.docker.com) to spin up this project locally. To do so, follow these steps:
 
 1. Follow [steps 1 and 2 from above](#development), the docker-compose file will automatically use the `.env` file in your project root

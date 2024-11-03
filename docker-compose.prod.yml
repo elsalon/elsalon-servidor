@@ -3,7 +3,9 @@ services:
     command: sh -c "yarn install && yarn build && yarn serve"  # Production build
     volumes: []  # Avoid code and node_modules mounting
     user: node  # Run as non-root for better security
+    restart: unless-stopped
 
   mongo:
     # Optionally, remove port exposure for MongoDB
     ports: []
+    restart: unless-stopped

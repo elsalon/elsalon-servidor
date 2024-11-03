@@ -1,6 +1,24 @@
 import { SlugField } from '../SlugField'
 import { simpleEmailTemplate } from '../emailTemplates'
 
+const mailVerify = {
+  generateEmailSubject: ({ req, user }) => {
+    return `Verificá tu cuenta de El Salón`;
+  },
+  generateEmailHTML: ({ req, token, user }) => {
+    // Use the token provided to allow your user to verify their account
+    const backendUrl = `${req.protocol}://${req.get('host')}`; // Dynamically obtain the backend URL
+    const frontUrl = req.headers.origin;
+
+    return simpleEmailTemplate({
+      backendUrl: backendUrl,
+      title: `Hola ${user.nombre}, verifica tu cuenta`,
+      content: `<p>Para verificar tu cuenta de El Salón, clickeá en este link</p>
+      <p><a target="_blank" href="${frontUrl}/verificar?t=${token}">Verificar cuenta</a></p>`
+    });
+  },
+}
+
 const Users = {
   slug: 'users',
   auth: {
@@ -8,24 +26,8 @@ const Users = {
     tokenExpiration: 1000 * 60 * 60 * 24 * 30,
     maxLoginAttempts: 7,
     lockTime: 1000 * 60, // 1 minute
-    verify: {
-      generateEmailSubject: ({ req, user }) => {
-        return `Verificá tu cuenta de El Salón`;
-      },
-      generateEmailHTML: ({ req, token, user }) => {
-        // Use the token provided to allow your user to verify their account
-        const backendUrl = `${req.protocol}://${req.get('host')}`; // Dynamically obtain the backend URL
-        const frontUrl = req.headers.origin;
-
-        return simpleEmailTemplate({
-          backendUrl: backendUrl,
-          title: `Hola ${user.nombre}, verifica tu cuenta`,
-          content: `<p>Para verificar tu cuenta de El Salón, clickeá en este link</p>
-          <p><a target="_blank" href="${frontUrl}/verificar?t=${token}">Verificar cuenta</a></p>`
-      });
-      },
-    },
-    forgotPassword:{
+    verify: process.env.DISABLE_EMAIL_VERIFICATION ? false : mailVerify,
+    forgotPassword: {
       generateEmailSubject: ({ req, user }) => {
         return `Restablacé tu contraseña de El Salón`;
       },
@@ -34,9 +36,9 @@ const Users = {
         const frontUrl = req.headers.origin;
 
         return simpleEmailTemplate({
-            backendUrl: backendUrl,
-            title: `Hola ${user.nombre}, restablacé tu contraseña`,
-            content: `<p>Para restablecer tu contraseña de El Salón, clickeá en este link</p>
+          backendUrl: backendUrl,
+          title: `Hola ${user.nombre}, restablacé tu contraseña`,
+          content: `<p>Para restablecer tu contraseña de El Salón, clickeá en este link</p>
             <p><a target="_blank" href="${frontUrl}/recuperar?t=${token}">Restablecer contraseña</a></p>`
         });
       },
@@ -66,6 +68,11 @@ const Users = {
       return false
     },
     delete: ({ req }) => {
+      if (req.user) {
+        return {
+          user: req.user.isAdmin,
+        }
+      }
       return false
     },
   },
@@ -76,7 +83,7 @@ const Users = {
   fields: [
     // Email added by default
     // Add more fields as needed
-    
+
     {
       name: 'rol',
       type: 'select',
@@ -92,7 +99,7 @@ const Users = {
       ],
       defaultValue: 'alumno',
     },
-    
+
     {
       name: 'nombre',
       type: 'text',
@@ -113,7 +120,7 @@ const Users = {
       admin: {
         position: 'sidebar',
       },
-      access:{
+      access: {
         update: ({ req }) => {
           if (req.user) {
             return req.user.isAdmin
