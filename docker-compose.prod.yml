@@ -1,8 +1,8 @@
 services:
   payload:
     command: sh -c "yarn install && yarn build && yarn serve"  # Production build
-    volumes: []  # Avoid code and node_modules mounting
-    user: node  # Run as non-root for better security
+    volumes:
+      - node_modules:/home/node/app/node_modules
     restart: unless-stopped
 
   mongo:
