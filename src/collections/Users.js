@@ -113,6 +113,10 @@ const Users = {
       name: 'bio',
       type: 'textarea',
     },
+    {
+      name: 'link',
+      type: 'text',
+    },
     SlugField(),
     {
       name: 'isAdmin',
