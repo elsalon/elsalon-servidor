@@ -98,6 +98,9 @@ export const feed = async (req, res, next) => {
 
         if (!comision) return res.status(404).json({ error: 'Comisión no encontrada' });
 
+        let integrantes = comision.integrantes || [];
+        let docentes = comision.docentes || [];
+
 
         /*
         Cosas que vamos a buscar en este feed:
@@ -116,7 +119,7 @@ export const feed = async (req, res, next) => {
         * De grupos cuyos integrantes estén en la comision 
         
         */
-        const docentesYAlumnos = [...comision?.integrantes, ...comision?.docentes]
+        const docentesYAlumnos = [...integrantes, ...docentes]
 
         let query = {
             and:[
@@ -142,7 +145,7 @@ export const feed = async (req, res, next) => {
                             autor: { in: docentesYAlumnos } // escrito por alguien de la comisión
                         },
                         {
-                            'grupo.integrantes': { in: comision?.integrantes } // o publicado por un grupo de alguien que esta en la comision
+                            'grupo.integrantes': { in: integrantes } // o publicado por un grupo de alguien que esta en la comision
                         },
                     ]
                 }
