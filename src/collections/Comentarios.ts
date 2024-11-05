@@ -29,6 +29,7 @@ const Comentarios: CollectionConfig = {
             name: 'entrada',
             type: 'relationship',
             relationTo: 'entradas',
+            maxDepth: 0,
         },
         {
             name: 'autor',
