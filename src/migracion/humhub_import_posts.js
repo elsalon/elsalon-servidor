@@ -59,7 +59,16 @@ Para saber si una entrada va al perfil del usuario, hay que tambien guardar los 
             "total": 0
         },
         "topics": [],
-        "files": []
+        "files":[
+                    {
+                        "id": 80462,
+                        "guid": "5b3a14ab-7232-4072-920e-1e94808d4796",
+                        "mime_type": "image/png",
+                        "size": "1334182",
+                        "file_name": "image.png",
+                        "url": "http://elsalon.org/file/file/download?guid=5b3a14ab-7232-4072-920e-1e94808d4796&hash_sha1=35e42b8c"
+                    }
+                ]
     }
 },
 */
@@ -74,7 +83,8 @@ import path from 'path';
 import fs from 'fs'; // Import the standard fs module
 import fsPromises from 'fs/promises'; // Import fs/promises for async operations
 
-
+var showdown  = require('showdown'),
+    converter = new showdown.Converter();
 
 const args = process.argv;
 const hardLimit = args[2] || -1;
@@ -216,7 +226,7 @@ const ImportPost = async (post) => {
     }
     // Verifico si el contentcontainer_id esta en la lista de containerToSala
     const container_id = post.content.metadata.contentcontainer_id;
-    const sala = containerToSala.find(sala => sala.content_ids.includes(container_id));
+    const sala = containerToSala.find(s => s.content_ids.includes(container_id));
     // Si la sala no existe no pasa nada, lo importo igual y queda asignado a bitácora del usuario
 
     // busco usuario importado que coincida con el mail
@@ -242,23 +252,39 @@ const ImportPost = async (post) => {
         console.log("Post con archivos", post.id);
         for(const file of post.content.files){
             console.log("Archivo", file)
+            const { id, file_name, url } = file;
+            const tempFilePath = path.resolve("temp", file_name);
+
+            await DownloadFileSalon(`/file/download/${id}`, tempFilePath);
+            console.log("File downloaded")
+
             if(file.mime_type?.includes("image") ){
                 // GUARDO Y SUBO LA IMAGEN
-                const { file_name, url } = file;
-                const imageResponse = await UploadImageFromUrl(url, file_name)
-                if (imageResponse.success) {
+                const res = await payload.create({
+                    collection: 'imagenes',
+                    filePath: tempFilePath,
+                    data: {
+                        focalX: 0.5,
+                        focalY: 0.5,
+                    }
+                });
+                if (res) {
                     console.log("Imagen subida correctamente")
-                    imagenes.push(imageResponse.data.id);
+                    imagenes.push(res.id);
                 }
             }else{
                 // GUARDO Y SUBO EL ARCHIVO
-                const { file_name, url } = file;
-                const fileResponse = await UploadFileFromUrl(url, file_name)
-                if (fileResponse.success) {
-                    console.log("Archivo subido correctamente")
-                    archivos.push(fileResponse.data.id);
+                const res = await payload.create({
+                    collection: 'archivos',
+                    filePath: tempFilePath,
+                });
+                if (res) {
+                    console.log("Archivo subido correctamente", res)
+                    archivos.push(res.id);
                 }
             }
+            // Clean up temporary file
+            await fsPromises.unlink(tempFilePath)
         }
     } // finish image/files upload
 
@@ -295,6 +321,19 @@ const ImportPost = async (post) => {
 }
 
 
+
+async function DownloadFileSalon(url, filePath) {
+    return new Promise((resolve, reject) => {
+      fetchHumhub.get(url, { responseType: 'stream' })
+        .then(response => {
+          const stream = response.data.pipe(fs.createWriteStream(filePath));
+          stream.on('finish', resolve);
+          stream.on('error', reject);
+        })
+        .catch(reject);
+    });
+  }
+
 // const UploadImage = async (file) => {
 //     /*
 //     File object example
@@ -312,117 +351,117 @@ const ImportPost = async (post) => {
 
 
 
-async function UploadImageFromUrl(imageUrl, filename = 'image-from-url.jpg') {  
-    try {
-        const folder = "temp";
-        const tempFilePath = path.resolve(folder, filename);
-        await DownloadFile(imageUrl, tempFilePath);
+// async function UploadImageFromUrl(imageUrl, filename = 'image-from-url.jpg') {  
+//     try {
+//         const folder = "temp";
+//         const tempFilePath = path.resolve(folder, filename);
+//         await DownloadFile(imageUrl, tempFilePath);
 
-        // Upload to PayloadCMS
-        const uploadResponse = await payload.create({
-            collection: 'avatares',
-            filePath: tempFilePath,
-            data: {
-                focalX: 0.5,
-                focalY: 0.5,
-            }
-        });
-        // Clean up temporary file
-        await fsPromises.unlink(tempFilePath)
+//         // Upload to PayloadCMS
+//         const uploadResponse = await payload.create({
+//             collection: 'avatares',
+//             filePath: tempFilePath,
+//             data: {
+//                 focalX: 0.5,
+//                 focalY: 0.5,
+//             }
+//         });
+//         // Clean up temporary file
+//         await fsPromises.unlink(tempFilePath)
         
-        return {
-            success: true,
-            data: uploadResponse
-        };
-    } catch (error) {
-        console.error('Error uploading image');
+//         return {
+//             success: true,
+//             data: uploadResponse
+//         };
+//     } catch (error) {
+//         console.error('Error uploading image');
 
-        // Clean up if the file exists
-        try {
-            await fsPromises.unlink(tempFilePath);
-        } catch (cleanupError) {
-            // Ignore cleanup errors and log them if necessary
-            console.error('Cleanup error');
-        }
+//         // Clean up if the file exists
+//         try {
+//             await fsPromises.unlink(tempFilePath);
+//         } catch (cleanupError) {
+//             // Ignore cleanup errors and log them if necessary
+//             console.error('Cleanup error');
+//         }
 
-        return {
-            success: false,
-            error: error.message
-        };
-    }
-}
+//         return {
+//             success: false,
+//             error: error.message
+//         };
+//     }
+// }
 
-async function UploadFileFromUrl(fileUrl, filename) {
-    try {
-        const folder = "temp";
-        const tempFilePath = path.resolve(folder, filename);
-        await DownloadFile(fileUrl, tempFilePath);
+// async function UploadFileFromUrl(fileUrl, filename) {
+//     try {
+//         const folder = "temp";
+//         const tempFilePath = path.resolve(folder, filename);
+//         await DownloadFile(fileUrl, tempFilePath);
 
-        // Upload to PayloadCMS
-        const uploadResponse = await payload.create({
-            collection: 'archivos',
-            filePath: tempFilePath,
-        });
-        // Clean up temporary file
-        await fsPromises.unlink(tempFilePath)
+//         // Upload to PayloadCMS
+//         const uploadResponse = await payload.create({
+//             collection: 'archivos',
+//             filePath: tempFilePath,
+//         });
+//         // Clean up temporary file
+//         await fsPromises.unlink(tempFilePath)
         
-        return {
-            success: true,
-            data: uploadResponse
-        };
-    } catch (error) {
-        console.error('Error uploading file');
+//         return {
+//             success: true,
+//             data: uploadResponse
+//         };
+//     } catch (error) {
+//         console.error('Error uploading file');
 
-        // Clean up if the file exists
-        try {
-            await fsPromises.unlink(tempFilePath);
-        } catch (cleanupError) {
-            // Ignore cleanup errors and log them if necessary
-            console.error('Cleanup error');
-        }
+//         // Clean up if the file exists
+//         try {
+//             await fsPromises.unlink(tempFilePath);
+//         } catch (cleanupError) {
+//             // Ignore cleanup errors and log them if necessary
+//             console.error('Cleanup error');
+//         }
 
-        return {
-            success: false,
-            error: error.message
-        };
-    }
-}
+//         return {
+//             success: false,
+//             error: error.message
+//         };
+//     }
+// }
 
-async function DownloadFile(url, destinationPath) {
-    try {
-        // Ensure the destination directory exists
-        const directory = path.dirname(destinationPath);
-        await fsPromises.mkdir(directory, { recursive: true });
+// async function DownloadFile(url, destinationPath) {
+//     try {
+//         // Ensure the destination directory exists
+//         const directory = path.dirname(destinationPath);
+//         await fsPromises.mkdir(directory, { recursive: true });
 
-        // Make the GET request with axios
-        const response = await axios({
-            method: 'get',
-            url: url,
-            responseType: 'stream',
-        });
+//         // Make the GET request with axios
+//         const response = await axios({
+//             method: 'get',
+//             url: url,
+//             responseType: 'stream',
+//         });
 
-        // Create a writable stream to the destination file
-        const writer = fs.createWriteStream(destinationPath);
+//         // Create a writable stream to the destination file
+//         const writer = fs.createWriteStream(destinationPath);
 
-        // Pipe the response data to the file
-        response.data.pipe(writer);
+//         // Pipe the response data to the file
+//         response.data.pipe(writer);
 
-        // Return a promise that resolves when the write stream finishes
-        return new Promise((resolve, reject) => {
-            writer.on('finish', resolve);
-            writer.on('error', reject);
-        });
-    } catch (error) {
-        console.error('Error downloading file:', error);
-        throw error; // Re-throw the error for further handling if needed
-    }
-}
+//         // Return a promise that resolves when the write stream finishes
+//         return new Promise((resolve, reject) => {
+//             writer.on('finish', resolve);
+//             writer.on('error', reject);
+//         });
+//     } catch (error) {
+//         console.error('Error downloading file:', error);
+//         throw error; // Re-throw the error for further handling if needed
+//     }
+// }
 
 
 
-// init();
+init();
 
-TestDownload()
+// TestDownload()
 
 async function TestDownload(){
     // const url = "http://elsalon.org/file/file/download?guid=d034ad76-5efd-4632-baf2-88f4cb12f75a&hash_sha1=4580fdb7"

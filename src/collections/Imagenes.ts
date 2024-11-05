@@ -8,7 +8,7 @@ const Imagenes: CollectionConfig = {
     hooks:{
         beforeChange: [
             async ({ operation, data, req }) => {
-                if(operation === 'create'){
+                if(operation === 'create' && req.user){
                     // console.log('New entry created', data);
                     data.uploader = req.user.id; // El autor es el usuario actual
                     return data;

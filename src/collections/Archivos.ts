@@ -5,7 +5,17 @@ const Archivos: CollectionConfig = {
     access: {
         read: () => true,
     },
-    
+    hooks:{
+        beforeChange: [
+            async ({ operation, data, req }) => {
+                if(operation === 'create' && req.user){
+                    // console.log('New entry created', data);
+                    data.uploader = req.user.id; // El autor es el usuario actual
+                    return data;
+                }
+            }
+        ]
+    },
     admin: {
         group: 'Medios',
     },
@@ -26,7 +36,13 @@ const Archivos: CollectionConfig = {
             'application/octet-stream',
         ],
     },
-    fields: []
+    fields: [
+        {
+            name: 'uploader',
+            type: 'relationship',
+            relationTo: 'users',
+        }
+    ]
 }
 
 export default Archivos;
