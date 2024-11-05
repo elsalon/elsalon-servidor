@@ -12,7 +12,7 @@ const Entradas: CollectionConfig = {
             ValidarEntradaVacia,
             CrearExtracto,
             async ({ operation, data, req }) => {
-                if(operation === 'create'){
+                if(operation === 'create' && req.user){
                     data.autor = req.user.id; // El autor es el usuario actual
                     return data;
                 }

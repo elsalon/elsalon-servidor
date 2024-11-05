@@ -14,6 +14,54 @@ Entonces tenemos que buscar si ese contentcontainer_id esta en la lista de conte
 
 Para saber si una entrada va al perfil del usuario, hay que tambien guardar los contentcontainer_id de cada usuario en user.account.contentcontainer_id
 
+
+/// ejemplo de objeto post
+ {
+    "id": 50994,
+    "message": ".",
+    "content": {
+        "id": 418237,
+        "metadata": {
+            "id": 418237,
+            "guid": "a08b2527-80ed-4a39-bf90-597275e5651e",
+            "object_model": "humhub\\modules\\post\\models\\Post",
+            "object_id": 50994,
+            "visibility": 1,
+            "state": 1,
+            "archived": false,
+            "hidden": false,
+            "pinned": false,
+            "locked_comments": false,
+            "created_by": {
+                "id": 27,
+                "guid": "641d17d0-cc04-40a6-b4f0-31250ce861df",
+                "display_name": "Gonzalo Moiguer",
+                "url": "http://elsalon.org/u/gonz+moiguer/"
+            },
+            "created_at": "2024-11-04 23:56:00",
+            "updated_by": {
+                "id": 27,
+                "guid": "641d17d0-cc04-40a6-b4f0-31250ce861df",
+                "display_name": "Gonzalo Moiguer",
+                "url": "http://elsalon.org/u/gonz+moiguer/"
+            },
+            "updated_at": "2024-11-04 23:56:00",
+            "scheduled_at": null,
+            "url": "/u/gonz+moiguer/post/post/view?id=50994",
+            "contentcontainer_id": 40,
+            "stream_channel": "default"
+        },
+        "comments": {
+            "total": "0",
+            "latest": []
+        },
+        "likes": {
+            "total": 0
+        },
+        "topics": [],
+        "files": []
+    }
+},
 */
 
 
@@ -117,7 +165,7 @@ const SaveLogs = () => {
     const filename = `humhub_importlogs_posts.json`
     const filePath = `src/migracion/logs/${filename}`;
     console.log(`Guardando ${importedPosts.length} entradas del endpoint ${endpoint} al archivo ${filename}`);
-    fs.writeFile(filePath, JSON.stringify(documents), 'utf8', onWriteFile)
+    fs.writeFile(filePath, JSON.stringify(importedPosts), 'utf8', onWriteFile)
 }
 
 const onWriteFile = (err) => {
@@ -156,13 +204,9 @@ const RetrieveNextPage = async (page) => {
 
 const ImportPost = async (post) => {
     // Primero verifico si el post ya fue importado
-    if (importedPosts.includes(post.id)) {
+    const _imported = importedPosts.find(p => p.hhid == post.id);
+    if(_imported) {
         console.log("Post ya importado", post.id);
-        return;
-    }
-    // Verifico si el usuario que creo el post ya fue importado
-    if (!importedUsers.includes(post.created_by.id)) {
-        console.log("Usuario no importado", post.created_by.id);
         return;
     }
     // Verifico si el post tiene un contentcontainer_id valido
@@ -176,26 +220,27 @@ const ImportPost = async (post) => {
     // Si la sala no existe no pasa nada, lo importo igual y queda asignado a bitácora del usuario
 
     // busco usuario importado que coincida con el mail
-    const autor = await payload.findOne({
-        collection: 'users',
-        where: {
-            email: {
-                equals: post.created_by.email
-            }
-        }
-    });
-    
+    // let autor = await payload.find({
+    //     collection: 'users',
+    //     where: {
+    //         email: {
+    //             equals: post.content.metadata.created_by.email
+    //         }
+    //     }
+    // });
+    let autor = importedUsers.find(u => u.hhid == post.content.metadata.created_by.id);
+
     if(!autor){
-        console.log("No se encontro el autor del post", post.id, post.created_by.display_name, post.created_by.id);
+        console.log("No se encontro el autor del post", post.id, post.content.metadata.created_by.display_name, post.content.metadata.created_by.id);
         return; // no se puede importar el post sin autor
     }
 
     var imagenes = [];
     var archivos = [];
 
-    if(post.files.length > 0){
+    if(post.content.files.length > 0){
         console.log("Post con archivos", post.id);
-        for(file in post.files){
+        for(let file in post.content.files){
             if(file.mime_type?.includes("image") ){
                 // GUARDO Y SUBO LA IMAGEN
                 const { file_name, url } = file;
@@ -218,7 +263,7 @@ const ImportPost = async (post) => {
 
     // TODO Parse markdown y formato especial de imagenes
     let entrada = {
-        autor: autor.id,
+        autor: autor.id, // id es el id de payload al importar
         autoriaGrupal: false,
         contenido: post.message, // TODO
         // extracto: // TODO
@@ -237,7 +282,7 @@ const ImportPost = async (post) => {
         importedPosts.push({
             id: response.id,
             hhid: post.id,
-            hhguid: post.guid,
+            hhguid: post.content.metadata.guid,
         });
         SaveLogs();
         imported++
