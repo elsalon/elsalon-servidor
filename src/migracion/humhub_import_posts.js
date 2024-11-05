@@ -179,11 +179,11 @@ const onWriteFile = (err) => {
 
 const RetrieveNextPage = async (page) => {
     try {
+        console.log(`Downloading endpoint ${endpoint} page: ${page}/${pages}`);
         const response = await fetchHumhub.get(`/${endpoint}?page=${page}`);
         const results = response.data.results;
         const pages = response.data.pages;
         
-        console.log(`Downloading endpoint ${endpoint} page: ${page}/${pages}`);
         
         for (const post of results) {
             if (hardLimit == -1 || imported < hardLimit) { // Check if you should import
@@ -240,7 +240,8 @@ const ImportPost = async (post) => {
 
     if(post.content.files.length > 0){
         console.log("Post con archivos", post.id);
-        for(let file in post.content.files){
+        for(const file of post.content.files){
+            console.log("Archivo", file)
             if(file.mime_type?.includes("image") ){
                 // GUARDO Y SUBO LA IMAGEN
                 const { file_name, url } = file;
@@ -266,11 +267,12 @@ const ImportPost = async (post) => {
         autor: autor.id, // id es el id de payload al importar
         autoriaGrupal: false,
         contenido: post.message, // TODO
-        // extracto: // TODO
+        // extracto: // se
         imagenes: imagenes,
         archivos: archivos,
         // mencionados TODO
         sala: sala ? sala.id : null,
+        publishedAt: new Date(post.content.metadata.created_at).toISOString()
     }
 
     try {
@@ -416,4 +418,24 @@ async function DownloadFile(url, destinationPath) {
     }
 }
 
-init();
+
+
+// init();
+
+TestDownload()
+
+async function TestDownload(){
+    // const url = "http://elsalon.org/file/file/download?guid=d034ad76-5efd-4632-baf2-88f4cb12f75a&hash_sha1=4580fdb7"
+    // const file_name = "test.jpg"
+    // const imageResponse = await UploadImageFromUrl(url, file_name);
+    // console.log("ImageResponse", imageResponse)
+    const response = await fetchHumhub.get('/file/download/80388', {
+        responseType: 'stream'
+    });
+    
+    const folder = "temp";
+    const filename = "test.jpg";
+    const tempFilePath = path.resolve(folder, filename);
+    response.data.pipe(fs.createWriteStream(tempFilePath));
+    console.log("File downloaded")
+}
