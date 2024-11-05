@@ -65,19 +65,66 @@ export const AddNotificationAprecio = async ({
     operation, // name of the operation ie. 'create', 'update'
     }) => {
     if(operation === 'create'){
-        // console.log("***", doc.entrada.autor.nombre); // El autor de la entrada que fue apreciada
+        // console.log("*** notificacion aprecio***", req.body.contenidotipo, req.body.contenidoid);
+        switch(req.body.contenidotipo){
+            case 'entrada':
+                console.log("Crear notificacion aprecio de entrada");
+                NotificacionAprecioEntrada(doc, req);
+                break;
+            case 'comentario':
+                console.log("Crear notificacion aprecio de comentario")
+                NotificacionAprecioComentario(doc, req);
+                break;
+        }
+    }
+}
+
+const NotificacionAprecioEntrada = async (doc, req) => {
+    const entrada = await req.payload.findByID({
+        collection: 'entradas',
+        id: doc.contenidoid,
+    });
+    if(!entrada) return;
+    let destinatarios = [];
+    if(entrada.autoriaGrupal){
+        destinatarios = entrada.integrantes.map(i => i.id);
+    }else{
+        destinatarios.push(entrada.autor.id);
+    }
+    destinatarios.forEach(async (destinatario) => {
         await req.payload.create({
             collection: 'notificaciones',
             data: {
-                autor: doc.entrada.autor.id, // El autor de la entrada que fue apreciada
+                autor: destinatario,  // El autor de la entrada que fue apreciada
                 tipoNotificacion: 'apreciacion',
-                mensaje: `<strong>${req.user.nombre}</strong> apreció tu entrada <strong>${doc.entrada.extracto}</strong>`,
+                mensaje: `<strong>${req.user.nombre}</strong> apreció tu entrada <strong>${entrada.extracto}</strong>`,
                 leida: false,
                 linkType: 'entrada',
-                linkTo: doc.entrada.id,
+                linkTo: entrada.id,
             },
         });
-    }
+    });
+}
+
+const NotificacionAprecioComentario = async (doc, req) => {
+    const comentario = await req.payload.findByID({
+        collection: 'comentarios',
+        id: doc.contenidoid,
+    });
+    if(!comentario) return;
+    let resumen = comentario.contenido.replace(/<[^>]*>?/gm, '').substring(0, 10);
+    // remove html tags
+    await req.payload.create({
+        collection: 'notificaciones',
+        data: {
+            autor: comentario.autor.id,  // El autor de la entrada que fue apreciada
+            tipoNotificacion: 'apreciacion',
+            mensaje: `<strong>${req.user.nombre}</strong> apreció tu comentario ${resumen}...`,
+            leida: false,
+            linkType: 'entrada',
+            linkTo: comentario.entrada.id,
+        },
+    });
 }
 
 export const AddNotificationColaboracion = async ({

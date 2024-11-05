@@ -21,38 +21,36 @@ const Aprecio: CollectionConfig = {
             relationTo: 'users',
         },
         {
-            name: 'entrada',
-            type: 'relationship',
-            relationTo: 'entradas',
-
+            name: 'contenidoid',
+            type: 'text',
         }
     ],
     endpoints: [
         {
-            path: '/:entradaid', 
+            path: '/:contenidoid', 
             method: 'get',
             handler: async (req, res, next) => {
-                // console.log('GET /aprecio/:entradaid');
+                // console.log('GET /aprecio/:contenidoid');
                 if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
                 try {
-                  const { entradaid } = req.params;
+                  const { contenidoid } = req.params;
                   const userId = req.user?.id; // Obteniendo el ID del usuario actual
-                  // Obtener si el usuario actual ha apreciado esta entrada
+                  // Obtener si el usuario actual ha apreciado este contenido
                   const hasApreciado = await req.payload.find({
                     collection: 'aprecio',
                     where: {
-                      entrada: { equals: entradaid },
                       autor: { equals: userId },
+                      contenidoid: { equals: contenidoid },
                     },
                     limit: 1,
                   });
                   
-                  // Obtener los últimos 5 aprecios para esta entrada
+                  // Obtener los últimos 5 aprecios para este contenido
                   const aprecios = await req.payload.find({
                     collection: 'aprecio',
                     where: {
-                      entrada: { equals: entradaid },
+                      contenidoid: { equals: contenidoid },
                     },
                     limit: 5,
                   });
