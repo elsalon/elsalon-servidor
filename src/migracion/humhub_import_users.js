@@ -80,7 +80,7 @@ const RetrieveNextPage = async (page) => {
     }
 };
 
-const SaveDocsToFile = () => {
+const SaveLogs = () => {
     console.log(`Guardando ${documents.length} entradas del endpoint ${endpoint} al archivo ${filename}`);
     fs.writeFile(`src/migracion/logs/${filename}`, JSON.stringify(documents), 'utf8', onWriteFile)
 }
@@ -90,7 +90,7 @@ const onWriteFile = (err) => {
     } else {
       console.log("Archivo guardado correctamente")
     }
-  }
+}
 
 const LoadLogsFile = async () => {
     const filePath = `src/migracion/logs/${filename}`;
@@ -167,9 +167,10 @@ const importUser = async (user) => {
             hhguid: user.guid,
             email: user.email,
             id: response.id,
+            contentcontainer_id: user.account.contentcontainer_id,
         }
         documents.push(logData)
-        SaveDocsToFile();
+        SaveLogs();
 
         imported++
 
@@ -178,8 +179,7 @@ const importUser = async (user) => {
     }
 }
 
-async function UploadImageFromUrl(imageUrl, filename = 'image-from-url.jpg') {
-    
+async function UploadImageFromUrl(imageUrl, filename = 'image-from-url.jpg') {  
     try {
         const folder = "temp";
         const tempFilePath = path.resolve(folder, filename);
