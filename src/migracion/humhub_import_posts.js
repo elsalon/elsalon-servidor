@@ -73,8 +73,6 @@ Para saber si una entrada va al perfil del usuario, hay que tambien guardar los 
 },
 */
 
-
-
 import payload from 'payload'
 import 'dotenv/config';
 import axios from 'axios'
@@ -88,6 +86,9 @@ var showdown  = require('showdown'),
     converter = new showdown.Converter({
         completeHTMLDocument: false,
     });
+
+    
+converter.setOption('completeHTMLDocument', false);
 
 const args = process.argv;
 const hardLimit = args[2] || -1;
@@ -270,6 +271,7 @@ const ImportPost = async (post) => {
                     collection: 'imagenes',
                     filePath: tempFilePath,
                     data: {
+                        uploader: autor.id,
                         focalX: 0.5,
                         focalY: 0.5,
                     }
@@ -288,6 +290,9 @@ const ImportPost = async (post) => {
                 const res = await payload.create({
                     collection: 'archivos',
                     filePath: tempFilePath,
+                    data:{
+                        uploader: autor.id,
+                    }
                 });
                 if (res) {
                     console.log("Archivo subido correctamente", res)
@@ -367,9 +372,20 @@ function ParseHumHubEntriesToSalon(markdown, imagenesImportadas){
     var html = converter.makeHtml(markdown);
     // Convierto las imagenes en formato propio de salon [image:id]
     html = ReplaceImgTags(html, imagenesImportadas);
+    // Quito tags innecesario que no puedo desactivar en showdown
+    html = RemoveHeadBodyTags(html);
     
-    
+    console.log("HTML", html)
     return html;
+}
+
+function RemoveHeadBodyTags(html){
+    // Load the HTML into Cheerio
+    const $ = cheerio.load(html);
+    // Remove the <head> and <body> tags
+    var bodyContent = $('body').html();
+    // Return the modified HTML as a string
+    return bodyContent;
 }
 
 
