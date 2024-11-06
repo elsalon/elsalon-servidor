@@ -83,8 +83,11 @@ import path from 'path';
 import fs from 'fs'; // Import the standard fs module
 import fsPromises from 'fs/promises'; // Import fs/promises for async operations
 
+import * as cheerio from 'cheerio'; // Import Cheerio for HTML parsing
 var showdown  = require('showdown'),
-    converter = new showdown.Converter();
+    converter = new showdown.Converter({
+        completeHTMLDocument: false,
+    });
 
 const args = process.argv;
 const hardLimit = args[2] || -1;
@@ -245,14 +248,17 @@ const ImportPost = async (post) => {
         return; // no se puede importar el post sin autor
     }
 
-    var imagenes = [];
-    var archivos = [];
+    console.log("--- Importando post", post.id, post.content.metadata.created_by.display_name)
+
+    let imagenes = [],
+        imagenesImportadas = [],
+        archivos = [];
 
     if(post.content.files.length > 0){
         console.log("Post con archivos", post.id);
         for(const file of post.content.files){
-            console.log("Archivo", file)
-            const { id, file_name, url } = file;
+            // console.log("Archivo", file)
+            const { id, file_name, guid } = file;
             const tempFilePath = path.resolve("temp", file_name);
 
             await DownloadFileSalon(`/file/download/${id}`, tempFilePath);
@@ -271,6 +277,11 @@ const ImportPost = async (post) => {
                 if (res) {
                     console.log("Imagen subida correctamente")
                     imagenes.push(res.id);
+                    imagenesImportadas.push({
+                        id: res.id,
+                        hhid: id,
+                        hhguid: guid,
+                    });
                 }
             }else{
                 // GUARDO Y SUBO EL ARCHIVO
@@ -288,17 +299,21 @@ const ImportPost = async (post) => {
         }
     } // finish image/files upload
 
+    const contenido = ParseHumHubEntriesToSalon(post.message, imagenesImportadas);
+    // Imagenes y archivos. Convertir array de ids en formato [{imagen:id}]
+    imagenes = imagenes.map(i => ({imagen: i}));
+    archivos = archivos.map(i => ({archivo: i}));
+    console.log("imagenes", imagenes)
     // TODO Parse markdown y formato especial de imagenes
     let entrada = {
         autor: autor.id, // id es el id de payload al importar
         autoriaGrupal: false,
-        contenido: post.message, // TODO
-        // extracto: // se
-        imagenes: imagenes,
-        archivos: archivos,
+        contenido,
+        imagenes,
+        archivos,
         // mencionados TODO
         sala: sala ? sala.id : null,
-        publishedAt: new Date(post.content.metadata.created_at).toISOString()
+        createdAt: new Date(post.content.metadata.created_at).toISOString()
     }
 
     try {
@@ -334,147 +349,48 @@ async function DownloadFileSalon(url, filePath) {
     });
   }
 
-// const UploadImage = async (file) => {
-//     /*
-//     File object example
-//     {
-//         "id": 80462,
-//         "guid": "5b3a14ab-7232-4072-920e-1e94808d4796",
-//         "mime_type": "image/png",
-//         "size": "1334182",
-//         "file_name": "image.png",
-//         "url": "http://elsalon.org/file/file/download?guid=5b3a14ab-7232-4072-920e-1e94808d4796&hash_sha1=35e42b8c"
-//     }
-//     */
-    
-// }
-
-
-
-// async function UploadImageFromUrl(imageUrl, filename = 'image-from-url.jpg') {  
-//     try {
-//         const folder = "temp";
-//         const tempFilePath = path.resolve(folder, filename);
-//         await DownloadFile(imageUrl, tempFilePath);
-
-//         // Upload to PayloadCMS
-//         const uploadResponse = await payload.create({
-//             collection: 'avatares',
-//             filePath: tempFilePath,
-//             data: {
-//                 focalX: 0.5,
-//                 focalY: 0.5,
-//             }
-//         });
-//         // Clean up temporary file
-//         await fsPromises.unlink(tempFilePath)
-        
-//         return {
-//             success: true,
-//             data: uploadResponse
-//         };
-//     } catch (error) {
-//         console.error('Error uploading image');
-
-//         // Clean up if the file exists
-//         try {
-//             await fsPromises.unlink(tempFilePath);
-//         } catch (cleanupError) {
-//             // Ignore cleanup errors and log them if necessary
-//             console.error('Cleanup error');
-//         }
-
-//         return {
-//             success: false,
-//             error: error.message
-//         };
-//     }
-// }
-
-// async function UploadFileFromUrl(fileUrl, filename) {
-//     try {
-//         const folder = "temp";
-//         const tempFilePath = path.resolve(folder, filename);
-//         await DownloadFile(fileUrl, tempFilePath);
-
-//         // Upload to PayloadCMS
-//         const uploadResponse = await payload.create({
-//             collection: 'archivos',
-//             filePath: tempFilePath,
-//         });
-//         // Clean up temporary file
-//         await fsPromises.unlink(tempFilePath)
-        
-//         return {
-//             success: true,
-//             data: uploadResponse
-//         };
-//     } catch (error) {
-//         console.error('Error uploading file');
-
-//         // Clean up if the file exists
-//         try {
-//             await fsPromises.unlink(tempFilePath);
-//         } catch (cleanupError) {
-//             // Ignore cleanup errors and log them if necessary
-//             console.error('Cleanup error');
-//         }
-
-//         return {
-//             success: false,
-//             error: error.message
-//         };
-//     }
-// }
-
-// async function DownloadFile(url, destinationPath) {
-//     try {
-//         // Ensure the destination directory exists
-//         const directory = path.dirname(destinationPath);
-//         await fsPromises.mkdir(directory, { recursive: true });
-
-//         // Make the GET request with axios
-//         const response = await axios({
-//             method: 'get',
-//             url: url,
-//             responseType: 'stream',
-//         });
-
-//         // Create a writable stream to the destination file
-//         const writer = fs.createWriteStream(destinationPath);
-
-//         // Pipe the response data to the file
-//         response.data.pipe(writer);
-
-//         // Return a promise that resolves when the write stream finishes
-//         return new Promise((resolve, reject) => {
-//             writer.on('finish', resolve);
-//             writer.on('error', reject);
-//         });
-//     } catch (error) {
-//         console.error('Error downloading file:', error);
-//         throw error; // Re-throw the error for further handling if needed
-//     }
-// }
-
-
 
 init();
 
-// TestDownload()
+// TestMarkdown();
 
-async function TestDownload(){
-    // const url = "http://elsalon.org/file/file/download?guid=d034ad76-5efd-4632-baf2-88f4cb12f75a&hash_sha1=4580fdb7"
-    // const file_name = "test.jpg"
-    // const imageResponse = await UploadImageFromUrl(url, file_name);
-    // console.log("ImageResponse", imageResponse)
-    const response = await fetchHumhub.get('/file/download/80388', {
-        responseType: 'stream'
-    });
-    
-    const folder = "temp";
-    const filename = "test.jpg";
-    const tempFilePath = path.resolve(folder, filename);
-    response.data.pipe(fs.createWriteStream(tempFilePath));
-    console.log("File downloaded")
+function TestMarkdown(){
+    // const text      = "**03\\.11.24** - 2 de espadas\r\n\r\nConfusión ante el contexto, la solución no es clara. Hay una violencia estática, violencia que sin embargo _es_ _pura potencia._ También, la negación: los ojos vendados en ceguera voluntaria.\r\n\r\n![](file-guid:5b3a14ab-7232-4072-920e-1e94808d4796 \"image.png\")"
+    const text = "<p>[image:672a45d10d6bd963cabb6d75][image:672a45d30d6bd963cabb6d7c][image:672a45d50d6bd963cabb6d83]</p>"
+    const html      = converter.makeHtml(text);
+    console.log(html)
 }
+
+
+function ParseHumHubEntriesToSalon(markdown, imagenesImportadas){
+    // Convierto en html
+    var html = converter.makeHtml(markdown);
+    // Convierto las imagenes en formato propio de salon [image:id]
+    html = ReplaceImgTags(html, imagenesImportadas);
+    
+    
+    return html;
+}
+
+
+function ReplaceImgTags(htmlString, imagenesImportadas) {
+    // Load the HTML into Cheerio
+    const $ = cheerio.load(htmlString);
+  
+    // Select all <img> tags
+    $('img').each((index, img) => {
+      const src = $(img).attr('src'); // Get the src attribute
+      
+      if (src && src.startsWith("file-guid:")) {
+          const fileGuid = src.split(":")[1];
+          const image = imagenesImportadas.find(i => i.hhguid == fileGuid);
+          const replacement = `[image:${image.id}]` // Formato propio de salon
+          console.log(`Found image with src: ${src}`, image.id, replacement);
+        // Replace the entire <img> tag with the replacement content
+        $(img).replaceWith(replacement);
+      }
+    });
+  
+    // Return the modified HTML as a string
+    return $.html();
+  }
