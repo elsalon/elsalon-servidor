@@ -176,6 +176,12 @@ const SaveLogs = () => {
     console.log(`Guardando ${importedPosts.length} entradas del endpoint ${endpoint} al archivo ${filename}`);
     fs.writeFile(filePath, JSON.stringify(importedPosts), 'utf8', onWriteFile)
 }
+const SaveUserLogs = () => {
+    const filename = `humhub_importlogs_users.json`
+    const filePath = `src/migracion/logs/${filename}`;
+    // console.log(`Guardando ${importedUsers.length} usuarios creados al archivo ${filename}`);
+    fs.writeFile(filePath, JSON.stringify(importedUsers), 'utf8', onWriteFile)
+}
 
 const onWriteFile = (err) => {
     if (err) {
@@ -241,71 +247,22 @@ const ImportPost = async (post) => {
 
     if(!autor){
         console.log("No se encontro el autor del post", post.id, post.content.metadata.created_by.display_name, post.content.metadata.created_by.id);
-        return; // no se puede importar el post sin autor
+        autor = await ImportUser(post.content.metadata.created_by);
+        console.log("Autor importado", autor.id)
     }
 
     console.log("--- Importando post", post.id, post.content.metadata.created_by.display_name)
 
-    let imagenes = [],
-        imagenesImportadas = [],
-        archivos = [];
 
-    if(post.content.files.length > 0){
-        console.log("Post con archivos", post.id);
-        for(const file of post.content.files){
-            // console.log("Archivo", file)
-            const { id, file_name, guid } = file;
-            const tempFilePath = path.resolve("temp", file_name);
-
-            await DownloadFileSalon(`/file/download/${id}`, tempFilePath);
-            console.log("File downloaded")
-
-            if(file.mime_type?.includes("image") ){
-                // GUARDO Y SUBO LA IMAGEN
-                const res = await payload.create({
-                    collection: 'imagenes',
-                    filePath: tempFilePath,
-                    data: {
-                        uploader: autor.id,
-                        focalX: 0.5,
-                        focalY: 0.5,
-                    }
-                });
-                if (res) {
-                    console.log("Imagen subida correctamente")
-                    imagenes.push(res.id);
-                    imagenesImportadas.push({
-                        id: res.id,
-                        hhid: id,
-                        hhguid: guid,
-                    });
-                }
-            }else{
-                // GUARDO Y SUBO EL ARCHIVO
-                const res = await payload.create({
-                    collection: 'archivos',
-                    filePath: tempFilePath,
-                    data:{
-                        uploader: autor.id,
-                    }
-                });
-                if (res) {
-                    console.log("Archivo subido correctamente", res)
-                    archivos.push(res.id);
-                }
-            }
-            // Clean up temporary file
-            await fsPromises.unlink(tempFilePath)
-        }
-    } // finish image/files upload
+    let {imagenes, archivos, imagenesImportadas} = await ProcessUploads(post.content, autor);
 
     const contenido = ParseHumHubEntriesToSalon(post.message, imagenesImportadas);
     // Imagenes y archivos. Convertir array de ids en formato [{imagen:id}]
     imagenes = imagenes.map(i => ({imagen: i}));
     archivos = archivos.map(i => ({archivo: i}));
-    console.log("imagenes", imagenes)
+
     // TODO Parse markdown y formato especial de imagenes
-    let entrada = {
+    let data = {
         autor: autor.id, // id es el id de payload al importar
         autoriaGrupal: false,
         contenido,
@@ -319,7 +276,7 @@ const ImportPost = async (post) => {
     try {
         const response = await payload.create({
             collection: 'entradas',
-            data: entrada,
+            data,
         });
         console.log("Entrada creada", response.id)
         importedPosts.push({
@@ -328,6 +285,12 @@ const ImportPost = async (post) => {
             hhguid: post.content.metadata.guid,
         });
         SaveLogs();
+
+        // Importar Comentario
+        if(post.content.comments.total > 0){
+            await ImportComments(post, response);
+        }
+
         imported++
     } catch (e) {
         console.log(e)
@@ -336,6 +299,133 @@ const ImportPost = async (post) => {
 }
 
 
+async function ImportComments(hhpost, salonpost){
+    /*
+    {
+        "id": 39065,
+        "message": "[https://drive.google.com/file/d/1aS_4NrqO5rVNskJaCdNlS4354mAwxL0r/view?usp=drivesdk](https://drive.google.com/file/d/1aS_4NrqO5rVNskJaCdNlS4354mAwxL0r/view?usp=drivesdk)",
+        "objectModel": "humhub\\modules\\post\\models\\Post",
+        "objectId": 50950,
+        "createdBy": {
+            "id": 4479,
+            "guid": "adf545d4-860b-4850-92b5-af80fab5c27c",
+            "display_name": "Ines Amanzio",
+            "url": "http://elsalon.org/u/inesamanzio/"
+        },
+        "createdAt": "2024-11-01 09:52:00",
+        "likes": {
+            "total": 0
+        },
+        "files": []
+    },
+    */
+    const content_id = hhpost.content.id;
+    const response = await fetchHumhub.get(`/comment/content/${content_id}`);
+    const results = response.data.results;
+    
+    
+    for (const comment of results) {
+        if (hardLimit == -1 || imported < hardLimit) { // Check if you should import
+            await ImportComment(comment, salonpost);
+        }
+    }
+}
+
+async function ImportComment(hhcomment, salonpost){
+    // busco usuario importado que coincida con el mail
+    let autor = importedUsers.find(u => u.hhid == hhcomment.createdBy.id);
+
+    if(!autor){
+        console.log("No se encontro el autor del comentario", hhcomment.id, hhcomment.createdBy.display_name, hhcomment.createdBy.id);
+        autor = await ImportUser(hhcomment.createdBy);
+    }
+
+    console.log("--- Importando comentario", hhcomment.id, hhcomment.createdBy.display_name)
+
+    let {imagenes, archivos, imagenesImportadas} = await ProcessUploads(hhcomment, autor);
+
+    const contenido = ParseHumHubEntriesToSalon(hhcomment.message, imagenesImportadas);
+    // Imagenes y archivos. Convertir array de ids en formato [{imagen:id}]
+    imagenes = imagenes.map(i => ({imagen: i}));
+    archivos = archivos.map(i => ({archivo: i}));
+    let data = {
+        autor: autor.id, // id es el id de payload al importar
+        entrada: salonpost.id, // entrada parent
+        contenido,
+        imagenes,
+        archivos,
+        createdAt: new Date(hhcomment.createdAt).toISOString()
+    }
+
+    try {
+        const response = await payload.create({
+            collection: 'comentarios',
+            data,
+        });
+        console.log("Comentario creada", response.id)
+    } catch (e) {
+        console.log(e)
+    }
+}
+
+
+async function ProcessUploads(entry, autor){
+    let imagenes = [],
+        imagenesImportadas = [],
+        archivos = [];
+
+    for(const file of entry.files){
+        // console.log("Archivo", file)
+        const { id, file_name, guid } = file;
+        const tempFilePath = path.resolve("temp", file_name);
+
+        await DownloadFileSalon(`/file/download/${id}`, tempFilePath);
+        console.log("File downloaded")
+
+        // Salteo los videos
+        if(file.mime_type?.includes("video") ){
+            console.log("Video salteado")
+            continue;
+        }
+        if(file.mime_type?.includes("image") ){
+            // GUARDO Y SUBO LA IMAGEN
+            const res = await payload.create({
+                collection: 'imagenes',
+                filePath: tempFilePath,
+                data: {
+                    uploader: autor.id,
+                    focalX: 0.5,
+                    focalY: 0.5,
+                }
+            });
+            if (res) {
+                console.log("Imagen subida correctamente")
+                imagenes.push(res.id);
+                imagenesImportadas.push({
+                    id: res.id,
+                    hhid: id,
+                    hhguid: guid,
+                });
+            }
+        }else{
+            // GUARDO Y SUBO EL ARCHIVO
+            const res = await payload.create({
+                collection: 'archivos',
+                filePath: tempFilePath,
+                data:{
+                    uploader: autor.id,
+                }
+            });
+            if (res) {
+                console.log("Archivo subido correctamente", res)
+                archivos.push(res.id);
+            }
+        }
+        // Clean up temporary file
+        await fsPromises.unlink(tempFilePath)
+    }
+    return {imagenes, archivos, imagenesImportadas};
+}
 
 async function DownloadFileSalon(url, filePath) {
     return new Promise((resolve, reject) => {
@@ -347,20 +437,38 @@ async function DownloadFileSalon(url, filePath) {
         })
         .catch(reject);
     });
-  }
-
-
-init();
-
-// TestMarkdown();
-
-function TestMarkdown(){
-    // const text      = "**03\\.11.24** - 2 de espadas\r\n\r\nConfusión ante el contexto, la solución no es clara. Hay una violencia estática, violencia que sin embargo _es_ _pura potencia._ También, la negación: los ojos vendados en ceguera voluntaria.\r\n\r\n![](file-guid:5b3a14ab-7232-4072-920e-1e94808d4796 \"image.png\")"
-    const text = "<p>[image:672a45d10d6bd963cabb6d75][image:672a45d30d6bd963cabb6d7c][image:672a45d50d6bd963cabb6d83]</p>"
-    const html      = converter.makeHtml(text);
-    console.log(html)
 }
 
+async function DownloadAvatarSalon(url, destinationPath) {
+    try {
+        // Ensure the destination directory exists
+        
+        const directory = path.dirname(destinationPath);
+        await fsPromises.mkdir(directory, { recursive: true });
+
+        // Make the GET request with axios
+        const response = await axios({
+            method: 'get',
+            url: url,
+            responseType: 'stream',
+        });
+
+        // Create a writable stream to the destination file
+        const writer = fs.createWriteStream(destinationPath);
+
+        // Pipe the response data to the file
+        response.data.pipe(writer);
+
+        // Return a promise that resolves when the write stream finishes
+        return new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', reject);
+        });
+    } catch (error) {
+        console.error('Error downloading file:', error);
+        throw error; // Re-throw the error for further handling if needed
+    }
+}
 
 function ParseHumHubEntriesToSalon(markdown, imagenesImportadas){
     // Convierto en html
@@ -369,8 +477,6 @@ function ParseHumHubEntriesToSalon(markdown, imagenesImportadas){
     html = ReplaceImgTags(html, imagenesImportadas);
     // Quito tags innecesario que no puedo desactivar en showdown
     html = RemoveHeadBodyTags(html);
-    
-    console.log("HTML", html)
     return html;
 }
 
@@ -387,21 +493,98 @@ function RemoveHeadBodyTags(html){
 function ReplaceImgTags(htmlString, imagenesImportadas) {
     // Load the HTML into Cheerio
     const $ = cheerio.load(htmlString);
-  
+    
     // Select all <img> tags
     $('img').each((index, img) => {
-      const src = $(img).attr('src'); // Get the src attribute
-      
-      if (src && src.startsWith("file-guid:")) {
-          const fileGuid = src.split(":")[1];
-          const image = imagenesImportadas.find(i => i.hhguid == fileGuid);
-          const replacement = `[image:${image.id}]` // Formato propio de salon
-          console.log(`Found image with src: ${src}`, image.id, replacement);
-        // Replace the entire <img> tag with the replacement content
-        $(img).replaceWith(replacement);
-      }
+        const src = $(img).attr('src'); // Get the src attribute
+        
+        if (src && src.startsWith("file-guid:")) {
+            const fileGuid = src.split(":")[1];
+            const image = imagenesImportadas.find(i => i.hhguid == fileGuid);
+            const replacement = `[image:${image.id}]` // Formato propio de salon
+            console.log(`Found image with src: ${src}`, image.id, replacement);
+            // Replace the entire <img> tag with the replacement content
+            $(img).replaceWith(replacement);
+        }
     });
-  
+    
     // Return the modified HTML as a string
     return $.html();
-  }
+}
+
+
+async function ImportUser(user){
+    const { display_name, guid, id } = user;
+    // Get account
+    const response = await fetchHumhub.get(`/user/${id}`);
+    const _user = response.data;
+    const { email, username, contentcontainer_id } = _user.account;
+    console.log("---- Importando usuario", display_name, email, contentcontainer_id, id, guid)
+    const userExists = await payload.find({
+        collection: 'users',
+        where: {
+            email: {
+                equals: email,
+            },
+        },
+    });
+
+    if (userExists.docs.length > 0) {
+        console.log("Usuario ya existe en db", email)
+        return userExists.docs[0];
+    }
+    try {
+        const userData = {
+            nombre: display_name,
+            email: email,
+            password: HUMHUB_DEFAULTPASS,
+            _verified: true,
+        }
+        console.log("Creando usuario", userData.email)
+        const imageUrl = "https://elsalon.org/uploads/profile_image/" + guid + ".jpg"
+        const filename = username + ".jpg"
+        const tempFilePath = path.resolve("temp", filename);
+        try{
+            await DownloadAvatarSalon(imageUrl, tempFilePath);
+            console.log("File downloaded", tempFilePath);
+            const res = await payload.create({
+                collection: 'avatares',
+                filePath: tempFilePath,
+                data: {
+                    focalX: 0.5,
+                    focalY: 0.5,
+                }
+            });
+            if(res.status == 200){
+                console.log("Avatar subido correctamente")
+                userData.avatar = res.id;
+            }
+            // Clean up temporary file
+            await fsPromises.unlink(tempFilePath)
+        }catch(e){
+            console.log("Error al subir avatar. Prosigo.")
+        }
+
+        // Creo el usuario
+        const response = await payload.create({
+            collection: 'users',
+            data: userData,
+        });
+
+        console.log("Usuario creado", response.id)
+        const logData = {
+            hhid: id,
+            hhguid: guid,
+            email: email,
+            id: response.id,
+            contentcontainer_id: contentcontainer_id,
+        }
+        importedUsers.push(logData);
+        SaveUserLogs();
+        return response;
+    } catch (e) {
+        console.log(e)
+    }
+}
+
+init();
