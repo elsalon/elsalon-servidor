@@ -417,7 +417,7 @@ async function ProcessUploads(entry, autor){
                 }
             });
             if (res) {
-                console.log("Archivo subido correctamente", res)
+                console.log("Archivo subido correctamente")
                 archivos.push(res.id);
             }
         }
@@ -555,7 +555,7 @@ async function ImportUser(user){
                     focalY: 0.5,
                 }
             });
-            if(res.status == 200){
+            if(res.id){
                 console.log("Avatar subido correctamente")
                 userData.avatar = res.id;
             }
