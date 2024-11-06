@@ -465,7 +465,7 @@ async function DownloadAvatarSalon(url, destinationPath) {
             writer.on('error', reject);
         });
     } catch (error) {
-        console.error('Error downloading file:', error);
+        console.error('Error descargando avatar. Puede que no exista');
         throw error; // Re-throw the error for further handling if needed
     }
 }
