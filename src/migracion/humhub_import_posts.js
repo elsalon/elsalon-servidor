@@ -83,12 +83,7 @@ import fsPromises from 'fs/promises'; // Import fs/promises for async operations
 
 import * as cheerio from 'cheerio'; // Import Cheerio for HTML parsing
 var showdown  = require('showdown'),
-    converter = new showdown.Converter({
-        completeHTMLDocument: false,
-    });
-
-    
-converter.setOption('completeHTMLDocument', false);
+    converter = new showdown.Converter();
 
 const args = process.argv;
 const hardLimit = args[2] || -1;
