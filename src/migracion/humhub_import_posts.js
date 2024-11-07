@@ -82,7 +82,7 @@ import fs from 'fs'; // Import the standard fs module
 import fsPromises from 'fs/promises'; // Import fs/promises for async operations
 
 import * as cheerio from 'cheerio'; // Import Cheerio for HTML parsing
-var showdown  = require('showdown'),
+var showdown = require('showdown'),
     converter = new showdown.Converter();
 
 const args = process.argv;
@@ -92,7 +92,7 @@ const endpoint = "post";
 
 console.log("Import El Salon humhub. Descargando endpoint", endpoint, "con limite", hardLimit);
 const filename = `humhub_importlogs_${endpoint}.json`
-const {PAYLOAD_SECRET, HUMHUB_TOKEN, HUMHUB_DEFAULTPASS } = process.env
+const { PAYLOAD_SECRET, HUMHUB_TOKEN, HUMHUB_DEFAULTPASS } = process.env
 
 const fetchHumhub = axios.create({
     baseURL: 'https://elsalon.org/api/v1',
@@ -122,7 +122,10 @@ const init = async () => {
 }
 
 
-const StartImport = async() =>{
+const StartImport = async () => {
+    // Create temp folder
+    await fsPromises.mkdir(path.resolve("temp"), { recursive: true });
+
     await LoadLogsCreatedUsers();
     await LoadContainerToSala();
     await LoadLogsCreatedPosts();
@@ -185,9 +188,9 @@ const SaveUserLogs = () => {
 
 const onWriteFile = (err) => {
     if (err) {
-      console.log("Error al escribir archivo", err)
+        console.log("Error al escribir archivo", err)
     } else {
-      console.log("Archivo logs guardado correctamente")
+        console.log("Archivo logs guardado correctamente")
     }
 }
 
@@ -198,19 +201,21 @@ const RetrieveNextPage = async (page) => {
         const response = await fetchHumhub.get(`/${endpoint}?page=${page}`);
         const results = response.data.results;
         const pages = response.data.pages;
-        
-        
+
+
         for (const post of results) {
             if (hardLimit == -1 || imported < hardLimit) { // Check if you should import
                 await ImportPost(post);
             }
         }
-        
+
         // Move to the next page after all users on the current page are processed
         if (page < pages) {
             await RetrieveNextPage(page + 1);
         } else {
-            console.log("IMPORT COMPLETE!");
+            // Clean temp folder
+            await fs.rm(path.resolve("temp"), { recursive: true });
+            console.log("Terminado. Importado", imported, "entradas")
         }
     } catch (error) {
         console.log("Error", error);
@@ -220,7 +225,7 @@ const RetrieveNextPage = async (page) => {
 const ImportPost = async (post) => {
     // Primero verifico si el post ya fue importado
     const _imported = importedPosts.find(p => p.hhid == post.id);
-    if(_imported) {
+    if (_imported) {
         console.log("Post ya importado", post.id);
         return;
     }
@@ -245,7 +250,7 @@ const ImportPost = async (post) => {
     // });
     let autor = importedUsers.find(u => u.hhid == post.content.metadata.created_by.id);
 
-    if(!autor){
+    if (!autor) {
         console.log("No se encontro el autor del post", post.id, post.content.metadata.created_by.display_name, post.content.metadata.created_by.id);
         autor = await ImportUser(post.content.metadata.created_by);
         console.log("Autor importado", autor.id)
@@ -254,12 +259,13 @@ const ImportPost = async (post) => {
     console.log("--- Importando post", post.id, post.content.metadata.created_by.display_name)
 
 
-    let {imagenes, archivos, imagenesImportadas} = await ProcessUploads(post.content, autor);
+    let { imagenes, archivos, imagenesImportadas } = await ProcessUploads(post.content, autor);
 
-    const contenido = ParseHumHubEntriesToSalon(post.message, imagenesImportadas);
+    const { contenido, mencionados } = await ParseHumHubEntriesToSalon(post.message, imagenesImportadas);
+    console.log(" >> Contenido", contenido, mencionados);
     // Imagenes y archivos. Convertir array de ids en formato [{imagen:id}]
-    imagenes = imagenes.map(i => ({imagen: i}));
-    archivos = archivos.map(i => ({archivo: i}));
+    imagenes = imagenes.map(i => ({ imagen: i }));
+    archivos = archivos.map(i => ({ archivo: i }));
 
     // TODO Parse markdown y formato especial de imagenes
     let data = {
@@ -268,7 +274,7 @@ const ImportPost = async (post) => {
         contenido,
         imagenes,
         archivos,
-        // mencionados TODO
+        mencionados,
         sala: sala ? sala.id : null,
         createdAt: new Date(post.content.metadata.created_at).toISOString()
     }
@@ -287,7 +293,7 @@ const ImportPost = async (post) => {
         SaveLogs();
 
         // Importar Comentario
-        if(post.content.comments.total > 0){
+        if (post.content.comments.total > 0) {
             await ImportComments(post, response);
         }
 
@@ -295,11 +301,11 @@ const ImportPost = async (post) => {
     } catch (e) {
         console.log(e)
     }
-    
+
 }
 
 
-async function ImportComments(hhpost, salonpost){
+async function ImportComments(hhpost, salonpost) {
     /*
     {
         "id": 39065,
@@ -322,8 +328,8 @@ async function ImportComments(hhpost, salonpost){
     const content_id = hhpost.content.id;
     const response = await fetchHumhub.get(`/comment/content/${content_id}`);
     const results = response.data.results;
-    
-    
+
+
     for (const comment of results) {
         if (hardLimit == -1 || imported < hardLimit) { // Check if you should import
             await ImportComment(comment, salonpost);
@@ -331,27 +337,28 @@ async function ImportComments(hhpost, salonpost){
     }
 }
 
-async function ImportComment(hhcomment, salonpost){
+async function ImportComment(hhcomment, salonpost) {
     // busco usuario importado que coincida con el mail
     let autor = importedUsers.find(u => u.hhid == hhcomment.createdBy.id);
 
-    if(!autor){
+    if (!autor) {
         console.log("No se encontro el autor del comentario", hhcomment.id, hhcomment.createdBy.display_name, hhcomment.createdBy.id);
         autor = await ImportUser(hhcomment.createdBy);
     }
 
     console.log("--- Importando comentario", hhcomment.id, hhcomment.createdBy.display_name)
 
-    let {imagenes, archivos, imagenesImportadas} = await ProcessUploads(hhcomment, autor);
+    let { imagenes, archivos, imagenesImportadas } = await ProcessUploads(hhcomment, autor);
 
-    const contenido = ParseHumHubEntriesToSalon(hhcomment.message, imagenesImportadas);
+    const { contenido, mencionados } = await ParseHumHubEntriesToSalon(hhcomment.message, imagenesImportadas);
     // Imagenes y archivos. Convertir array de ids en formato [{imagen:id}]
-    imagenes = imagenes.map(i => ({imagen: i}));
-    archivos = archivos.map(i => ({archivo: i}));
+    imagenes = imagenes.map(i => ({ imagen: i }));
+    archivos = archivos.map(i => ({ archivo: i }));
     let data = {
         autor: autor.id, // id es el id de payload al importar
         entrada: salonpost.id, // entrada parent
         contenido,
+        mencionados,
         imagenes,
         archivos,
         createdAt: new Date(hhcomment.createdAt).toISOString()
@@ -369,80 +376,89 @@ async function ImportComment(hhcomment, salonpost){
 }
 
 
-async function ProcessUploads(entry, autor){
+async function ProcessUploads(entry, autor) {
     let imagenes = [],
         imagenesImportadas = [],
         archivos = [];
 
-    for(const file of entry.files){
+    for (const file of entry.files) {
         // console.log("Archivo", file)
-        const { id, file_name, guid } = file;
+        const { id, file_name, guid, mime_type } = file;
         const tempFilePath = path.resolve("temp", file_name);
+        const allowedMimeType = ["image", "application"];
+        // Salteo los mime no incluido
+        if (!allowedMimeType.some(m => mime_type.includes(m))) {
+            console.log("Mime type no permitido", mime_type)
+            continue;
+        }
 
         await DownloadFileSalon(`/file/download/${id}`, tempFilePath);
         console.log("File downloaded")
 
-        // Salteo los videos
-        if(file.mime_type?.includes("video") ){
-            console.log("Video salteado")
-            continue;
-        }
-        if(file.mime_type?.includes("image") ){
+        if (mime_type?.includes("image")) {
             // GUARDO Y SUBO LA IMAGEN
-            const res = await payload.create({
-                collection: 'imagenes',
-                filePath: tempFilePath,
-                data: {
-                    uploader: autor.id,
-                    focalX: 0.5,
-                    focalY: 0.5,
-                }
-            });
-            if (res) {
-                console.log("Imagen subida correctamente")
-                imagenes.push(res.id);
-                imagenesImportadas.push({
-                    id: res.id,
-                    hhid: id,
-                    hhguid: guid,
+            try{
+                const res = await payload.create({
+                    collection: 'imagenes',
+                    filePath: tempFilePath,
+                    data: {
+                        uploader: autor.id,
+                        focalX: 0.5,
+                        focalY: 0.5,
+                    }
                 });
-            }
-        }else{
-            // GUARDO Y SUBO EL ARCHIVO
-            const res = await payload.create({
-                collection: 'archivos',
-                filePath: tempFilePath,
-                data:{
-                    uploader: autor.id,
+                if (res.id) {
+                    console.log("Imagen subida correctamente")
+                    imagenes.push(res.id);
+                    imagenesImportadas.push({
+                        id: res.id,
+                        hhid: id,
+                        hhguid: guid,
+                    });
                 }
-            });
-            if (res) {
-                console.log("Archivo subido correctamente")
-                archivos.push(res.id);
+            }catch(e){
+                console.log("Error al subir imagen", e)
+            }
+        } else {
+            // GUARDO Y SUBO EL ARCHIVO
+            try{
+                const res = await payload.create({
+                    collection: 'archivos',
+                    filePath: tempFilePath,
+                    data: {
+                        uploader: autor.id,
+                    }
+                });
+                if (res) {
+                    console.log("Archivo subido correctamente")
+                    archivos.push(res.id);
+                }
+            }catch(e){
+                console.log("Error al subir archivo", e)
             }
         }
         // Clean up temporary file
         await fsPromises.unlink(tempFilePath)
     }
-    return {imagenes, archivos, imagenesImportadas};
+    return { imagenes, archivos, imagenesImportadas };
 }
 
 async function DownloadFileSalon(url, filePath) {
     return new Promise((resolve, reject) => {
-      fetchHumhub.get(url, { responseType: 'stream' })
-        .then(response => {
-          const stream = response.data.pipe(fs.createWriteStream(filePath));
-          stream.on('finish', resolve);
-          stream.on('error', reject);
-        })
-        .catch(reject);
+        fetchHumhub.get(url, { responseType: 'stream' })
+            .then(response => {
+                const stream = response.data.pipe(fs.createWriteStream(filePath));
+                stream.on('finish', resolve);
+                stream.on('error', reject);
+            })
+            .catch(reject);
     });
 }
 
 async function DownloadAvatarSalon(url, destinationPath) {
     try {
         // Ensure the destination directory exists
-        
+
         const directory = path.dirname(destinationPath);
         await fsPromises.mkdir(directory, { recursive: true });
 
@@ -470,17 +486,23 @@ async function DownloadAvatarSalon(url, destinationPath) {
     }
 }
 
-function ParseHumHubEntriesToSalon(markdown, imagenesImportadas){
+async function ParseHumHubEntriesToSalon(markdown, imagenesImportadas) {
     // Convierto en html
-    var html = converter.makeHtml(markdown);
+    let html = converter.makeHtml(markdown);
     // Convierto las imagenes en formato propio de salon [image:id]
     html = ReplaceImgTags(html, imagenesImportadas);
+    // Iframes
+    html = ReplaceEmbebidos(html);
+    // Mencionados
+    var { modifiedHtml, mencionados } = await ReplaceMencionados(html);
+    html = modifiedHtml;
+
     // Quito tags innecesario que no puedo desactivar en showdown
     html = RemoveHeadBodyTags(html);
-    return html;
+    return { contenido: html, mencionados };
 }
 
-function RemoveHeadBodyTags(html){
+function RemoveHeadBodyTags(html) {
     // Load the HTML into Cheerio
     const $ = cheerio.load(html);
     // Remove the <head> and <body> tags
@@ -493,27 +515,108 @@ function RemoveHeadBodyTags(html){
 function ReplaceImgTags(htmlString, imagenesImportadas) {
     // Load the HTML into Cheerio
     const $ = cheerio.load(htmlString);
-    
+
     // Select all <img> tags
     $('img').each((index, img) => {
         const src = $(img).attr('src'); // Get the src attribute
-        
+
         if (src && src.startsWith("file-guid:")) {
             const fileGuid = src.split(":")[1];
             const image = imagenesImportadas.find(i => i.hhguid == fileGuid);
             const replacement = `[image:${image.id}]` // Formato propio de salon
-            console.log(`Found image with src: ${src}`, image.id, replacement);
+            // console.log(`Found image with src: ${src}`, image.id, replacement);
             // Replace the entire <img> tag with the replacement content
             $(img).replaceWith(replacement);
         }
     });
-    
+
     // Return the modified HTML as a string
     return $.html();
 }
 
+const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com\/)(\d+)/;
 
-async function ImportUser(user){
+function ReplaceEmbebidos(htmlString) {
+    const $ = cheerio.load(htmlString);
+
+    $('a').each((index, a) => {
+        const href = $(a).attr('href'); // Get the src attribute
+        if (href && href.startsWith("oembed:")) {
+            const url = href.split(":")[1];
+            console.log("Found oembed", url)
+            // const replacement = `<iframe src="" frameborder="0" allowfullscreen></iframe>` // Formato propio de salon
+            const youtubeMatch = url.match(youtubeRegex);
+            const vimeoMatch = url.match(vimeoRegex);
+
+            if (youtubeMatch) {
+                const videoId = youtubeMatch[1];
+                const iframe = `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+                console.log("*** Youtube Match", videoId, iframe)
+                $(a).replaceWith(iframe);
+            }
+
+            // If a Vimeo URL is matched
+            if (vimeoMatch) {
+                const videoId = vimeoMatch[1];
+                const iframe = `<iframe src="https://player.vimeo.com/video/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+                $(a).replaceWith(iframe);
+            }
+
+        }
+    });
+    return $.html();
+}
+
+async function ReplaceMencionados(htmlString) {
+    const $ = cheerio.load(htmlString);
+    let mencionados = [];
+
+    // Get all <a> tags that match the mention format
+    const mentionLinks = $('a').toArray().filter(a => {
+        const href = $(a).attr('href');
+        return href && href.startsWith("mention:");
+    });
+
+    // Process each mention link asynchronously
+    for (const a of mentionLinks) {
+        const href = $(a).attr('href');
+        const guid = href.split(":")[1];
+        let user = importedUsers.find(u => u.hhguid === guid);
+        
+        if(user){
+            const res = await payload.findByID({
+                collection: 'users',
+                id: user.id
+            });
+            user = res.data;
+        } else {
+            // Usuario no encontrado por guid, buscar por username
+            const username = $(a).attr('title').split("/")[2];
+            const response = await fetchHumhub.get(`/user/get-by-username?username=${username}`);
+            const _user = response.data;
+            user = await ImportUser(_user);
+        }
+
+        mencionados.push(user.id);
+        // Formato de menciones salon: 
+        // [nombre](mencion:id)
+        // [gonza](mencion:66dce3b5d0a303ddc377b366)
+        const replacement = `[${user.nombre}](mencion:${user.id})`;
+        console.log(`Found mention with href: ${href}`, replacement);
+        // Replace the entire <a> tag with the replacement content
+        $(a).replaceWith(replacement);
+
+    }
+    return {
+        modifiedHtml: $.html(),
+        mencionados
+    };
+}
+
+
+
+async function ImportUser(user) {
     const { display_name, guid, id } = user;
     // Get account
     const response = await fetchHumhub.get(`/user/${id}`);
@@ -544,7 +647,7 @@ async function ImportUser(user){
         const imageUrl = "https://elsalon.org/uploads/profile_image/" + guid + ".jpg"
         const filename = username + ".jpg"
         const tempFilePath = path.resolve("temp", filename);
-        try{
+        try {
             await DownloadAvatarSalon(imageUrl, tempFilePath);
             console.log("File downloaded", tempFilePath);
             const res = await payload.create({
@@ -555,13 +658,13 @@ async function ImportUser(user){
                     focalY: 0.5,
                 }
             });
-            if(res.id){
+            if (res.id) {
                 console.log("Avatar subido correctamente")
                 userData.avatar = res.id;
             }
             // Clean up temporary file
             await fsPromises.unlink(tempFilePath)
-        }catch(e){
+        } catch (e) {
             console.log("Error al subir avatar. Prosigo.")
         }
 

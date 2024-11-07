@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "license": "MIT",
   "scripts": {
-    "migrate": "npx ts-node -T ./src/migracion/humhub_import_users.js",
+    "migrate": "cross-env DISABLE_EMAIL_VERIFICATION=true npx ts-node -T ./src/migracion/humhub_import_posts.js",
     "dev": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts nodemon",
     "build:payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload build",
     "build:server": "tsc",
