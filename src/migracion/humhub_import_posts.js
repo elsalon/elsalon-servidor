@@ -253,7 +253,7 @@ const ImportPost = async (post) => {
     if (!autor) {
         console.log("No se encontro el autor del post", post.id, post.content.metadata.created_by.display_name, post.content.metadata.created_by.id);
         autor = await ImportUser(post.content.metadata.created_by);
-        console.log("Autor importado", autor.id)
+        console.log("Autor importado", autor.nombre, autor.id)
     }
 
     console.log("--- Importando post", post.id, post.content.metadata.created_by.display_name)
@@ -534,37 +534,65 @@ function ReplaceImgTags(htmlString, imagenesImportadas) {
     return $.html();
 }
 
-const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com\/)(\d+)/;
 
+function getYoutubeVideoId(url) {
+    const match = url.match(youtubeRegex);
+    return match ? match[1] : null;
+}
+
+function getVimeoVideoId(url) {
+    const match = url.match(vimeoRegex);
+    return match ? match[1] : null;
+}
+
+function createYoutubeEmbed(videoId) {
+    return `<iframe 
+        src="https://www.youtube.com/embed/${videoId}" 
+        frameborder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+        allowfullscreen>
+    </iframe>`;
+}
+
+function createVimeoEmbed(videoId) {
+    return `<iframe 
+        src="https://player.vimeo.com/video/${videoId}" 
+        frameborder="0" 
+        allow="autoplay; fullscreen; picture-in-picture" 
+        allowfullscreen>
+    </iframe>`;
+}
+
 function ReplaceEmbebidos(htmlString) {
-    const $ = cheerio.load(htmlString);
-
-    $('a').each((index, a) => {
-        const href = $(a).attr('href'); // Get the src attribute
-        if (href && href.startsWith("oembed:")) {
-            const url = href.split(":")[1];
-            console.log("Found oembed", url)
-            // const replacement = `<iframe src="" frameborder="0" allowfullscreen></iframe>` // Formato propio de salon
-            const youtubeMatch = url.match(youtubeRegex);
-            const vimeoMatch = url.match(vimeoRegex);
-
-            if (youtubeMatch) {
-                const videoId = youtubeMatch[1];
-                const iframe = `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
-                console.log("*** Youtube Match", videoId, iframe)
-                $(a).replaceWith(iframe);
+    const $ = cheerio.load(htmlString, { decodeEntities: false });
+    
+    $('a').each((index, element) => {
+        const $element = $(element);
+        const href = $element.attr('href');
+        
+        if (href && href.startsWith('oembed:')) {
+            const url = href.substring(7); // Remove 'oembed:' prefix
+            
+            // Try YouTube first
+            const youtubeId = getYoutubeVideoId(url);
+            if (youtubeId) {
+                $element.replaceWith(createYoutubeEmbed(youtubeId));
+                return;
             }
-
-            // If a Vimeo URL is matched
-            if (vimeoMatch) {
-                const videoId = vimeoMatch[1];
-                const iframe = `<iframe src="https://player.vimeo.com/video/${videoId}" frameborder="0" allowfullscreen></iframe>`;
-                $(a).replaceWith(iframe);
+            
+            // Try Vimeo
+            const vimeoId = getVimeoVideoId(url);
+            if (vimeoId) {
+                $element.replaceWith(createVimeoEmbed(vimeoId));
+                return;
             }
-
+            
+            console.log(`Unrecognized video URL format: ${url}`);
         }
     });
+    
     return $.html();
 }
 
@@ -583,13 +611,12 @@ async function ReplaceMencionados(htmlString) {
         const href = $(a).attr('href');
         const guid = href.split(":")[1];
         let user = importedUsers.find(u => u.hhguid === guid);
-        
         if(user){
             const res = await payload.findByID({
                 collection: 'users',
                 id: user.id
             });
-            user = res.data;
+            user = res;
         } else {
             // Usuario no encontrado por guid, buscar por username
             const username = $(a).attr('title').split("/")[2];
@@ -597,7 +624,6 @@ async function ReplaceMencionados(htmlString) {
             const _user = response.data;
             user = await ImportUser(_user);
         }
-
         mencionados.push(user.id);
         // Formato de menciones salon: 
         // [nombre](mencion:id)

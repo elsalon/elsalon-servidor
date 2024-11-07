@@ -117,6 +117,10 @@ const Users = {
       name: 'link',
       type: 'text',
     },
+    {
+      name: 'mostrarEmail',
+      type: 'checkbox',
+    },
     SlugField(),
     {
       name: 'isAdmin',

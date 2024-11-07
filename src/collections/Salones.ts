@@ -96,6 +96,8 @@ const Salones: CollectionConfig = {
 
                     const user = req.user;
 
+                    console.log('Fetching dashboard for user', user.id, 'page', page, 'createdGreaterThan', createdGreaterThan)
+
                     let idsMateriasColabora: string[] = [];
                     let idsUsuariosColabora: string[] = [];
                     let idsGruposColabora: string[] = [];
@@ -112,7 +114,7 @@ const Salones: CollectionConfig = {
                             case 'salon':
                                 idsMateriasColabora.push(colaboracion.idColaborador as string);
                                 break;
-                            case 'usuario':
+                            case 'bitacora':
                                 idsUsuariosColabora.push(colaboracion.idColaborador as string);
                                 break;
                             case 'grupo':
@@ -120,6 +122,10 @@ const Salones: CollectionConfig = {
                                 break;
                         }
                     });
+
+                    console.log("materias colabora", idsMateriasColabora)
+                    console.log("usuarios colabora", idsUsuariosColabora)
+                    console.log("grupos colabora", idsGruposColabora)
 
                     let query: Where = {
                         or: [
