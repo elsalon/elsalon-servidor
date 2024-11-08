@@ -4,8 +4,7 @@ Como unir entradas a una sala?
 Cada espacio tiene un contentcontainer_id: espacio.contentcontainer_id. 
 Hay que hacer una lista de por ejemplo todos los espacios relacionados a PAV1 y un array de sus posibles contentcontainer_id
 {
-    slug: 'pav1',
-    id: 123, // id payload
+    slugpayload: 'pav1', 
     content_ids: [1,2,3,4,5]
 }
 

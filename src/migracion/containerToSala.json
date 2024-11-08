@@ -1,0 +1,26 @@
+[
+    {
+        "slugpayload": "pav1",
+        "content_ids": [5, 625, 1088, 1637, 2080, 2895, 3971]
+    },
+    {
+        "slugpayload": "pav2",
+        "content_ids": [6, 626, 1089, 1638, 2081, 2894, 3972]
+    },
+    {
+        "slugpayload": "pav3",
+        "content_ids": [627, 1090, 1639, 2082, 2893, 3973]
+    },
+    {
+        "slugpayload": "pav4",
+        "content_ids": [628, 1091, 1640, 2079, 2892, 3974]
+    },
+    {
+        "slugpayload": "iluminacion-y-camara-1",
+        "content_ids": [2083, 2725, 4285]
+    },
+    {
+        "slugpayload": "iluminacion-y-camara-2",
+        "content_ids": [2084, 2726, 4282]
+    }
+]
