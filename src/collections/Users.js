@@ -81,8 +81,32 @@ const Users = {
   },
 
   fields: [
-    // Email added by default
-    // Add more fields as needed
+    {
+      name: 'email',
+      type: 'email',
+      required: true,
+      unique: true,
+      access: {
+        read: ({ doc, req }) => {
+          // Handle cases where req.user or doc might be undefined
+          if (!req.user || !doc) return false;
+
+          // If it's their own profile, they can see it
+          if (req.user.id && doc.id && req.user.id === doc.id) return true;
+
+          // If they're an admin, they can see it
+          if (req.user.isAdmin) return true;
+
+          // Otherwise, check mostrarEmail flag
+          console.log("mostrar email", doc.mostrarEmail)
+          return Boolean(doc.mostrarEmail);
+        }
+      },
+      admin: {
+        // Always show in admin UI
+        readOnly: false,
+      }
+    },
 
     {
       name: 'rol',
@@ -120,6 +144,7 @@ const Users = {
     {
       name: 'mostrarEmail',
       type: 'checkbox',
+      defaultValue: false,
     },
     SlugField(),
     {

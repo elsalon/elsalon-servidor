@@ -96,8 +96,6 @@ const Salones: CollectionConfig = {
 
                     const user = req.user;
 
-                    console.log('Fetching dashboard for user', user.id, 'page', page, 'createdGreaterThan', createdGreaterThan)
-
                     let idsMateriasColabora: string[] = [];
                     let idsUsuariosColabora: string[] = [];
                     let idsGruposColabora: string[] = [];
@@ -122,10 +120,6 @@ const Salones: CollectionConfig = {
                                 break;
                         }
                     });
-
-                    console.log("materias colabora", idsMateriasColabora)
-                    console.log("usuarios colabora", idsUsuariosColabora)
-                    console.log("grupos colabora", idsGruposColabora)
 
                     let query: Where = {
                         or: [
@@ -170,6 +164,8 @@ const Salones: CollectionConfig = {
                         sort: "-createdAt",
                         limit: 5,
                         page: page,
+                        overrideAccess: false,
+                        user: req.user,
                     });
 
                     res.status(200).json(feed);

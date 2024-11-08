@@ -7,11 +7,15 @@ export const unirme = async (req, res, next) => {
             collection: 'comisiones',
             id: comisionid,
             depth: 0,
+            overrideAccess: false,
+            user: req.user,
         });
 
         // TODO CHEQUEAR SI EL USUARIO YA ESTA EN OTRA COMISION DE ESTE CONTEXTO
         const yaEstaEnOtraComision = await req.payload.find({
             collection: 'comisiones',
+            overrideAccess: false,
+            user: req.user,
             where: {
                 and: [
                     {
@@ -60,6 +64,8 @@ export const abandonar = async (req, res, next) => {
             collection: 'comisiones',
             id: comisionid,
             depth: 0,
+            overrideAccess: false,
+            user: req.user,
         });
 
         // Se quiere ir individualmente
@@ -94,6 +100,8 @@ export const feed = async (req, res, next) => {
             collection: 'comisiones',
             id: req.params.comisionid,
             depth: 0,
+            overrideAccess: false,
+            user: req.user,
         });
 
         if (!comision) return res.status(404).json({ error: 'Comisión no encontrada' });
@@ -170,6 +178,8 @@ export const feed = async (req, res, next) => {
             sort: "-createdAt",  // Ordenar por fecha de creación, de más reciente a más antigua
             limit: 5,
             page: parseInt(page) || 1,
+            overrideAccess: false,
+            user: req.user,
         });
 
         return res.status(200).json(feed);
