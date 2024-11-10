@@ -31,6 +31,7 @@ const Salones: CollectionConfig = {
         colorPickerField({
             name: 'color',
             label: 'Color',
+            defaultValue: '#000',
         }),
         {
             name: 'aulas',
