@@ -102,6 +102,7 @@ const fetchHumhub = axios.create({
 var importedUsers = [];
 var importedPosts = [];
 var containerToSala = [];
+var emojis = [];
 
 
 const init = async () => {
@@ -124,7 +125,7 @@ const init = async () => {
 const StartImport = async () => {
     // Create temp folder
     await fsPromises.mkdir(path.resolve("temp"), { recursive: true });
-
+    await LoadEmojis();
     await LoadLogsCreatedUsers();
     await LoadContainerToSala();
     await LoadLogsCreatedPosts();
@@ -146,13 +147,52 @@ const LoadLogsCreatedUsers = async () => {
     }
 }
 
+const LoadEmojis = async () => {
+    const filename = `emoji-database-compact.json`;
+    const filePath = `src/migracion/${filename}`;
+    try{
+        const data = await fsPromises.readFile(filePath, 'utf8');
+        emojis = JSON.parse(data);
+    }catch(err){
+        console.log("No se pudo cargar el archivo de emojis");
+    }
+}
+
 const LoadContainerToSala = async () => {
+    console.log("Loading Container To Sala")
     const filename = `containerToSala.json`
     const filePath = `src/migracion/${filename}`;
 
     try {
         const data = await fsPromises.readFile(filePath, 'utf8');
         containerToSala = JSON.parse(data);
+        
+        for(const sala of containerToSala){
+            if(!sala.id){
+                // console.log("Buscando id de sala", sala.slugpayload)
+                const response = await payload.find({
+                    collection: 'salones',
+                    where: {
+                        slug: {
+                            equals: sala.slugpayload
+                        }
+                    }
+                });
+                if(response.docs.length > 0){
+                    sala.id = response.docs[0].id;
+                }else{
+                    // No se encontro sala, la creo
+                    const res = await payload.create({
+                        collection: 'salones',
+                        data: {
+                            nombre: sala.slugpayload,
+                            slug: sala.slugpayload,
+                        }
+                    });
+                    sala.id = res.id;
+                }
+            }
+        }
     }
     catch (err) {
         console.log("No se pudo cargar el archivo de containerToSala");
@@ -237,16 +277,10 @@ const ImportPost = async (post) => {
     const container_id = post.content.metadata.contentcontainer_id;
     const sala = containerToSala.find(s => s.content_ids.includes(container_id));
     // Si la sala no existe no pasa nada, lo importo igual y queda asignado a bitácora del usuario
+    if(!sala){
+        console.log("No se encontro sala para el post", post.id, "container:", container_id);
+    }
 
-    // busco usuario importado que coincida con el mail
-    // let autor = await payload.find({
-    //     collection: 'users',
-    //     where: {
-    //         email: {
-    //             equals: post.content.metadata.created_by.email
-    //         }
-    //     }
-    // });
     let autor = importedUsers.find(u => u.hhid == post.content.metadata.created_by.id);
 
     if (!autor) {
@@ -255,13 +289,13 @@ const ImportPost = async (post) => {
         console.log("Autor importado", autor.nombre, autor.id)
     }
 
-    console.log("--- Importando post", post.id, post.content.metadata.created_by.display_name)
+    console.log("--- Importando post", post.id, post.content.metadata.created_by.display_name, sala?.slugpayload)
 
 
     let { imagenes, archivos, imagenesImportadas } = await ProcessUploads(post.content, autor);
 
     const { contenido, mencionados } = await ParseHumHubEntriesToSalon(post.message, imagenesImportadas);
-    console.log(" >> Contenido", contenido, mencionados);
+    // console.log(" >> Contenido", contenido, mencionados);
     // Imagenes y archivos. Convertir array de ids en formato [{imagen:id}]
     imagenes = imagenes.map(i => ({ imagen: i }));
     archivos = archivos.map(i => ({ archivo: i }));
@@ -487,6 +521,7 @@ async function DownloadAvatarSalon(url, destinationPath) {
 
 async function ParseHumHubEntriesToSalon(markdown, imagenesImportadas) {
     // Convierto en html
+    markdown = ReplaceEmojis(markdown);
     let html = converter.makeHtml(markdown);
     // Convierto las imagenes en formato propio de salon [image:id]
     html = ReplaceImgTags(html, imagenesImportadas);
@@ -499,6 +534,15 @@ async function ParseHumHubEntriesToSalon(markdown, imagenesImportadas) {
     // Quito tags innecesario que no puedo desactivar en showdown
     html = RemoveHeadBodyTags(html);
     return { contenido: html, mencionados };
+}
+
+function ReplaceEmojis(text){
+    return text.replace(/:(.*?):/g, (match, emojiName) => {
+        // Here, `emojiName` is the name between the colons, e.g., "grinning face"
+        // Implement your logic to map `emojiName` to its corresponding Unicode here
+        const emoji = emojis.find(e => e.label === emojiName);
+        return emoji?.unicode || match; // return the Unicode or the original if not found
+    });
 }
 
 function RemoveHeadBodyTags(html) {
@@ -628,7 +672,7 @@ async function ReplaceMencionados(htmlString) {
         // [nombre](mencion:id)
         // [gonza](mencion:66dce3b5d0a303ddc377b366)
         const replacement = `[${user.nombre}](mencion:${user.id})`;
-        console.log(`Found mention with href: ${href}`, replacement);
+        // console.log(`Found mention with href: ${href}`, replacement);
         // Replace the entire <a> tag with the replacement content
         $(a).replaceWith(replacement);
 
@@ -658,7 +702,7 @@ async function ImportUser(user) {
     });
 
     if (userExists.docs.length > 0) {
-        console.log("Usuario ya existe en db", email)
+        // console.log("Usuario ya existe en db", email)
         return userExists.docs[0];
     }
     try {

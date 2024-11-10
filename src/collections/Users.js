@@ -98,7 +98,6 @@ const Users = {
           if (req.user.isAdmin) return true;
 
           // Otherwise, check mostrarEmail flag
-          console.log("mostrar email", doc.mostrarEmail)
           return Boolean(doc.mostrarEmail);
         }
       },

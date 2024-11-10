@@ -1,5 +1,9 @@
 [
     {
+        "slugpayload": "el-salon",
+        "content_ids": [16]
+    },
+    {
         "slugpayload": "pav1",
         "content_ids": [5, 625, 1088, 1637, 2080, 2895, 3971]
     },
@@ -22,5 +26,24 @@
     {
         "slugpayload": "iluminacion-y-camara-2",
         "content_ids": [2084, 2726, 4282]
+    },
+    {   "slugpayload": "medios-expresivos-1",
+        "content_ids": [2118, 3975]
+    },
+    {
+        "slugpayload": "medios-expresivos-2",
+        "content_ids": [2119, 3976]
+    },
+    {
+        "slugpayload": "teorica-y-estetica-de-los-medios",
+        "content_ids": [2117]
+    },
+    {
+        "slugpayload": "teorias-audiovisuales",
+        "content_ids": [2115]
+    },
+    {
+        "slugpayload": "tecnicas-audiovisuales",
+        "content_ids": [629,2899, 3970]
     }
 ]
