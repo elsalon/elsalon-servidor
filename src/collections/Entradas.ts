@@ -1,5 +1,6 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrAutor, NotificarMencionados, CrearExtracto, ValidarEntradaVacia } from '../helper'
+import { Campos } from './CamposEntradasYComentarios'
 
 const Entradas: CollectionConfig = {
     slug: 'entradas',
@@ -27,12 +28,7 @@ const Entradas: CollectionConfig = {
         group: 'Interacciones',
     },
     fields: [
-        {
-            name: 'autor',
-            type: 'relationship',
-            relationTo: 'users',
-            hasMany: false,
-        },
+        ...Campos,
         {
             name: 'autoriaGrupal',
             type: 'checkbox',
@@ -43,46 +39,8 @@ const Entradas: CollectionConfig = {
             relationTo: 'grupos',
         },
         {
-            name: 'contenido',
-            type: 'textarea',
-        },
-        {
             name: 'extracto',
             type: 'text',
-        },
-        {
-            name: 'imagenes',
-            type: 'array',
-            fields: [
-                {
-                    name: 'imagen',
-                    type: 'upload',
-                    relationTo: 'imagenes',
-                }
-            ]
-        },
-        {
-            name: 'archivos',
-            type: 'array',
-            fields: [
-                {
-                    name: 'archivo',
-                    type: 'upload',
-                    relationTo: 'archivos',
-                }
-            ]
-        },
-        {
-            name: 'mencionados',
-            type: 'relationship',
-            relationTo: 'users',
-            hasMany: true,
-        },
-        {
-            name: 'etiquetas',
-            type: 'relationship',
-            relationTo: 'etiquetas',
-            hasMany: true,
         },
         {
             name: 'sala',
