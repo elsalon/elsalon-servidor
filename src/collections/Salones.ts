@@ -99,7 +99,7 @@ const Salones: CollectionConfig = {
                         : null;
 
                     const user = req.user;
-                    console.log("EL SALON ID", globals.elSalonId)
+
                     let idsSalonesColabora: string[] = [globals.elSalonId]; // Incluyo el salon principal
                     let idsUsuariosColabora: string[] = [];
                     let idsGruposColabora: string[] = [];

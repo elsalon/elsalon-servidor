@@ -32,7 +32,6 @@ const start = async () => {
     onInit: async () => {
       payload.logger.info(`Payload Admin URL: ${payload.getAdminURL()}`)
       const elsalon = await LoadSalonPrincipal(payload);
-      console.log("El salon principal", elsalon)
       globals.elSalonId = elsalon.id;
     },
   })
