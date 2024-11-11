@@ -51,7 +51,7 @@ export const isAdmin: Access = ({ req: { user } }) => {
 };
 
 export const afterCreateAssignAutorToUser = async ({ operation, data, req }) => {
-    if(operation === 'create'){
+    if(operation === 'create' && req.user){
         data.autor = req.user.id; // El autor es el usuario actual
         return data;
     }
@@ -64,7 +64,7 @@ export const AddNotificationAprecio = async ({
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
     }) => {
-    if(operation === 'create'){
+    if(operation === 'create' && req.body?.contenidotipo){
         // console.log("*** notificacion aprecio***", req.body.contenidotipo, req.body.contenidoid);
         switch(req.body.contenidotipo){
             case 'entrada':
