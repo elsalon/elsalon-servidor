@@ -131,5 +131,6 @@ export default buildConfig({
       method: 'get',
       handler: searchQuery,
     },
-  ]
+  ],
 })
+

@@ -4,6 +4,8 @@ import { SlugField } from '../SlugField';
 import { isAdmin, isAdminOrDocente } from '../helper';
 import { Where } from 'payload/types';
 
+const globals = require('../globals');
+
 const Salones: CollectionConfig = {
     slug: 'salones',
     admin: {
@@ -83,6 +85,7 @@ const Salones: CollectionConfig = {
             path: '/feed',
             method: 'get' as const,
             handler: async (req, res, next) => {
+
                 try {
                     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -96,8 +99,8 @@ const Salones: CollectionConfig = {
                         : null;
 
                     const user = req.user;
-
-                    let idsMateriasColabora: string[] = [];
+                    console.log("EL SALON ID", globals.elSalonId)
+                    let idsSalonesColabora: string[] = [globals.elSalonId]; // Incluyo el salon principal
                     let idsUsuariosColabora: string[] = [];
                     let idsGruposColabora: string[] = [];
 
@@ -111,7 +114,7 @@ const Salones: CollectionConfig = {
                     colaboraciones.docs.forEach((colaboracion) => {
                         switch (colaboracion.tipo) {
                             case 'salon':
-                                idsMateriasColabora.push(colaboracion.idColaborador as string);
+                                idsSalonesColabora.push(colaboracion.idColaborador as string);
                                 break;
                             case 'bitacora':
                                 idsUsuariosColabora.push(colaboracion.idColaborador as string);
@@ -128,7 +131,7 @@ const Salones: CollectionConfig = {
                                 autor: { equals: user.id }
                             },
                             {
-                                sala: { in: idsMateriasColabora }
+                                sala: { in: idsSalonesColabora }
                             },
                             {
                                 autor: { in: idsUsuariosColabora }

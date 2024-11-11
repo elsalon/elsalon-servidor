@@ -1,6 +1,7 @@
 import express from 'express'
 import payload from 'payload'
 const path = require('path');
+const globals = require('./globals');
 
 var cors = require('cors');
 var corsOptions = {
@@ -30,6 +31,9 @@ const start = async () => {
     express: app,
     onInit: async () => {
       payload.logger.info(`Payload Admin URL: ${payload.getAdminURL()}`)
+      const elsalon = await LoadSalonPrincipal(payload);
+      console.log("El salon principal", elsalon)
+      globals.elSalonId = elsalon.id;
     },
   })
 
@@ -39,3 +43,28 @@ const start = async () => {
 }
 
 start()
+
+
+
+const LoadSalonPrincipal = async (payload) => {
+  const salon = await payload.find({
+    collection: 'salones',
+    where:{
+      slug: {
+        equals: 'el-salon'
+      }
+    }
+  })
+  if(salon.docs.length > 0){
+    return salon.docs[0];
+  }else{
+    const res = await payload.create({
+      collection: 'salones',
+      data: {
+        nombre: 'El Salón',
+        slug: 'el-salon',
+      }
+    })
+    return res;
+  }
+}
