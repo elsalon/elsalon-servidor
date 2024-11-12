@@ -32,6 +32,14 @@ const Grupos: CollectionConfig = {
             type: 'relationship',
             relationTo: 'salones',
         },
+        {
+            name: 'desc',
+            type: 'textarea',
+        },
+        {
+            name: 'link',
+            type: 'text',
+        },
         SlugField(),
     ],
 }
