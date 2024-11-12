@@ -45,4 +45,12 @@ export const Campos: Field[] = [
         relationTo: 'etiquetas',
         hasMany: true,
     },
+    {
+        name: 'embedsYoutube',
+        type: 'text',
+    },
+    {
+        name: 'embedsVimeo',
+        type: 'text',
+    },
 ]
