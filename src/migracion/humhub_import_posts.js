@@ -130,7 +130,8 @@ const StartImport = async () => {
     await LoadContainerToSala();
     await LoadLogsCreatedPosts();
     // Una vez cargado el archivo, empiezo a descargar los datos
-    RetrieveNextPage(1);
+    const startingPage = 1;
+    RetrieveNextPage(startingPage);
 }
 
 
@@ -233,13 +234,13 @@ const onWriteFile = (err) => {
     }
 }
 
-
+var pages = 0;
 const RetrieveNextPage = async (page) => {
     try {
         console.log(`Downloading endpoint ${endpoint} page: ${page}/${pages}`);
         const response = await fetchHumhub.get(`/${endpoint}?page=${page}`);
         const results = response.data.results;
-        const pages = response.data.pages;
+        pages = response.data.pages;
 
 
         for (const post of results) {
@@ -294,7 +295,7 @@ const ImportPost = async (post) => {
 
     let { imagenes, archivos, imagenesImportadas } = await ProcessUploads(post.content, autor);
 
-    const { contenido, mencionados } = await ParseHumHubEntriesToSalon(post.message, imagenesImportadas);
+    const { contenido, mencionados, embedsVimeo, embedsYoutube } = await ParseHumHubEntriesToSalon(post.message, imagenesImportadas);
     // console.log(" >> Contenido", contenido, mencionados);
     // Imagenes y archivos. Convertir array de ids en formato [{imagen:id}]
     imagenes = imagenes.map(i => ({ imagen: i }));
@@ -308,6 +309,8 @@ const ImportPost = async (post) => {
         imagenes,
         archivos,
         mencionados,
+        embedsVimeo, 
+        embedsYoutube,
         sala: sala ? sala.id : null,
         createdAt: new Date(post.content.metadata.created_at).toISOString()
     }
@@ -325,16 +328,56 @@ const ImportPost = async (post) => {
         });
         SaveLogs();
 
-        // Importar Comentario
-        if (post.content.comments.total > 0) {
-            await ImportComments(post, response);
-        }
+        // Importar Comentario        
+        await ImportComments(post, response);
+
+        // Importar aprecios
+        await ImportAprecios(post, response);
+        // TODO
+        // {{API_URL}}/like/find-by-object?model=humhub\modules\post\models\Post&pk=${post.id}
+        /*
+        [
+            {
+                "id": 160228,
+                "createdBy": {
+                    "id": 3805,
+                    "guid": "2d6fc2e2-1d57-4224-a20b-f5965c212891",
+                    "display_name": "Camila Aguete",
+                    "url": "http://elsalon.org/u/camilaag/"
+                },
+                "createdAt": "2024-11-11 09:37:54"
+            }
+        ]
+        */
 
         imported++
     } catch (e) {
         console.log(e)
     }
+}
 
+async function ImportAprecios(hhpost, salonpost) {
+    console.log("Importando aprecios", hhpost.content.likes.total)
+    if(hhpost.content.likes.total == 0) return;
+
+    const response = await fetchHumhub.get(`/like/find-by-object?model=humhub\\modules\\post\\models\\Post&pk=${hhpost.id}`);
+    const results = response.data.results;
+    for(const aprecio of results){
+        console.log("Importando aprecio de", aprecio.createdBy.display_name)
+        var autor = importedUsers.find(u => u.hhid == aprecio.createdBy.id);
+        if (!autor) {
+            console.log("Creando autor del aprecio", aprecio.createdBy.display_name, aprecio.createdBy.id);
+            autor = await ImportUser(aprecio.createdBy);
+        }
+        await payload.create({
+            collection: 'aprecio',
+            data: {
+                contenidoid: salonpost.id,
+                autor: autor.id,
+                createdAt: new Date(aprecio.createdAt).toISOString()
+            }
+        });
+    }
 }
 
 
@@ -358,6 +401,8 @@ async function ImportComments(hhpost, salonpost) {
         "files": []
     },
     */
+    if(hhpost.content.comments.total == 0) return;
+
     const content_id = hhpost.content.id;
     const response = await fetchHumhub.get(`/comment/content/${content_id}`);
     const results = response.data.results;
@@ -383,7 +428,7 @@ async function ImportComment(hhcomment, salonpost) {
 
     let { imagenes, archivos, imagenesImportadas } = await ProcessUploads(hhcomment, autor);
 
-    const { contenido, mencionados } = await ParseHumHubEntriesToSalon(hhcomment.message, imagenesImportadas);
+    const { contenido, mencionados, embedsVimeo, embedsYoutube } = await ParseHumHubEntriesToSalon(hhcomment.message, imagenesImportadas);
     // Imagenes y archivos. Convertir array de ids en formato [{imagen:id}]
     imagenes = imagenes.map(i => ({ imagen: i }));
     archivos = archivos.map(i => ({ archivo: i }));
@@ -394,6 +439,8 @@ async function ImportComment(hhcomment, salonpost) {
         mencionados,
         imagenes,
         archivos,
+        embedsVimeo, 
+        embedsYoutube,
         createdAt: new Date(hhcomment.createdAt).toISOString()
     }
 
@@ -405,6 +452,13 @@ async function ImportComment(hhcomment, salonpost) {
         console.log("Comentario creada", response.id)
     } catch (e) {
         console.log(e)
+    }
+
+    // Me fijo si hay comentarios en el comentario
+    if(hhcomment.commentsCount > 0){
+        for(const comment of hhcomment.comments){
+            await ImportComment(comment, salonpost);
+        }
     }
 }
 
@@ -426,7 +480,7 @@ async function ProcessUploads(entry, autor) {
         }
 
         await DownloadFileSalon(`/file/download/${id}`, tempFilePath);
-        console.log("File downloaded")
+        // console.log("File downloaded")
 
         if (mime_type?.includes("image")) {
             // GUARDO Y SUBO LA IMAGEN
@@ -526,14 +580,16 @@ async function ParseHumHubEntriesToSalon(markdown, imagenesImportadas) {
     // Convierto las imagenes en formato propio de salon [image:id]
     html = ReplaceImgTags(html, imagenesImportadas);
     // Iframes
-    html = ReplaceEmbebidos(html);
+    const replacedEmbed = ReplaceEmbebidos(html);
+    html = replacedEmbed.html;
+    let {embedsVimeo, embedsYoutube} = replacedEmbed;
     // Mencionados
     var { modifiedHtml, mencionados } = await ReplaceMencionados(html);
     html = modifiedHtml;
 
     // Quito tags innecesario que no puedo desactivar en showdown
     html = RemoveHeadBodyTags(html);
-    return { contenido: html, mencionados };
+    return { contenido: html, mencionados, embedsVimeo, embedsYoutube};
 }
 
 function ReplaceEmojis(text){
@@ -609,6 +665,9 @@ function createVimeoEmbed(videoId) {
 }
 
 function ReplaceEmbebidos(htmlString) {
+    var embedsYoutube = [];
+    var embedsVimeo = [];
+
     const $ = cheerio.load(htmlString, { decodeEntities: false });
     
     $('a').each((index, element) => {
@@ -622,6 +681,7 @@ function ReplaceEmbebidos(htmlString) {
             const youtubeId = getYoutubeVideoId(url);
             if (youtubeId) {
                 $element.replaceWith(createYoutubeEmbed(youtubeId));
+                embedsYoutube.push(youtubeId);
                 return;
             }
             
@@ -629,6 +689,7 @@ function ReplaceEmbebidos(htmlString) {
             const vimeoId = getVimeoVideoId(url);
             if (vimeoId) {
                 $element.replaceWith(createVimeoEmbed(vimeoId));
+                embedsVimeo.push(vimeoId);
                 return;
             }
             
@@ -636,7 +697,10 @@ function ReplaceEmbebidos(htmlString) {
         }
     });
     
-    return $.html();
+    embedsYoutube = embedsYoutube.join(",");
+    embedsVimeo = embedsVimeo.join(",");
+
+    return {html: $.html(), embedsVimeo, embedsYoutube};
 }
 
 async function ReplaceMencionados(htmlString) {
