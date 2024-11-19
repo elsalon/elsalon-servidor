@@ -1,16 +1,107 @@
 import payload from 'payload';
-const jwt = require('jsonwebtoken');
+import { SignJWT, jwtVerify  } from 'jose';
 const logoUrl = `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/public/salon_logo_lg_600x80.png`;
 
-function GenerarMailDesuscripcion(email){
+// generate jwt
+async function generateToken(payload) {
+    const token = await new SignJWT(payload)
+      .setProtectedHeader({ alg: 'HS256' })
+      .setExpirationTime('2d')
+      .sign(new TextEncoder().encode(process.env.PAYLOAD_SECRET));
+    return token;
+}
+// Verify a JWT
+async function verifyToken(token) {
+    try {
+      const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.PAYLOAD_SECRET));
+      return payload;
+    } catch (err) {
+      console.error('Invalid or expired token:', err.message);
+      throw err;
+    }
+  }
+
+async function GenerarMailDesuscripcion(email){
     const data = {
         email,
         action: "unsubscribe",
-        expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 horas
     }
-    const token = jwt.sign(data, process.env.PAYLOAD_SECRET);
-    const url = process.env.PAYLOAD_PUBLIC_FRONTEND_URL + `/desuscribir?token=${token}`;
+    // const token = await payload.auth.sign(data, process.env.PAYLOAD_SECRET, { expiresIn: '2d'});
+    const token = await generateToken(data);
+      
+    // const token = jwt.sign(data, process.env.PAYLOAD_SECRET);
+    const url = process.env.PAYLOAD_PUBLIC_SERVER_URL + `/api/desuscribir?token=${token}`;
     return `<p>Para dejar de recibir mails de El Salón, podés <a href="${url}">desuscribirte acá</a>.</p>`;
+}
+
+export const DesuscribirUsuario = async (req, res, next) => {
+    const token = req.query.token;
+    if (!token) {
+        res.status(400).send("Token inválido");
+        return;
+    }
+    try {
+        const data = await verifyToken(token);
+        if (data.action !== "unsubscribe") {
+            res.status(400).send("Token inválido");
+            return;
+        }
+        const res = await payload.find({
+            collection: 'users',
+            where: {
+                email: {equals: data.email}
+            }
+        });
+        const user = res.docs[0];
+        if (!user) {
+            res.status(404).send("Usuario no encontrado");
+            return;
+        }
+        await payload.update({
+            collection: 'users',
+            id: user.id,
+            data: {
+                notificacionesMail: {
+                    activas: false
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error al desuscribir usuario:', error);
+        res.status(500).send("Error al desuscribir usuario");
+        return;
+    }
+
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Desuscripción Exitosa</title>
+            <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            </style>
+        </head>
+        <body>
+            <h1>Desuscripción Exitosa</h1>
+            <p>Ya no vas a recibir correos de El Salón</p>
+            <p>Para volver a suscribirte, podés hacerlo desde tu perfil</p>
+        </body>
+        </html>
+    `;
+    res.status(200).send(htmlContent);
 }
 
 const mailHeader =`<!DOCTYPE html>
@@ -56,10 +147,10 @@ const mailHeader =`<!DOCTYPE html>
             </div>
             <div class="content">`;
 
-            const mailFooter = (email) => `</div>
+            const mailFooter = async (email) => `</div>
 <div class="footer">
     <p>El Salón</p>
-    ${GenerarMailDesuscripcion(email)}
+    ${await GenerarMailDesuscripcion(email)}
 </div>
 </div>
 </body>
@@ -119,22 +210,22 @@ function BloqueComentario(comentario, entrada){
 }
 
 
-export const EnviarMailMencion = (mencionado, doc) => {
+export const EnviarMailMencion = async (mencionado, doc) => {
     // Chequear si el usuario tiene notificaciones por mail habilitadas
     if (!mencionado.notificacionesMail.activas || !mencionado.notificacionesMail.mencionNueva) return;
     var body = mailHeader;
     body += BloqueEntrada(doc);
-    body += mailFooter(mencionado.email);
+    body += await mailFooter(mencionado.email);
 
     AddToMailQueue(mencionado.email, `El Salon - ${doc.autor.nombre} te mencionó`, body);
 }
 
-export const EnviarMailComentario = (comentario, entrada) => {
+export const EnviarMailComentario = async (comentario, entrada) => {
     // Chequear si el usuario tiene notificaciones por mail habilitadas
     if (!entrada.autor.notificacionesMail.activas || !entrada.autor.notificacionesMail.comentarioNuevo) return;
     var body = mailHeader;
     body += BloqueComentario(comentario, entrada);
-    body += mailFooter(entrada.autor.email);
+    body += await mailFooter(entrada.autor.email);
 
     AddToMailQueue(entrada.autor.email, `El Salon - ${comentario.autor.nombre} comentó una entrada tuya`, body);
 }
