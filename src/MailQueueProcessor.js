@@ -21,7 +21,7 @@ class MailQueueProcessor {
       if (!this.isProcessing) return;
   
       try {
-        console.log('Checking mail queue...')
+        // console.log('Checking mail queue...')
         // Find oldest unsent mail in queue
         const queueItem = await this.payload.find({
             collection: 'mailQueue',

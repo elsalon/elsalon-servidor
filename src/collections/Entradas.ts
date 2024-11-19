@@ -39,10 +39,6 @@ const Entradas: CollectionConfig = {
             relationTo: 'grupos',
         },
         {
-            name: 'extracto',
-            type: 'text',
-        },
-        {
             name: 'sala',
             type: 'relationship',
             relationTo: 'salones',

@@ -1,6 +1,7 @@
 // Helper functions
 import { Access, FieldAccess } from 'payload/types';
 import payload from 'payload';
+import { EnviarMailMencion, EnviarMailComentario } from './GeneradorNotificacionesMail';
 
 
 // Helper acces function
@@ -155,11 +156,11 @@ export const AddNotificationColaboracion = async ({
                         linkTo: req.user.slug,
                     },
                 });
-                // Envio mail
-                const receptor = await req.payload.findByID({collection: 'users', id: doc.idColaborador});
-                if(receptor.notificacionesMail?.activas && receptor.notificacionesMail?.colaboradorNuevo){
-                    await AddToMailQueue(receptor.email, 'Nueva colaboración', `${req.user.nombre} empezó a colaborar con vos`)
-                }
+                // Dejo acá comentado. En principio no vamos a enviar mail por cada colaboración
+                // const receptor = await req.payload.findByID({collection: 'users', id: doc.idColaborador});
+                // if(receptor.notificacionesMail?.activas && receptor.notificacionesMail?.colaboradorNuevo){
+                //     await AddToMailQueue(receptor.email, 'Nueva colaboración', `${req.user.nombre} empezó a colaborar con vos`)
+                // }
                 break;
             case 'grupo':
                 // console.log('Colaboracion en grupo');
@@ -181,10 +182,11 @@ export const AddNotificationColaboracion = async ({
                                 linkTo: req.user.slug,
                             },
                         });
-
-                        if(integrante.notificacionesMail?.activas && integrante.notificacionesMail?.colaboradorNuevo){
-                            await AddToMailQueue(integrante.email, 'Nueva colaboración', `${req.user.nombre} empezó a colaborar con tu grupo ${grupo.nombre}`)
-                        }
+                        
+                        // Dejo acá comentado. En principio no vamos a enviar mail por cada colaboración
+                        // if(integrante.notificacionesMail?.activas && integrante.notificacionesMail?.colaboradorNuevo){
+                        //     await AddToMailQueue(integrante.email, 'Nueva colaboración', `${req.user.nombre} empezó a colaborar con tu grupo ${grupo.nombre}`)
+                        // }
                     });
                 }
                 break;
@@ -192,14 +194,30 @@ export const AddNotificationColaboracion = async ({
     }
 }
 
-export const AddToMailQueue = (to, subject, body) => {
-    console.log("Agregando mail a la cola", to, subject);
-    return payload.create({
-        collection: 'mailQueue',
-        data: {to, subject, body},
-    });
+export const NotificarAutorEntrada = async ({
+    doc, // full document data
+    req, // full express request
+    previousDoc, // document data before updating the collection
+    operation, // name of the operation ie. 'create', 'update'
+}) => {
+    if(operation === 'create'){
+        // console.log("entrada", doc.entrada)
+        const entrada = await req.payload.findByID({collection: 'entradas', id: doc.entrada});
+        // console.log("autor", entrada.autor)
+        await req.payload.create({
+            collection: 'notificaciones',
+            data: {
+                autor: entrada.autor.id, // destinatario
+                tipoNotificacion: 'comentario',
+                mensaje: `<strong>${doc.autor.nombre}</strong> comentó tu entrada <strong>${entrada.extracto}</strong>`,
+                leida: false,
+                linkType: 'entrada',
+                linkTo: entrada.id,
+            },
+        });
+        EnviarMailComentario(doc, entrada);
+    }
 }
-
 
 export const NotificarMencionados = async ({
     doc, // full document data
@@ -238,6 +256,7 @@ const CrearNotificacionMencion = async(mencionado, doc) => {
             linkTo,
         },
     });
+    EnviarMailMencion(mencionado, doc);
 }
 export const CrearExtracto = async ({ operation, data, req }) => {
     if (operation === 'create' || operation === 'update') {

@@ -12,6 +12,10 @@ export const Campos: Field[] = [
         type: 'textarea',
     },
     {
+        name: 'extracto',
+        type: 'text',
+    },
+    {
         name: 'imagenes',
         type: 'array',
         fields: [

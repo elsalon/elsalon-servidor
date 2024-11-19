@@ -159,30 +159,30 @@ const Users = {
           type: 'checkbox',
           defaultValue: true,
         },
-        {
-          name: 'colaboradorNuevo',
-          type: 'checkbox',
-          defaultValue: true,
-          // Recibir notificacion cuando alguien te sigue
-        },
-        {
-          name: 'grupoNuevo',
-          type: 'checkbox',
-          defaultValue: true,
-          // Recibir notificacion cuando alguien te agrega a un grupo
-        },
+        // {
+        //   name: 'colaboradorNuevo',
+        //   type: 'checkbox',
+        //   defaultValue: true,
+        //   // Recibir notificacion cuando alguien te sigue
+        // },
+        // {
+        //   name: 'grupoNuevo',
+        //   type: 'checkbox',
+        //   defaultValue: true,
+        //   // Recibir notificacion cuando alguien te agrega a un grupo
+        // },
         {
           name: 'mencionNueva',
           type: 'checkbox',
           defaultValue: true,
           // Recibir notificacion cuando alguien te menciona en un post
         },
-        {
-          name: 'aprecioNuevo',
-          type: 'checkbox',
-          defaultValue: true,
-          // Recibir notificacion cuando alguien aprecia tu post
-        },
+        // {
+        //   name: 'aprecioNuevo',
+        //   type: 'checkbox',
+        //   defaultValue: true,
+        //   // Recibir notificacion cuando alguien aprecia tu post
+        // },
         {
           name: 'comentarioNuevo',
           type: 'checkbox',

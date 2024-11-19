@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, NotificarMencionados } from '../helper'
+import { isAdminOrAutor, NotificarAutorEntrada, NotificarMencionados, CrearExtracto } from '../helper'
 import { Campos } from './CamposEntradasYComentarios'
 
 const Comentarios: CollectionConfig = {
@@ -10,6 +10,7 @@ const Comentarios: CollectionConfig = {
     },
     hooks: {
         beforeChange: [
+            CrearExtracto,
             async ({ operation, data, req }) => {
                 if(operation === 'create' && req.user){
                     // console.log('New entry created', data);
@@ -19,6 +20,7 @@ const Comentarios: CollectionConfig = {
             }
         ],
         afterChange: [
+            NotificarAutorEntrada,
             NotificarMencionados,
         ]
     },
