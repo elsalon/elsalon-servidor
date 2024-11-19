@@ -134,9 +134,9 @@ export const AddNotificationColaboracion = async ({
     operation, // name of the operation ie. 'create', 'update'
 }) => {
     if(operation === 'create'){
-        console.log("Usuario que empezo a colaborar:", req.user.slug)
-        console.log("Tipo de colaboracion:", doc.tipo);
-        console.log("Objeto con el que colabora:", doc.idColaborador);
+        // console.log("Usuario que empezo a colaborar:", req.user.slug)
+        // console.log("Tipo de colaboracion:", doc.tipo);
+        // console.log("Objeto con el que colabora:", doc.idColaborador);
 
         switch(doc.tipo){
             case 'salon':
@@ -155,6 +155,11 @@ export const AddNotificationColaboracion = async ({
                         linkTo: req.user.slug,
                     },
                 });
+                // Envio mail
+                const receptor = await req.payload.findByID({collection: 'users', id: doc.idColaborador});
+                if(receptor.notificacionesMail?.activas && receptor.notificacionesMail?.colaboradorNuevo){
+                    await AddToMailQueue(receptor.email, 'Nueva colaboración', `${req.user.nombre} empezó a colaborar con vos`)
+                }
                 break;
             case 'grupo':
                 // console.log('Colaboracion en grupo');
@@ -176,12 +181,25 @@ export const AddNotificationColaboracion = async ({
                                 linkTo: req.user.slug,
                             },
                         });
+
+                        if(integrante.notificacionesMail?.activas && integrante.notificacionesMail?.colaboradorNuevo){
+                            await AddToMailQueue(integrante.email, 'Nueva colaboración', `${req.user.nombre} empezó a colaborar con tu grupo ${grupo.nombre}`)
+                        }
                     });
                 }
                 break;
         }
     }
 }
+
+export const AddToMailQueue = (to, subject, body) => {
+    console.log("Agregando mail a la cola", to, subject);
+    return payload.create({
+        collection: 'mailQueue',
+        data: {to, subject, body},
+    });
+}
+
 
 export const NotificarMencionados = async ({
     doc, // full document data

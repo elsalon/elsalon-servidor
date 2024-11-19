@@ -26,6 +26,7 @@ import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
 import Etiquetas from './collections/Etiquetas'
 import { cloudStorage } from '@payloadcms/plugin-cloud-storage'
+import MailQueue from './collections/MailQueue'
 
 // DigitalOcean Spaces
 const DOSpacesAdapter = s3Adapter({
@@ -74,6 +75,7 @@ export default buildConfig({
     Notificaciones,
     Fijadas,
     Etiquetas,
+    MailQueue,
   ],
   globals: [
     Ajustes,

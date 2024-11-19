@@ -1,3 +1,4 @@
+import { isAdminOrSelf } from '../helper';
 import { SlugField } from '../SlugField'
 import { simpleEmailTemplate } from '../emailTemplates'
 
@@ -144,6 +145,51 @@ const Users = {
       name: 'mostrarEmail',
       type: 'checkbox',
       defaultValue: false,
+    },
+    {
+      name: 'notificacionesMail',
+      type: 'group',
+      access: {
+        read: isAdminOrSelf,
+        update: isAdminOrSelf,
+      },
+      fields: [
+        {
+          name: 'activas',
+          type: 'checkbox',
+          defaultValue: true,
+        },
+        {
+          name: 'colaboradorNuevo',
+          type: 'checkbox',
+          defaultValue: true,
+          // Recibir notificacion cuando alguien te sigue
+        },
+        {
+          name: 'grupoNuevo',
+          type: 'checkbox',
+          defaultValue: true,
+          // Recibir notificacion cuando alguien te agrega a un grupo
+        },
+        {
+          name: 'mencionNueva',
+          type: 'checkbox',
+          defaultValue: true,
+          // Recibir notificacion cuando alguien te menciona en un post
+        },
+        {
+          name: 'aprecioNuevo',
+          type: 'checkbox',
+          defaultValue: true,
+          // Recibir notificacion cuando alguien aprecia tu post
+        },
+        {
+          name: 'comentarioNuevo',
+          type: 'checkbox',
+          defaultValue: true,
+          // Recibir notificacion cuando alguien comenta tu post
+        }
+      ],
     },
     SlugField(),
     {

@@ -2,6 +2,7 @@ import express from 'express'
 import payload from 'payload'
 const path = require('path');
 const globals = require('./globals');
+const { initializeMailQueue, cleanupFailedEmails } = require('./mailQueueProcessor');
 
 var cors = require('cors');
 var corsOptions = {
@@ -33,6 +34,13 @@ const start = async () => {
       payload.logger.info(`Payload Admin URL: ${payload.getAdminURL()}`)
       const elsalon = await LoadSalonPrincipal(payload);
       globals.elSalonId = elsalon.id;
+
+      // Initialize mail queue
+      const mailQueue = initializeMailQueue(payload);
+      // Optional: Set up periodic cleanup of failed emails
+      setInterval(() => {
+        cleanupFailedEmails(payload);
+      }, 1000 * 60 * 60); // Run every hour
     },
   })
 
