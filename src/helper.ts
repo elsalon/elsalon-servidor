@@ -203,7 +203,7 @@ export const NotificarAutorEntrada = async ({
     if(operation === 'create'){
         // console.log("entrada", doc.entrada)
         const entrada = await req.payload.findByID({collection: 'entradas', id: doc.entrada});
-        // if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+        if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
         // console.log("autor", entrada.autor)
         await req.payload.create({
             collection: 'notificaciones',

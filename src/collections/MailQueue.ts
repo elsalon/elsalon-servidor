@@ -4,7 +4,7 @@ import { isAdmin } from '../helper'
 const MailQueue: CollectionConfig = {
     slug: 'mailQueue',
     admin: {
-        group: 'medios',
+        group: 'Medios',
         useAsTitle: 'subject',
     },
     labels: {
