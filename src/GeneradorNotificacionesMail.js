@@ -166,17 +166,32 @@ export const AddToMailQueue = (to, subject, body) => {
     });
 }
 
+function GenerarAvatar(autor){
+    if(autor.avatar?.sizes?.thumbnail?.url){
+        return `
+            <img 
+                src="${autor.avatar.sizes.thumbnail.url}" 
+                alt="Avatar" 
+                style="max-width: 48px; height: auto;"
+            />`;
+    }else{
+        // Genero un cuadrado con las iniciales del nombre
+        const initials = autor.nombre.split(' ').map(word => word[0]).join('');
+        return `
+            <div 
+                style="width: 48px; height: 48px; background-color: #000; color: #fff; font-weight: bold; font-size: 20px; text-align: center; line-height: 48px;"
+            >
+                ${initials}
+            </div>`;
+    }
+}
 
 
 function BloqueEntrada(doc){
     return `<table>
     <tr>
         <td width="48" style="vertical-align: top; padding-right: 20px;">
-            <img 
-                src="${doc.autor.avatar.sizes.thumbnail.url}" 
-                alt="Avatar" 
-                style="max-width: 48px; height: auto;"
-            />
+            ${GenerarAvatar(doc.autor)}
         </td>
         <td>
             <p style="font-weight:bold">${doc.autor.nombre}</p>
@@ -190,11 +205,7 @@ function BloqueComentario(comentario, entrada){
     return `<table>
     <tr>
         <td width="48" style="vertical-align: top; padding-right: 20px;">
-            <img 
-                src="${comentario.autor.avatar.sizes.thumbnail.url}" 
-                alt="Avatar" 
-                style="max-width: 48px; height: auto;"
-            />
+            ${GenerarAvatar(comentario.autor)}
         </td>
         <td>
             <p style="font-weight:bold">${comentario.autor.nombre}</p>
@@ -220,12 +231,17 @@ export const EnviarMailMencion = async (mencionado, doc) => {
     AddToMailQueue(mencionado.email, `El Salon - ${doc.autor.nombre} te mencionó`, body);
 }
 
-export const EnviarMailComentario = async (comentario, entrada) => {
-    // Chequear si el usuario tiene notificaciones por mail habilitadas
-    if (!entrada.autor.notificacionesMail.activas || !entrada.autor.notificacionesMail.comentarioNuevo) return;
+export const NotificarMailComentario = async ({
+    doc, // full document data
+    operation, // name of the operation ie. 'create', 'update'
+}, entrada) => {
+    if(operation != 'create') return;
+    if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+    if(!entrada.autor.notificacionesMail.activas || !entrada.autor.notificacionesMail.comentarioNuevo) return; // Chequear si el usuario tiene notificaciones por mail habilitadas
+
     var body = mailHeader;
-    body += BloqueComentario(comentario, entrada);
+    body += BloqueComentario(doc, entrada);
     body += await mailFooter(entrada.autor.email);
 
-    AddToMailQueue(entrada.autor.email, `El Salon - ${comentario.autor.nombre} comentó una entrada tuya`, body);
+    AddToMailQueue(entrada.autor.email, `El Salon - ${doc.autor.nombre} comentó una entrada tuya`, body);
 }

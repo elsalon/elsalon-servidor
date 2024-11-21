@@ -23,12 +23,22 @@ const Notificaciones: CollectionConfig = {
         {
             name: 'tipoNotificacion',
             type: 'select',
-            options: ['apreciacion', 'comentario', 'mencion', 'respuesta', 'colaboracion'],
+            options: ['aprecio', 'comentario', 'mencion', 'colaboracion'],
         },
         {
-            name: 'mensaje',
-            type: 'text',
+            name: 'cantidad',
+            type: 'number',
+            defaultValue: 0,
         },
+        {
+            name: 'usuario',
+            type: 'relationship',
+            relationTo: 'users',
+        },
+        // {
+        //     name: 'mensaje',
+        //     type: 'text',
+        // },
         {
             name: 'linkType',
             type: 'select',
@@ -41,6 +51,7 @@ const Notificaciones: CollectionConfig = {
         {
             name: 'leida',
             type: 'checkbox',
+            defaultValue: false,
         }
     ],
     endpoints:[

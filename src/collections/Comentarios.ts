@@ -1,5 +1,7 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, NotificarAutorEntrada, NotificarMencionados, CrearExtracto } from '../helper'
+import { isAdminOrAutor, NotificarMencionados, CrearExtracto } from '../helper'
+import { NotificarNuevoComentario } from '../GeneradorNotificacionesWeb'
+import { NotificarMailComentario } from '../GeneradorNotificacionesMail'
 import { Campos } from './CamposEntradasYComentarios'
 
 const Comentarios: CollectionConfig = {
@@ -20,7 +22,11 @@ const Comentarios: CollectionConfig = {
             }
         ],
         afterChange: [
-            NotificarAutorEntrada,
+            async (c) => {
+                const entrada = await c.req.payload.findByID({collection: 'entradas', id: c.doc.entrada});
+                NotificarNuevoComentario(c, entrada);
+                NotificarMailComentario(c, entrada);
+            },
             NotificarMencionados,
         ]
     },

@@ -1,5 +1,6 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, afterCreateAssignAutorToUser, AddNotificationAprecio } from '../helper'
+import { isAdminOrAutor, afterCreateAssignAutorToUser } from '../helper'
+import { NotificarAprecio } from '../GeneradorNotificacionesWeb'
 
 const Aprecio: CollectionConfig = {
     slug: 'aprecio',
@@ -12,7 +13,7 @@ const Aprecio: CollectionConfig = {
     },
     hooks: {
         beforeChange: [afterCreateAssignAutorToUser],
-        afterChange: [AddNotificationAprecio]
+        afterChange: [NotificarAprecio]
     },
     fields: [
         {

@@ -1,5 +1,6 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, AddNotificationColaboracion } from '../helper'
+import { isAdminOrAutor,  } from '../helper'
+import { NotificarNuevaColaboracion } from '../GeneradorNotificacionesWeb'
 
 const Colaboraciones: CollectionConfig = {
     slug: 'colaboraciones',
@@ -11,7 +12,7 @@ const Colaboraciones: CollectionConfig = {
         group: 'Interacciones',
     },
     hooks: {
-        afterChange: [AddNotificationColaboracion]
+        afterChange: [NotificarNuevaColaboracion]
     },
     fields: [
         {
