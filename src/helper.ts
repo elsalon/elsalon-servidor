@@ -2,6 +2,7 @@
 import { Access, FieldAccess } from 'payload/types';
 import payload from 'payload';
 import { EnviarMailMencion } from './GeneradorNotificacionesMail';
+import { NotificarMencionEntrada, NotificarMencionComentario } from './GeneradorNotificacionesWeb';
 
 // Helper acces function
 export const isAutor: Access = ({ req: { user }, id }) => {
@@ -58,45 +59,40 @@ export const afterCreateAssignAutorToUser = async ({ operation, data, req }) => 
 }
 
 
-export const NotificarMencionados = async ({
-    doc, // full document data
-    req, // full express request
-    previousDoc, // document data before updating the collection
-    operation, // name of the operation ie. 'create', 'update'
-}) => {
-    if(operation === 'create'){
-        doc.mencionados?.forEach(async (mencionado) => {
-            CrearNotificacionMencion(mencionado, doc)
-        });
-    }else if (operation === 'update'){
-        let viejosMencionados = previousDoc.mencionados.map(m => m.id);
-        let nuevosMencionados = doc.mencionados.map(m => m.id).filter(m => !viejosMencionados.includes(m));
-        nuevosMencionados.forEach(async (mencionado) => {
-            CrearNotificacionMencion(mencionado, doc)
-        });
-    }
-};
-
-const CrearNotificacionMencion = async(mencionado, doc) => {
-    let mensaje = doc.extracto 
-        ? `<strong>${doc.autor.nombre}</strong> te mencionó en su entrada <strong>${doc.extracto}</strong>` // es una entrada
-        : `<strong>${doc.autor.nombre}</strong> te mencionó en su comentario a <strong>${doc.entrada.extracto}</strong>`; // es un comentario
+export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
+    // CREATE
+    if(operation === 'create') return doc.mencionados;
     
-    let linkTo = doc.extracto ? doc.id : doc.entrada.id;
-    
-    await payload.create({
-        collection: 'notificaciones',
-        data: {
-            autor: mencionado.id,
-            tipoNotificacion: 'mencion',
-            mensaje,
-            leida: false,
-            linkType: 'entrada',
-            linkTo,
-        },
-    });
-    EnviarMailMencion(mencionado, doc);
+    // UPDATE
+    let viejosMencionados = previousDoc.mencionados.map(m => m.id);
+    let nuevosMencionados = doc.mencionados.map(m => m.id).filter(m => !viejosMencionados.includes(m));
+    return nuevosMencionados;
 }
+
+// export const HandleMencionados = async ({
+//     doc, // full document data
+//     req, // full express request
+//     previousDoc, // document data before updating the collection
+//     operation, // name of the operation ie. 'create', 'update'
+// }) => {
+//     const collection = req.collection.config.slug;
+//     if(operation === 'create'){
+//         doc.mencionados?.forEach(async (mencionado) => {
+//             if(collection == "comentarios"){
+//                 NotificarMencionComentario(mencionado, doc);
+//             // NotificarMencion(mencionado, doc, collection)
+//             EnviarMailMencion(mencionado, doc, collection);
+//         });
+//     }else if (operation === 'update'){
+//         let viejosMencionados = previousDoc.mencionados.map(m => m.id);
+//         let nuevosMencionados = doc.mencionados.map(m => m.id).filter(m => !viejosMencionados.includes(m));
+//         nuevosMencionados.forEach(async (mencionado) => {
+//             NotificarMencion(mencionado, doc, collection)
+//             EnviarMailMencion(mencionado, doc, collection);
+//         });
+//     }
+// };
+
 export const CrearExtracto = async ({ operation, data, req }) => {
     if (operation === 'create' || operation === 'update') {
         let text = data.contenido;

@@ -1,5 +1,6 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, NotificarMencionados, CrearExtracto, ValidarEntradaVacia } from '../helper'
+import { isAdminOrAutor, CrearExtracto, ValidarEntradaVacia } from '../helper'
+import { NotificarMencionEntrada } from '../GeneradorNotificacionesWeb'
 import { Campos } from './CamposEntradasYComentarios'
 
 const Entradas: CollectionConfig = {
@@ -21,7 +22,7 @@ const Entradas: CollectionConfig = {
             // TODO revisar que si se esta fijando/desfijando o destacando/desdestacando, se chequee que el usuario sea admin o docente
         ],
         afterChange: [
-            NotificarMencionados,
+            NotificarMencionEntrada,
         ]
     },
     admin: {

@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, NotificarMencionados, CrearExtracto } from '../helper'
-import { NotificarNuevoComentario } from '../GeneradorNotificacionesWeb'
+import { isAdminOrAutor, CrearExtracto } from '../helper'
+import { NotificarNuevoComentario, NotificarMencionComentario } from '../GeneradorNotificacionesWeb'
 import { NotificarMailComentario } from '../GeneradorNotificacionesMail'
 import { Campos } from './CamposEntradasYComentarios'
 
@@ -26,8 +26,8 @@ const Comentarios: CollectionConfig = {
                 const entrada = await c.req.payload.findByID({collection: 'entradas', id: c.doc.entrada});
                 NotificarNuevoComentario(c, entrada);
                 NotificarMailComentario(c, entrada);
+                NotificarMencionComentario(c, entrada)
             },
-            NotificarMencionados,
         ]
     },
     admin: {

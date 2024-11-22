@@ -221,11 +221,17 @@ function BloqueComentario(comentario, entrada){
 }
 
 
-export const EnviarMailMencion = async (mencionado, doc) => {
+export const EnviarMailMencion = async (mencionado, doc, collection) => {
     // Chequear si el usuario tiene notificaciones por mail habilitadas
-    if (!mencionado.notificacionesMail.activas || !mencionado.notificacionesMail.mencionNueva) return;
+    if (!mencionado.notificacionesMail?.activas || !mencionado.notificacionesMail?.mencionNueva) return;
     var body = mailHeader;
-    body += BloqueEntrada(doc);
+
+    if(collection == 'entradas'){
+        body += BloqueEntrada(doc);
+    }else{
+        body += BloqueComentario(doc, doc.entrada);
+    }
+    
     body += await mailFooter(mencionado.email);
 
     AddToMailQueue(mencionado.email, `El Salon - ${doc.autor.nombre} te mencionó`, body);

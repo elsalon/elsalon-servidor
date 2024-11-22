@@ -1,5 +1,5 @@
 import payload from "payload"
-
+import { GetNuevosMencionados } from "./helper";
 
 export const NotificarAprecio = async ({ 
     doc,
@@ -62,7 +62,7 @@ export const NotificacionAprecioComentario = async (doc, req) => {
 
 
  /**
- * @param {user} user - Usuario siendo notificado
+ * @param {user} autor - Usuario siendo notificado
  * @param {user} usuario - Usuario que ejecutó la accion (se usará su avatar)
  * @param {string} tipoNotificacion - Tipo de notificación 'aprecio' | 'comentario' | 'mencion' | 'colaboracion']
  * @param {string} linkType - ID de la entrada o comentario a la que se hace referencia
@@ -76,6 +76,7 @@ const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, linkT
                 and: [
                     {tipoNotificacion: {equals: tipoNotificacion}},
                     {linkTo: {equals: linkTo}},
+                    {autor: {equals: autor}},
                 ]
             };
             break;
@@ -92,8 +93,19 @@ const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, linkT
                 and: [
                     {tipoNotificacion: {equals: tipoNotificacion}},
                     {linkTo: {equals: linkTo}},
+                    {autor: {equals: autor}},
                 ]
             };
+            break;
+        case 'mencion':
+            where = {
+                and: [
+                    {tipoNotificacion: {equals: tipoNotificacion}},
+                    {linkTo: {equals: linkTo}},
+                    {autor: {equals: autor}},
+                ]
+            };
+            console.log("Notificar mencion ** ", where)
             break;
     }
 
@@ -118,8 +130,8 @@ const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, linkT
         });
     }else{
         // Ya se aprecio antes. Modifico la cantidad
-        console.log("Sumando a notificacion existente")
         const notificacion = existente.docs[0];
+        console.log("Sumando a notificacion existente", notificacion.id)
         await payload.update({
             collection: 'notificaciones',
             id: notificacion.id,
@@ -187,4 +199,56 @@ export const NotificarNuevoComentario = async ({
     if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
 
     GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', 'entrada', entrada.id);
+}
+
+
+export const NotificarMencionEntrada = async ({
+    doc, // full document data
+    previousDoc, // document data before updating the collection
+    operation, // name of the operation ie. 'create', 'update'
+}) =>{
+    const nuevosMencionados = await GetNuevosMencionados({doc, previousDoc, operation});
+
+    if (!Array.isArray(nuevosMencionados)) {
+        console.error("Expected an array from GetNuevosMencionados, but got:", nuevosMencionados);
+        return;
+    }
+
+    // Process mentions sequentially with delay
+    for (const mencionado of nuevosMencionados) {        
+        try {
+            console.log(mencionado.nombre, mencionado.id, " --- ", doc.autor.nombre, doc.autor.id)
+            await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', 'entrada', doc.id);
+            // Wait 500ms between operations
+            await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+            console.error(`Error processing mention for user ${mencionado.id}:`, error);
+        }
+    }
+}
+
+export const NotificarMencionComentario = async ({
+    doc, // full document data
+    previousDoc,
+    operation, // name of the operation ie. 'create', 'update'
+}, entrada) => {
+    const nuevosMencionados = await GetNuevosMencionados({doc, previousDoc, operation});
+
+    if (!Array.isArray(nuevosMencionados)) {
+        console.error("Expected an array from GetNuevosMencionados, but got:", nuevosMencionados);
+        return;
+    }
+
+    // Process mentions sequentially with delay
+    for (const mencionado of nuevosMencionados) {
+        if (mencionado.id === entrada.autor.id) continue;
+        
+        try {
+            await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', 'entrada', entrada.id);
+            // Wait 500ms between operations
+            await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+            console.error(`Error processing mention for user ${mencionado.id}:`, error);
+        }
+    }
 }
