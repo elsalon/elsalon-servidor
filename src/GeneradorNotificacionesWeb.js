@@ -13,7 +13,7 @@ import { GetNuevosMencionados } from "./helper";
     let where = {
         and: [
             {tipoNotificacion: {equals: tipoNotificacion}},
-            {sourceDocument: {equals: sourceDocumentId}},
+            {'sourceDocument.value': {equals: sourceDocumentId}},
             {autor: {equals: autor}},
         ]
     };
