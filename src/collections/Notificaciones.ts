@@ -36,17 +36,14 @@ const Notificaciones: CollectionConfig = {
             relationTo: 'users',
         },
         // {
-        //     name: 'mensaje',
-        //     type: 'text',
+        //     name: 'sourceEventType',
+        //     type: 'select',
+        //     options: ['entrada', 'comentario', 'grupo', 'salon', 'usuario'],
         // },
         {
-            name: 'sourceEventType',
-            type: 'select',
-            options: ['entrada', 'comentario', 'grupo', 'salon', 'usuario'],
-        },
-        {
-            name: 'sourceEventId',
-            type: 'text',
+            name: 'sourceDocument',
+            type: 'relationship',
+            relationTo: ['entradas', 'comentarios', 'grupos', 'salones', 'users'],
         },
         {
             name: 'leida',

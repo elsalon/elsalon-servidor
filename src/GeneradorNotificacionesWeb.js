@@ -1,6 +1,93 @@
 import payload from "payload"
 import { GetNuevosMencionados } from "./helper";
 
+
+ /**
+ * @param {user} autor - Usuario siendo notificado
+ * @param {user} usuario - Usuario que ejecutó la accion (se usará su avatar)
+ * @param {string} tipoNotificacion - Tipo de notificación 'aprecio' | 'comentario' | 'mencion' | 'colaboracion']
+ * @param {string} sourceDocumentId - ID de la entrada o comentario a la que se hace referencia
+ */
+ const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, sourceDocumentId, sourceDocumentCollection) => {
+    // var where;
+    let where = {
+        and: [
+            {tipoNotificacion: {equals: tipoNotificacion}},
+            {sourceDocument: {equals: sourceDocumentId}},
+            {autor: {equals: autor}},
+        ]
+    };
+    // switch(tipoNotificacion){
+    //     case 'aprecio':
+    //         break;
+    //     case 'colaboracion':
+    //         where = {
+    //             and: [
+    //                 {tipoNotificacion: {equals: tipoNotificacion}},
+    //                 {autor: {equals: autor}},
+    //             ]
+    //         };
+    //         break
+    //     case 'comentario':
+    //         where = {
+    //             and: [
+    //                 {tipoNotificacion: {equals: tipoNotificacion}},
+    //                 {sourceEventId: {equals: sourceEventId}},
+    //                 {autor: {equals: autor}},
+    //             ]
+    //         };
+    //         break;
+    //     case 'mencion':
+    //         where = {
+    //             and: [
+    //                 {tipoNotificacion: {equals: tipoNotificacion}},
+    //                 {sourceEventId: {equals: sourceEventId}},
+    //                 {autor: {equals: autor}},
+    //             ]
+    //         };
+    //         // console.log("Notificar mencion ** ", where)
+    //         break;
+    // }
+
+        console.log({sourceDocumentId})
+    const existente = await payload.find({
+        collection: "notificaciones",
+        where: where,
+    });
+
+    // console.log({existente})
+    if(existente.totalDocs == 0){
+        // Primera vez que se aprecia esta entrada
+        console.log("Creando nueva notificacion")
+        await payload.create({
+            collection: 'notificaciones',
+            data: {
+                autor: autor,  // El autor de la entrada que fue apreciada
+                usuario: usuario.id, // El usuario que aprecio
+                tipoNotificacion,
+                sourceDocument: {
+                    relationTo: sourceDocumentCollection,
+                    value: sourceDocumentId
+                },
+            },
+        });
+    }else{
+        // Ya se aprecio antes. Modifico la cantidad
+        const notificacion = existente.docs[0];
+        console.log("Sumando a notificacion existente", notificacion.id)
+        await payload.update({
+            collection: 'notificaciones',
+            id: notificacion.id,
+            data: {
+                cantidad: notificacion.cantidad + 1,
+                usuario: usuario.id, // El último usuario que aprecio
+                leida: false,
+            }
+        });
+    }
+}
+
+
 export const NotificarAprecio = async ({ 
     doc,
     req, // full express request
@@ -35,7 +122,7 @@ export const NotificacionAprecioEntrada = async (doc, req) => {
         destinatarios.push(entrada.autor.id);
     }
     destinatarios.forEach(async (destinatario) => {
-        GenerarNotificacionOSumar(destinatario, req.user, 'aprecio', 'entrada', entrada.id);
+        GenerarNotificacionOSumar(destinatario, req.user.id, 'aprecio', entrada.id, 'entradas');
     });
 }
 
@@ -60,90 +147,6 @@ export const NotificacionAprecioComentario = async (doc, req) => {
     });
 }
 
-
- /**
- * @param {user} autor - Usuario siendo notificado
- * @param {user} usuario - Usuario que ejecutó la accion (se usará su avatar)
- * @param {string} tipoNotificacion - Tipo de notificación 'aprecio' | 'comentario' | 'mencion' | 'colaboracion']
- * @param {string} sourceEventType - ID de la entrada o comentario a la que se hace referencia
- * @param {string} sourceEventId - Tipo de link 'entrada' | 'grupo' | 'usuario' | 'salon'
- */
-const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, sourceEventType, sourceEventId ) => {
-    var where;
-    switch(tipoNotificacion){
-        case 'aprecio':
-            where = {
-                and: [
-                    {tipoNotificacion: {equals: tipoNotificacion}},
-                    {sourceEventId: {equals: sourceEventId}},
-                    {autor: {equals: autor}},
-                ]
-            };
-            break;
-        case 'colaboracion':
-            where = {
-                and: [
-                    {tipoNotificacion: {equals: tipoNotificacion}},
-                    {autor: {equals: autor}},
-                ]
-            };
-            break
-        case 'comentario':
-            where = {
-                and: [
-                    {tipoNotificacion: {equals: tipoNotificacion}},
-                    {sourceEventId: {equals: sourceEventId}},
-                    {autor: {equals: autor}},
-                ]
-            };
-            break;
-        case 'mencion':
-            where = {
-                and: [
-                    {tipoNotificacion: {equals: tipoNotificacion}},
-                    {sourceEventId: {equals: sourceEventId}},
-                    {autor: {equals: autor}},
-                ]
-            };
-            // console.log("Notificar mencion ** ", where)
-            break;
-    }
-
-    const existente = await payload.find({
-        collection: "notificaciones",
-        where: where,
-    });
-
-    // console.log({existente})
-    if(existente.totalDocs == 0){
-        // Primera vez que se aprecia esta entrada
-        console.log("Creando nueva notificacion")
-        await payload.create({
-            collection: 'notificaciones',
-            data: {
-                autor: autor,  // El autor de la entrada que fue apreciada
-                usuario: usuario.id, // El usuario que aprecio
-                tipoNotificacion: tipoNotificacion,
-                sourceEventType: sourceEventType,
-                sourceEventId: sourceEventId,
-            },
-        });
-    }else{
-        // Ya se aprecio antes. Modifico la cantidad
-        const notificacion = existente.docs[0];
-        console.log("Sumando a notificacion existente", notificacion.id)
-        await payload.update({
-            collection: 'notificaciones',
-            id: notificacion.id,
-            data: {
-                cantidad: notificacion.cantidad + 1,
-                usuario: usuario.id, // El último usuario que aprecio
-                leida: false,
-            }
-        });
-    }
-}
-
 export const NotificarNuevaColaboracion = async ({
     doc, // full document data
     req, // full express request
@@ -161,7 +164,7 @@ export const NotificarNuevaColaboracion = async ({
                 break;
             case 'bitacora':
                 // Notifico al usuario de la bitacora
-                GenerarNotificacionOSumar(doc.idColaborador, req.user, 'colaboracion', 'usuario', req.user.id);
+                GenerarNotificacionOSumar(doc.idColaborador, req.user.id, 'colaboracion', req.user.id, 'users');
 
                 // Dejo acá comentado. En principio no vamos a enviar mail por cada colaboración
                 // const receptor = await req.payload.findByID({collection: 'users', id: doc.idColaborador});
@@ -178,7 +181,7 @@ export const NotificarNuevaColaboracion = async ({
                 if(grupo){
                     // Notificar a cada integrante del grupo
                     grupo.integrantes.forEach(async (integrante) => {
-                        GenerarNotificacionOSumar(integrante.id, req.user, 'colaboracion', 'usuario', req.user.slug);
+                        GenerarNotificacionOSumar(integrante.id, req.user, 'colaboracion', grupo.id, 'grupos');
                         // Dejo acá comentado. En principio no vamos a enviar mail por cada colaboración
                         // if(integrante.notificacionesMail?.activas && integrante.notificacionesMail?.colaboradorNuevo){
                         //     await AddToMailQueue(integrante.email, 'Nueva colaboración', `${req.user.nombre} empezó a colaborar con tu grupo ${grupo.nombre}`)
@@ -198,7 +201,7 @@ export const NotificarNuevoComentario = async ({
     if(operation != 'create') return;
     if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
 
-    GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', 'comentario', doc.id);
+    GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', doc.id, 'comentarios');
 }
 
 
@@ -218,7 +221,7 @@ export const NotificarMencionEntrada = async ({
     for (const mencionado of nuevosMencionados) {        
         try {
             console.log(mencionado.nombre, mencionado.id, " --- ", doc.autor.nombre, doc.autor.id)
-            await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', 'entrada', doc.id);
+            await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'entradas');
             // Wait 500ms between operations
             await new Promise(resolve => setTimeout(resolve, 500));
         } catch (error) {
@@ -244,7 +247,7 @@ export const NotificarMencionComentario = async ({
         if (mencionado.id === entrada.autor.id) continue;
         
         try {
-            await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', 'comentario', doc.id);
+            await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'comentarios');
             // // Wait 500ms between operations
             // await new Promise(resolve => setTimeout(resolve, 500));
         } catch (error) {
