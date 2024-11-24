@@ -7,7 +7,7 @@ const Notificaciones: CollectionConfig = {
         group: 'Interacciones',
     },
     access:{
-        read: isAutor,
+        read: isAdmin, // isAutor,
         create: isAdmin,
         update: isAdmin,
         delete: isAdminOrAutor,
@@ -40,12 +40,12 @@ const Notificaciones: CollectionConfig = {
         //     type: 'text',
         // },
         {
-            name: 'linkType',
+            name: 'sourceEventType',
             type: 'select',
-            options: ['entrada', 'grupo', 'salon', 'usuario'],
+            options: ['entrada', 'comentario', 'grupo', 'salon', 'usuario'],
         },
         {
-            name: 'linkTo',
+            name: 'sourceEventId',
             type: 'text',
         },
         {

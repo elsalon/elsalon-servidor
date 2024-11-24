@@ -54,8 +54,8 @@ export const NotificacionAprecioComentario = async (doc, req) => {
             tipoNotificacion: 'aprecio',
             mensaje: `<strong>${req.user.nombre}</strong> apreció tu comentario ${resumen}...`,
             leida: false,
-            linkType: 'entrada',
-            linkTo: comentario.entrada.id,
+            sourceEventType: 'entrada',
+            sourceEventId: comentario.entrada.id,
         },
     });
 }
@@ -65,17 +65,17 @@ export const NotificacionAprecioComentario = async (doc, req) => {
  * @param {user} autor - Usuario siendo notificado
  * @param {user} usuario - Usuario que ejecutó la accion (se usará su avatar)
  * @param {string} tipoNotificacion - Tipo de notificación 'aprecio' | 'comentario' | 'mencion' | 'colaboracion']
- * @param {string} linkType - ID de la entrada o comentario a la que se hace referencia
- * @param {string} linkTo - Tipo de link 'entrada' | 'grupo' | 'usuario' | 'salon'
+ * @param {string} sourceEventType - ID de la entrada o comentario a la que se hace referencia
+ * @param {string} sourceEventId - Tipo de link 'entrada' | 'grupo' | 'usuario' | 'salon'
  */
-const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, linkType, linkTo ) => {
+const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, sourceEventType, sourceEventId ) => {
     var where;
     switch(tipoNotificacion){
         case 'aprecio':
             where = {
                 and: [
                     {tipoNotificacion: {equals: tipoNotificacion}},
-                    {linkTo: {equals: linkTo}},
+                    {sourceEventId: {equals: sourceEventId}},
                     {autor: {equals: autor}},
                 ]
             };
@@ -92,7 +92,7 @@ const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, linkT
             where = {
                 and: [
                     {tipoNotificacion: {equals: tipoNotificacion}},
-                    {linkTo: {equals: linkTo}},
+                    {sourceEventId: {equals: sourceEventId}},
                     {autor: {equals: autor}},
                 ]
             };
@@ -101,11 +101,11 @@ const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, linkT
             where = {
                 and: [
                     {tipoNotificacion: {equals: tipoNotificacion}},
-                    {linkTo: {equals: linkTo}},
+                    {sourceEventId: {equals: sourceEventId}},
                     {autor: {equals: autor}},
                 ]
             };
-            console.log("Notificar mencion ** ", where)
+            // console.log("Notificar mencion ** ", where)
             break;
     }
 
@@ -114,7 +114,7 @@ const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, linkT
         where: where,
     });
 
-    console.log({existente})
+    // console.log({existente})
     if(existente.totalDocs == 0){
         // Primera vez que se aprecia esta entrada
         console.log("Creando nueva notificacion")
@@ -124,8 +124,8 @@ const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, linkT
                 autor: autor,  // El autor de la entrada que fue apreciada
                 usuario: usuario.id, // El usuario que aprecio
                 tipoNotificacion: tipoNotificacion,
-                linkType: linkType,
-                linkTo: linkTo,
+                sourceEventType: sourceEventType,
+                sourceEventId: sourceEventId,
             },
         });
     }else{
@@ -198,7 +198,7 @@ export const NotificarNuevoComentario = async ({
     if(operation != 'create') return;
     if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
 
-    GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', 'entrada', entrada.id);
+    GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', 'comentario', doc.id);
 }
 
 
@@ -244,9 +244,9 @@ export const NotificarMencionComentario = async ({
         if (mencionado.id === entrada.autor.id) continue;
         
         try {
-            await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', 'entrada', entrada.id);
-            // Wait 500ms between operations
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', 'comentario', doc.id);
+            // // Wait 500ms between operations
+            // await new Promise(resolve => setTimeout(resolve, 500));
         } catch (error) {
             console.error(`Error processing mention for user ${mencionado.id}:`, error);
         }
