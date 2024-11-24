@@ -7,9 +7,9 @@ const Notificaciones: CollectionConfig = {
         group: 'Interacciones',
     },
     access:{
-        read: isAdmin, // isAutor,
+        read: isAutor, // isAutor,
         create: isAdmin,
-        update: isAdmin,
+        update: isAdminOrAutor,
         delete: isAdminOrAutor,
     },
     hooks: {
@@ -35,11 +35,6 @@ const Notificaciones: CollectionConfig = {
             type: 'relationship',
             relationTo: 'users',
         },
-        // {
-        //     name: 'sourceEventType',
-        //     type: 'select',
-        //     options: ['entrada', 'comentario', 'grupo', 'salon', 'usuario'],
-        // },
         {
             name: 'sourceDocument',
             type: 'relationship',

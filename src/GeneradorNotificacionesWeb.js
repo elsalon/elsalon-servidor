@@ -117,12 +117,13 @@ export const NotificacionAprecioEntrada = async (doc, req) => {
     if(!entrada) return;
     let destinatarios = [];
     if(entrada.autoriaGrupal){
-        destinatarios = entrada.integrantes.map(i => i.id);
+        destinatarios = entrada.grupo.integrantes.map(i => i.id);
     }else{
         destinatarios.push(entrada.autor.id);
     }
     destinatarios.forEach(async (destinatario) => {
-        GenerarNotificacionOSumar(destinatario, req.user.id, 'aprecio', entrada.id, 'entradas');
+        if(destinatario == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+        GenerarNotificacionOSumar(destinatario, req.user, 'aprecio', entrada.id, 'entradas');
     });
 }
 
@@ -132,19 +133,7 @@ export const NotificacionAprecioComentario = async (doc, req) => {
         id: doc.contenidoid,
     });
     if(!comentario) return;
-    let resumen = comentario.contenido.replace(/<[^>]*>?/gm, '').substring(0, 10);
-    // remove html tags
-    await req.payload.create({
-        collection: 'notificaciones',
-        data: {
-            autor: comentario.autor.id,  // El autor de la entrada que fue apreciada
-            tipoNotificacion: 'aprecio',
-            mensaje: `<strong>${req.user.nombre}</strong> apreció tu comentario ${resumen}...`,
-            leida: false,
-            sourceEventType: 'entrada',
-            sourceEventId: comentario.entrada.id,
-        },
-    });
+    GenerarNotificacionOSumar(comentario.autor.id, req.user, 'aprecio', comentario.id, 'comentarios');
 }
 
 export const NotificarNuevaColaboracion = async ({
@@ -164,7 +153,7 @@ export const NotificarNuevaColaboracion = async ({
                 break;
             case 'bitacora':
                 // Notifico al usuario de la bitacora
-                GenerarNotificacionOSumar(doc.idColaborador, req.user.id, 'colaboracion', req.user.id, 'users');
+                GenerarNotificacionOSumar(doc.idColaborador, req.user, 'colaboracion', req.user.id, 'users');
 
                 // Dejo acá comentado. En principio no vamos a enviar mail por cada colaboración
                 // const receptor = await req.payload.findByID({collection: 'users', id: doc.idColaborador});
@@ -218,7 +207,9 @@ export const NotificarMencionEntrada = async ({
     }
 
     // Process mentions sequentially with delay
-    for (const mencionado of nuevosMencionados) {        
+    for (const mencionado of nuevosMencionados) {    
+        if (mencionado.id === doc.autor.id) continue; // No notificar si el autor del comentario es el mismo que el de la entrada
+
         try {
             console.log(mencionado.nombre, mencionado.id, " --- ", doc.autor.nombre, doc.autor.id)
             await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'entradas');
@@ -245,6 +236,7 @@ export const NotificarMencionComentario = async ({
     // Process mentions sequentially with delay
     for (const mencionado of nuevosMencionados) {
         if (mencionado.id === entrada.autor.id) continue;
+        if (mencionado.id === doc.autor.id) continue; // No notificar si el autor del comentario es el mismo que el de la entrada
         
         try {
             await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'comentarios');
