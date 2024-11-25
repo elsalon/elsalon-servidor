@@ -2,7 +2,7 @@ import express from 'express'
 import payload from 'payload'
 const path = require('path');
 const globals = require('./globals');
-const { initializeMailQueue, cleanupFailedEmails } = require('./mailQueueProcessor');
+const { initializeMailQueue, cleanupFailedEmails } = require('./MailQueueProcessor');
 
 var cors = require('cors');
 var corsOptions = {
