@@ -6,10 +6,10 @@ import { s3Storage } from '@payloadcms/storage-s3'
 
 // import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
-import { buildConfig } from 'payload'
+import { buildConfig, BasePayload } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
-
+import globals from './globals'
 
 import Ajustes from './collections/Ajustes'
 
@@ -115,8 +115,38 @@ export default buildConfig({
     payloadCloudPlugin(),
     DOSpacesAdapter,
   ],
-  cors: [
-    'http://localhost:8080', 
-    'http://localhost:3000'
-  ]
+  cors:['http://localhost:8080', 'http://localhost:3000'],
+  csrf:['http://localhost:8080', 'http://localhost:3000'],
+  
+  onInit: async (payload) => {
+    const elsalon = await LoadSalonPrincipal(payload)
+    console.log('Salon Principal:', elsalon);
+    globals.elSalonId = elsalon.id;
+  }
 })
+
+
+
+
+const LoadSalonPrincipal = async (payload: BasePayload) => {
+  const salon = await payload.find({
+    collection: 'salones',
+    where:{
+      slug: {
+        equals: 'el-salon'
+      }
+    }
+  })
+  if(salon.docs.length > 0){
+    return salon.docs[0];
+  }else{
+    const res = await payload.create({
+      collection: 'salones',
+      data: {
+        nombre: 'El Salón',
+        slug: 'el-salon',
+      }
+    })
+    return res;
+  }
+}

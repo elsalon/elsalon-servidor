@@ -6,6 +6,9 @@ import { Campos } from './CamposEntradasYComentarios'
 const Entradas: CollectionConfig = {
     slug: 'entradas',
     access:{
+        read: ({ req: { user } }) => {
+            return !!user; // Return true if the user is logged in
+        },
         update: isAdminOrAutor,
         delete: isAdminOrAutor,
     },

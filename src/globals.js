@@ -1,5 +1,5 @@
 const globals = {
-    elSalonId: null,
+    elSalonId: "",
   };
   
   export default globals;

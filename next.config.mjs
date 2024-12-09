@@ -7,7 +7,7 @@ const nextConfig = {
 
     return [
       {
-        source: '/api/:path*',
+        source: '/:path*',
         has: [
           {
             type: "header",
@@ -31,7 +31,7 @@ const nextConfig = {
           {
             key: "Access-Control-Allow-Credentials", 
             value: 'true' // Important if you need to send cookies/auth headers
-          }
+          },
         ],
       },
     ]

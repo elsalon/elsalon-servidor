@@ -60,7 +60,7 @@ const Users : CollectionConfig = {
     admin: ({ req }) => Boolean(req.user) && Boolean(req.user?.isAdmin),
     create: () => { return true },
     read: ({ req: { user } }) => {
-      return Boolean(user)
+      return !!user; // Return true if the user is logged in
     },
     update: isAdminOrSelf,
     delete: isAdmin,
