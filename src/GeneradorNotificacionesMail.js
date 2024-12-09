@@ -1,6 +1,6 @@
 import payload from 'payload';
 import { SignJWT, jwtVerify  } from 'jose';
-const logoUrl = `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/public/salon_logo_lg_600x80.png`;
+const logoUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/public/salon_logo_lg_600x80.png`;
 
 // generate jwt
 async function generateToken(payload) {
@@ -30,7 +30,7 @@ async function GenerarMailDesuscripcion(email){
     const token = await generateToken(data);
       
     // const token = jwt.sign(data, process.env.PAYLOAD_SECRET);
-    const url = process.env.PAYLOAD_PUBLIC_SERVER_URL + `/api/desuscribir?token=${token}`;
+    const url = process.env.NEXT_PUBLIC_SERVER_URL + `/api/desuscribir?token=${token}`;
     return `<p>Para dejar de recibir mails de El Salón, podés <a href="${url}">desuscribirte acá</a>.</p>`;
 }
 

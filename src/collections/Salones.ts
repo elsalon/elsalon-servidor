@@ -1,10 +1,10 @@
-import { CollectionConfig } from 'payload/types';
-import { colorPickerField } from '@innovixx/payload-color-picker-field';
+import type { CollectionConfig } from 'payload'
+// import { colorPickerField } from '@innovixx/payload-color-picker-field';
 import { SlugField } from '../SlugField';
 import { isAdmin, isAdminOrDocente } from '../helper';
-import { Where } from 'payload/types';
+import { Where } from 'payload';
 
-const globals = require('../globals');
+import globals from '../globals';
 
 const Salones: CollectionConfig = {
     slug: 'salones',
@@ -30,11 +30,16 @@ const Salones: CollectionConfig = {
             name: 'siglas',
             type: 'text',
         },
-        colorPickerField({
+        // colorPickerField({
+        //     name: 'color',
+        //     label: 'Color',
+        //     defaultValue: '#000',
+        // }),
+        {
             name: 'color',
-            label: 'Color',
+            type: 'text',
             defaultValue: '#000',
-        }),
+        },
         {
             name: 'aulas',
             type: 'text',
@@ -70,7 +75,7 @@ const Salones: CollectionConfig = {
                 }
             ]
         },
-        SlugField(),
+        SlugField({collection: 'salones'}),
         {
             name: 'orden',
             type: 'number',
@@ -84,10 +89,10 @@ const Salones: CollectionConfig = {
         {
             path: '/feed',
             method: 'get' as const,
-            handler: async (req, res, next) => {
+            handler: async (req) => {
 
                 try {
-                    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+                    if (!req.user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
                     // Safely parse query parameters
                     const page = typeof req.query.page === 'string' 
@@ -100,7 +105,7 @@ const Salones: CollectionConfig = {
 
                     const user = req.user;
 
-                    let idsSalonesColabora: string[] = [globals.elSalonId]; // Incluyo el salon principal
+                    let idsSalonesColabora: string[] = globals.elSalonId ? [globals.elSalonId] : [];// Incluyo el salon principal
                     let idsUsuariosColabora: string[] = [];
                     let idsGruposColabora: string[] = [];
 
@@ -149,7 +154,7 @@ const Salones: CollectionConfig = {
                         // Validate the date string before creating Date object
                         const dateValue = new Date(createdGreaterThan);
                         if (isNaN(dateValue.getTime())) {
-                            return res.status(400).json({ error: 'Invalid date format for createdGreaterThan' });
+                            return Response.json({ error: 'Invalid date format for createdGreaterThan' }, { status: 400 });
                         }
 
                         query = {
@@ -172,10 +177,10 @@ const Salones: CollectionConfig = {
                         user: req.user,
                     });
 
-                    res.status(200).json(feed);
+                    return Response.json(feed, { status: 200 });
                 } catch (error) {
                     console.error('Error fetching dashboard', error);
-                    res.status(500).json({ error: 'Error fetching dashboard' });
+                    return Response.json({ error: 'Error fetching dashboard' }, { status: 500 });
                 }
             }
         }

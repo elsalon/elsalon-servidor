@@ -1,5 +1,5 @@
 import { SlugField } from '../SlugField'
-import { CollectionConfig } from 'payload/types'
+import { CollectionConfig } from 'payload'
 import { isAdminOrIntegrante } from '../helper'
 
 const Grupos: CollectionConfig = {
@@ -40,7 +40,7 @@ const Grupos: CollectionConfig = {
             name: 'link',
             type: 'text',
         },
-        SlugField(),
+        SlugField({collection: 'grupos'}),
     ],
 }
 

@@ -1,4 +1,4 @@
-import { CollectionConfig } from 'payload/types'
+import { CollectionConfig } from 'payload'
 import { isAdminOrAutor, CrearExtracto } from '../helper'
 import { NotificarNuevoComentario, NotificarMencionComentario } from '../GeneradorNotificacionesWeb'
 import { NotificarMailComentario } from '../GeneradorNotificacionesMail'

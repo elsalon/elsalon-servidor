@@ -1,15 +1,16 @@
-import { isAdminOrSelf } from '../helper';
+import { isAdminOrSelf, isAdmin } from '../helper';
 import { SlugField } from '../SlugField'
 import { simpleEmailTemplate } from '../emailTemplates'
+import { CollectionConfig, PayloadRequest, User } from 'payload';
 
 const mailVerify = {
-  generateEmailSubject: ({ req, user }) => {
+  generateEmailSubject: () => {
     return `Verificá tu cuenta de El Salón`;
   },
-  generateEmailHTML: ({ req, token, user }) => {
+  generateEmailHTML: ({ token, user } : {token: string, user: User}) => {
     // Use the token provided to allow your user to verify their account
-    const backendUrl = `${req.protocol}://${req.get('host')}`; // Dynamically obtain the backend URL
-    const frontUrl = req.headers.origin;
+    const backendUrl = process.env.NEXT_PUBLIC_SERVER_URL || "" 
+    const frontUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || ""
 
     return simpleEmailTemplate({
       backendUrl: backendUrl,
@@ -20,7 +21,7 @@ const mailVerify = {
   },
 }
 
-const Users = {
+const Users : CollectionConfig = {
   slug: 'users',
   auth: {
     // 1 mes
@@ -29,20 +30,26 @@ const Users = {
     lockTime: 1000 * 60, // 1 minute
     verify: process.env.DISABLE_EMAIL_VERIFICATION ? false : mailVerify,
     forgotPassword: {
-      generateEmailSubject: ({ req, user }) => {
+      generateEmailSubject: () => {
         return `Restablacé tu contraseña de El Salón`;
       },
-      generateEmailHTML: ({ req, token, user }) => {
-        const backendUrl = `${req.protocol}://${req.get('host')}`; // Dynamically obtain the backend URL
-        const frontUrl = req.headers.origin;
-
+      generateEmailHTML: (args?: { req?: PayloadRequest; token?: string; user?: any }) => {
+        if (!args) return '';
+        
+        const { token, user } = args;
+      
+        if (!token || !user) return ''; // Verifica que existan token y user
+      
+        const backendUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
+        const frontUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || "";
+        
         return simpleEmailTemplate({
           backendUrl: backendUrl,
           title: `Hola ${user.nombre}, restablacé tu contraseña`,
           content: `<p>Para restablecer tu contraseña de El Salón, clickeá en este link</p>
-            <p><a target="_blank" href="${frontUrl}/recuperar?t=${token}">Restablecer contraseña</a></p>`
+            <p><a target="_blank" href="${frontUrl}/recuperar?t=${token}">Restablecer contraseña</a></p>`,
         });
-      },
+      }
     }
   },
   admin: {
@@ -50,32 +57,13 @@ const Users = {
   },
   // anyone can create user. data is only accessible to the user who created it
   access: {
-    admin: ({ req }) => req.user && req.user.isAdmin,
+    admin: ({ req }) => Boolean(req.user) && Boolean(req.user?.isAdmin),
     create: () => { return true },
-    read: ({ req }) => {
-      if (req.user) {
-        return {
-          user: req.user.id,
-        }
-      }
-      return false
+    read: ({ req: { user } }) => {
+      return Boolean(user)
     },
-    update: ({ req }) => {
-      if (req.user) {
-        return {
-          user: req.user.id,
-        }
-      }
-      return false
-    },
-    delete: ({ req }) => {
-      if (req.user) {
-        return {
-          user: req.user.isAdmin,
-        }
-      }
-      return false
-    },
+    update: isAdminOrSelf,
+    delete: isAdmin,
   },
 
   hooks: {
@@ -88,7 +76,13 @@ const Users = {
       required: true,
       unique: true,
       access: {
-        read: ({ doc, req }) => {
+        read: ({ doc, req } : { 
+          doc?: { 
+            id?: string, 
+            mostrarEmail?: boolean 
+          }, 
+          req: PayloadRequest
+        })  => {
           // Handle cases where req.user or doc might be undefined
           if (!req.user || !doc) return false;
 
@@ -150,8 +144,11 @@ const Users = {
       name: 'notificacionesMail',
       type: 'group',
       access: {
-        read: isAdminOrSelf,
-        update: isAdminOrSelf,
+        read: ({ req: { user }, id }) => {
+          if (!user) return false;
+          if (user.isAdmin) return true;
+          return user.id === id;
+        },
       },
       fields: [
         {
@@ -191,7 +188,7 @@ const Users = {
         }
       ],
     },
-    SlugField(),
+    SlugField({collection: 'users'}),
     {
       name: 'isAdmin',
       type: 'checkbox',
@@ -199,9 +196,9 @@ const Users = {
         position: 'sidebar',
       },
       access: {
-        update: ({ req }) => {
-          if (req.user) {
-            return req.user.isAdmin
+        update:({req:{user}}) => {
+          if (user) {
+            return user.isAdmin || false
           }
           return false
         }

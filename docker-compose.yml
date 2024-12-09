@@ -6,16 +6,21 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - .:/home/node/app  # Only in dev, will override for production
+      - .:/home/node/app
       - node_modules:/home/node/app/node_modules
     working_dir: /home/node/app/
+    command: sh -c "corepack enable && corepack prepare pnpm@latest --activate && pnpm install && pnpm dev"
     depends_on:
       - mongo
+      # - postgres
     env_file:
-      - .env  # Override this in production as needed
+      - .env
 
+  # Ensure your DATABASE_URI uses 'mongo' as the hostname ie. mongodb://mongo/my-db-name
   mongo:
     image: mongo:latest
+    ports:
+      - '27017:27017'
     command:
       - --storageEngine=wiredTiger
     volumes:
@@ -23,13 +28,16 @@ services:
     logging:
       driver: none
 
+  # Uncomment the following to use postgres
+  # postgres:
+  #   restart: always
+  #   image: postgres:latest
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
 volumes:
   data:
+  # pgdata:
   node_modules:
-
-
-# For development run
-# docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-
-# For production run
-# docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d

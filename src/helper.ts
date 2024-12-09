@@ -1,8 +1,8 @@
 // Helper functions
-import { Access, FieldAccess } from 'payload/types';
-import payload from 'payload';
-import { EnviarMailMencion } from './GeneradorNotificacionesMail';
-import { NotificarMencionEntrada, NotificarMencionComentario } from './GeneradorNotificacionesWeb';
+import { Access, FieldAccess, CollectionBeforeChangeHook, CollectionAfterChangeHook } from 'payload';
+// import payload from 'payload';
+// import { EnviarMailMencion } from './GeneradorNotificacionesMail';
+// import { NotificarMencionEntrada, NotificarMencionComentario } from './GeneradorNotificacionesWeb';
 
 // Helper acces function
 export const isAutor: Access = ({ req: { user }, id }) => {
@@ -44,14 +44,15 @@ export const isAdminOrDocente: Access = ({ req: { user }, id }) => {
     if (!user) return false;
     if (user.isAdmin) return true;
     if (user.rol == 'docente') return true;
+    return false;
 }
 
 export const isAdmin: Access = ({ req: { user } }) => {
     if (!user) return false;
-    return user.isAdmin;
+    return user.isAdmin || false;
 };
 
-export const afterCreateAssignAutorToUser = async ({ operation, data, req }) => {
+export const afterCreateAssignAutorToUser:CollectionBeforeChangeHook = async ({ operation, data, req }) => {
     if(operation === 'create' && req.user){
         data.autor = req.user.id; // El autor es el usuario actual
         return data;
@@ -59,13 +60,13 @@ export const afterCreateAssignAutorToUser = async ({ operation, data, req }) => 
 }
 
 
-export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
+export const GetNuevosMencionados: CollectionAfterChangeHook = async ({ doc, previousDoc, operation }) => {
     // CREATE
-    if(operation === 'create') return doc.mencionados;
+    if (operation === 'create') return doc.mencionados;
     
     // UPDATE
-    let viejosMencionados = previousDoc.mencionados.map(m => m.id);
-    let nuevosMencionados = doc.mencionados.map(m => m.id).filter(m => !viejosMencionados.includes(m));
+    let viejosMencionados = previousDoc.mencionados.map((m: { id: string }) => m.id);
+    let nuevosMencionados = doc.mencionados.map((m: { id: string }) => m.id).filter((m: { id: string }) => !viejosMencionados.includes(m));
     return nuevosMencionados;
 }
 
@@ -93,7 +94,7 @@ export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
 //     }
 // };
 
-export const CrearExtracto = async ({ operation, data, req }) => {
+export const CrearExtracto:CollectionBeforeChangeHook = async ({ operation, data, req }) => {
     if (operation === 'create' || operation === 'update') {
         let text = data.contenido;
         
@@ -101,7 +102,7 @@ export const CrearExtracto = async ({ operation, data, req }) => {
         text = text.replace(/\[image:[a-f0-9]+\]/g, '');
         
         // Function to convert mentions and hashtags to plain text
-        const convertToPlainText = (content, regex, caracter) => {
+        const convertToPlainText = (content:string, regex:RegExp, caracter:string) => {
             return content.replace(regex, (match, name) => caracter + name);
         }
         
@@ -121,7 +122,7 @@ export const CrearExtracto = async ({ operation, data, req }) => {
     }
 }
 
-export const ValidarEntradaVacia = async ({ operation, data, req }) => {
+export const ValidarEntradaVacia:CollectionBeforeChangeHook = async ({ operation, data, req }) => {
     var entradaVacia = true;
     if (data.contenido == "<p><br></p>") {
         data.contenido = "";

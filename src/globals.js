@@ -2,4 +2,4 @@ const globals = {
     elSalonId: null,
   };
   
-  module.exports = globals;
+  export default globals;

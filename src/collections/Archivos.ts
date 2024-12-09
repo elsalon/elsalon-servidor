@@ -1,4 +1,4 @@
-import { CollectionConfig } from 'payload/types'
+import { CollectionConfig } from 'payload'
 
 const Archivos: CollectionConfig = {
     slug: 'archivos',
@@ -20,8 +20,8 @@ const Archivos: CollectionConfig = {
         group: 'Medios',
     },
     upload: {
-        staticURL: '/archivos',
-        staticDir: 'archivos',
+        // staticURL: '/archivos',
+        // staticDir: 'archivos',
         mimeTypes: [
             'application/zip',
             'application/rar',

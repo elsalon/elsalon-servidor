@@ -1,6 +1,5 @@
-import update from 'payload/dist/collections/operations/update';
-
-var slugify = require('slugify')
+import slugify from 'slugify';
+import { Field } from 'payload';
 
 /**
  * Creates a slug field that automatically generates from another field
@@ -9,78 +8,82 @@ var slugify = require('slugify')
  * @param {string} options.slugField The name of the slug field (default: 'slug')
  * @param {Object} options.slugify Slugify options (optional)
  * @param {Object} options.admin Additional admin config (optional)
- * @returns {Object} PayloadCMS field configuration
+ * @returns {Field} PayloadCMS field configuration
  */
 export const SlugField = ({
     sourceField = 'nombre',
     slugField = 'slug',
-    slugify: slugifyOptions = {lower: true, strict: true, replacement: '-'},
-    admin = {}
-} = {}) => ({
-    type: "text",
+    slugify: slugifyOptions = { lower: true, strict: true, replacement: '-' },
+    admin = {},
+    collection = 'users',
+}: {
+    sourceField?: string;
+    slugField?: string;
+    slugify?: object;
+    admin?: Record<string, unknown>;
+    collection?: any;
+} = {}): Field => ({
+    type: 'text',
     name: slugField,
     admin: {
-        position: "sidebar",
-        ...admin
-    },
-    access: {
-        update: ({ req }) => {return req.user.isAdmin}
+        position: 'sidebar',
+        ...admin,
     },
     hooks: {
         beforeChange: [
             async ({ data, originalDoc, req, operation }) => {
-                if (!data[sourceField]) return data[slugField];
+                if (!data || !data[sourceField]) return data?.[slugField];
 
                 const baseSlug = slugify(data[sourceField], {
-                    replacement: '-',    // replace spaces with dashes
-                    lower: true,         // convert to lowercase
-                    strict: true,         // remove special characters
-                    ...slugifyOptions
+                    replacement: '-',
+                    lower: true,
+                    strict: true,
+                    ...slugifyOptions,
                 });
 
-                // If we're updating and the slug hasn't changed, keep it
-                if (operation === 'update' && originalDoc[slugField] === baseSlug) {
+                // Si estamos actualizando y el slug no ha cambiado, lo dejamos igual
+                if (operation === 'update' && originalDoc?.[slugField] === baseSlug) {
                     return baseSlug;
                 }
 
-                // Check for existing slugs
+                // Consulta para buscar slugs similares
                 const existingSlugs = await req.payload.find({
-                    collection: req.collection.config.slug,
+                    collection,
                     where: {
                         and: [
                             {
-                                slug: {
-                                    like: baseSlug,
+                                [slugField]: {
+                                    like: `${baseSlug}%`, // Buscar todos los slugs que comiencen con baseSlug
                                 },
                             },
-                            // Exclude the current document if it's an update
-                            operation === 'update' && {
+                            ...(operation === 'update' ? [{
                                 id: {
-                                    not_equals: originalDoc.id,
+                                    not_equals: originalDoc?.id,
                                 },
-                            },
-                        ].filter(Boolean),
+                            }] : []),
+                        ],
                     },
-                    limit: 0, // Get all matches
+                    limit: 1000, // Limitar a un máximo de 1000 resultados
                 });
 
+                // Si no hay documentos que coincidan, devolvemos el slug base
                 if (existingSlugs.totalDocs === 0) return baseSlug;
 
-                // Find the highest number suffix
+                // Encuentra el número más alto de los slugs existentes
                 const slugPattern = new RegExp(`^${baseSlug}(?:-(\\d+))?$`);
                 let highestNumber = 0;
 
                 existingSlugs.docs.forEach(doc => {
-                    const match = doc.slug.match(slugPattern);
+                    const match = doc[slugField]?.match(slugPattern);
                     if (match && match[1]) {
                         const num = parseInt(match[1], 10);
                         if (num > highestNumber) highestNumber = num;
                     }
                 });
 
-                // Return slug with incremented number
+                // Retorna el slug con un sufijo de número incrementado
                 return `${baseSlug}-${highestNumber + 1}`;
             }
         ]
     }
-})
+});

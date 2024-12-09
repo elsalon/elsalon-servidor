@@ -1,4 +1,4 @@
-import { CollectionConfig } from 'payload/types'
+import { CollectionConfig } from 'payload'
 import { isAutor, isAdmin, isAdminOrAutor } from '../helper'
 
 const Notificaciones: CollectionConfig = {
@@ -50,8 +50,8 @@ const Notificaciones: CollectionConfig = {
         {
             path: '/todasleidas',
             method: 'patch',
-            handler: async (req, res, next) => {
-                if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
+            handler: async (req) => {
+                if(!req.user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
                 try {
                     const userId = req.user?.id; // Obteniendo el ID del usuario actual
                     // Marcar todas las notificaciones como leídas
@@ -64,10 +64,10 @@ const Notificaciones: CollectionConfig = {
                             leida: true,
                         },
                     });
-                    return res.json({ result });
+                    return Response.json({ result });
                 } catch (error) {
                     console.error('Error', error);
-                    return res.status(500).json({ error: 'Internal Server Error' });
+                    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
                 }
             }
         }

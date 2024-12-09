@@ -1,4 +1,4 @@
-import { CollectionConfig } from 'payload/types'
+import { CollectionConfig } from 'payload'
 
 const Imagenes: CollectionConfig = {
     slug: 'imagenes',
@@ -20,7 +20,6 @@ const Imagenes: CollectionConfig = {
         group: 'Medios',
     },
     upload: {
-        staticURL: '/imagenes',
         staticDir: 'imagenes',
         imageSizes: [
             {

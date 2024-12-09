@@ -1,4 +1,4 @@
-import { CollectionConfig, GlobalConfig } from 'payload/types'
+import { CollectionConfig, GlobalConfig } from 'payload'
 
 const Ajustes: GlobalConfig = {
     slug: 'ajustes',

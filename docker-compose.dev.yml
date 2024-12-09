@@ -1,6 +1,0 @@
-services:
-  payload:
-    command: sh -c "yarn install && yarn dev"  # Use dev command
-    volumes:
-      - .:/home/node/app  # Live code mounting for development
-      - node_modules:/home/node/app/node_modules

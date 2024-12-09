@@ -1,5 +1,5 @@
 import { SlugField } from '../SlugField'
-import { CollectionConfig } from 'payload/types'
+import { CollectionConfig } from 'payload'
 
 const Etiquetas: CollectionConfig = {
   slug: 'etiquetas',
@@ -16,7 +16,7 @@ const Etiquetas: CollectionConfig = {
       label: 'Nombre',
       type: 'text',
     },
-    SlugField(),
+    SlugField({collection: 'etiquetas'}),
   ]
 }
 

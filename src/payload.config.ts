@@ -1,14 +1,15 @@
-import path from 'path'
-
-import { payloadCloud } from '@payloadcms/plugin-cloud'
-import { s3Adapter } from '@payloadcms/plugin-cloud-storage/s3'
-
+// storage-adapter-import-placeholder
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
-import { webpackBundler } from '@payloadcms/bundler-webpack'
-import { slateEditor } from '@payloadcms/richtext-slate'
-import { buildConfig } from 'payload/config'
-import { searchQuery } from './SearchQuery'
-import {DesuscribirUsuario} from './GeneradorNotificacionesMail'
+import { payloadCloudPlugin } from '@payloadcms/payload-cloud'
+
+import { s3Storage } from '@payloadcms/storage-s3'
+
+// import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import path from 'path'
+import { buildConfig } from 'payload'
+import { fileURLToPath } from 'url'
+import sharp from 'sharp'
+
 
 import Ajustes from './collections/Ajustes'
 
@@ -26,41 +27,50 @@ import Aprecio from './collections/Aprecio'
 import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
 import Etiquetas from './collections/Etiquetas'
-import { cloudStorage } from '@payloadcms/plugin-cloud-storage'
+// import { cloudStorage } from '@payloadcms/plugin-cloud-storage'
 import MailQueue from './collections/MailQueue'
 
-// DigitalOcean Spaces
-const DOSpacesAdapter = s3Adapter({
-  config: {
-    endpoint: process.env.DO_SPACES_ENDPOINT,
-    forcePathStyle: true,
-    credentials: {
-      accessKeyId: process.env.DO_SPACES_ACCESS_KEY_ID,
-      secretAccessKey: process.env.DO_SPACES_SECRET_ACCESS_KEY,
-    },
-    region: process.env.DO_SPACES_REGION,
-  },
-  bucket: process.env.DO_SPACES_BUCKET,
-  acl: 'public-read',
-});
+const filename = fileURLToPath(import.meta.url)
+const dirname = path.dirname(filename)
 
-const GenerateFileURL = ({ filename, prefix }) => {
-  const endpoint = process.env.DO_SPACES_ENDPOINT; // "https://nyc3.digitaloceanspaces.com"
-  const bucket = process.env.DO_SPACES_BUCKET; // "elsalon-test"
-  // Extract the region from the endpoint (in this case, "nyc3")
-  const url = new URL(endpoint);
-  const region = url.hostname.split('.')[0]; // Extract "nyc3"
-  // Create the new URL
-  const fullUrl = `https://${bucket}.${region}.digitaloceanspaces.com`;
+const GenerateFileURL = ( filename:string, prefix:string ) => {
+  const fullUrl = process.env.DO_SPACES_CDN_URL
+  console.log('Generating URL for', filename, prefix, fullUrl)
   return [fullUrl, prefix, filename].filter(Boolean).join('/')
 }
+
+const DOSpacesAdapter = s3Storage({
+  enabled: true,
+  collections: {
+    imagenes: {
+      disablePayloadAccessControl: true,
+      prefix: 'media/imagenes',
+      generateFileURL: ({ filename, prefix }) => GenerateFileURL( filename, prefix || "" )
+    },
+    archivos: true,
+    avatares: true,
+  },
+  bucket: process.env.DO_SPACES_BUCKET || "",
+  acl: 'public-read',
+  config: {
+    forcePathStyle: true,
+    endpoint: process.env.DO_SPACES_ENDPOINT,
+    credentials: {
+      accessKeyId: process.env.DO_SPACES_ACCESS_KEY || "",
+      secretAccessKey: process.env.DO_SPACES_SECRET_KEY || "",
+    },
+    region: process.env.DO_SPACES_REGION,
+    // ... Other S3 configuration
+  },
+})
 
 export default buildConfig({
   admin: {
     user: Users.slug,
-    bundler: webpackBundler(),
+    importMap: {
+      baseDir: path.resolve(dirname),
+    },
   },
-  editor: slateEditor({}),
   collections: [
     Users,
     Grupos,
@@ -81,64 +91,18 @@ export default buildConfig({
   globals: [
     Ajustes,
   ],
+  // editor: lexicalEditor(),
+  secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
-    outputFile: path.resolve(__dirname, 'payload-types.ts'),
+    outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
-  graphQL: {
-    schemaOutputFile: path.resolve(__dirname, 'generated-schema.graphql'),
-  },
-  plugins: [
-    cloudStorage({
-      collections: {
-        'imagenes': {
-          adapter: DOSpacesAdapter,
-          disableLocalStorage: true,
-          prefix: 'media/imagenes',
-          generateFileURL: ({ filename, prefix }) => GenerateFileURL({ filename, prefix })
-        },
-        'avatares': {
-          adapter: DOSpacesAdapter,
-          disableLocalStorage: true,
-          prefix: 'media/avatares',
-          generateFileURL: ({ filename, prefix }) => GenerateFileURL({ filename, prefix })
-        },
-        'archivos': {
-          adapter: DOSpacesAdapter,
-          disableLocalStorage: true,
-          prefix: 'media/archivos',
-          generateFileURL: ({ filename, prefix }) => GenerateFileURL({ filename, prefix })
-        },
-      }
-    }),
-    payloadCloud(),
-  ],
   db: mongooseAdapter({
-    url: process.env.DATABASE_URI,
+    url: process.env.DATABASE_URI || '',
   }),
-  email: {
-    // transportOptions: {
-    //   host: 'smtp.ethereal.email',
-    //   port: 587,
-    //   auth: {
-    //       user: 'antone.streich@ethereal.email',
-    //       pass: 'UspHx1s8AKvK1Fn8Jj'
-    //   }
-    // },
-    fromName: 'hello',
-    fromAddress: 'hello@example.com',
-    logMockCredentials: true, // Optional
-  },
-  endpoints: [
-    {
-      path: '/busqueda',
-      method: 'get',
-      handler: searchQuery,
-    },
-    {
-      path: '/desuscribir',
-      method: 'get',
-      handler: DesuscribirUsuario,
-    }
+  sharp,
+  plugins: [
+    payloadCloudPlugin(),
+    DOSpacesAdapter,
+    // storage-adapter-placeholder
   ],
 })
-

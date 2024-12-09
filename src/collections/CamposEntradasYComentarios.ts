@@ -1,4 +1,4 @@
-import { CollectionConfig, Field } from 'payload/types'
+import { CollectionConfig, Field } from 'payload'
 
 export const Campos: Field[] = [
     {

@@ -1,4 +1,4 @@
-import { CollectionConfig } from 'payload/types'
+import { CollectionConfig } from 'payload'
 
 const Fijadas: CollectionConfig = {
     slug: 'fijadas',
@@ -16,7 +16,7 @@ const Fijadas: CollectionConfig = {
     hooks: {
         beforeChange: [
             async ({ operation, data, req }) => {
-                if(operation === 'create'){
+                if(operation === 'create' && req.user?.id != null){
                     data.autor = req.user.id; // El autor es el usuario actual
                     return data;
                 }

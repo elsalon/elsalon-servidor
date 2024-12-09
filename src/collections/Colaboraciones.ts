@@ -1,4 +1,4 @@
-import { CollectionConfig } from 'payload/types'
+import { CollectionConfig } from 'payload'
 import { isAdminOrAutor,  } from '../helper'
 import { NotificarNuevaColaboracion } from '../GeneradorNotificacionesWeb'
 

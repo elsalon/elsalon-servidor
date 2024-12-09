@@ -1,52 +1,55 @@
 {
-  "name": "elsalon",
-  "description": "A blank template to get started with Payload",
+  "name": "elsalon-servidor",
   "version": "1.0.0",
-  "main": "dist/server.js",
+  "description": "A blank template to get started with Payload 3.0",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "migrate": "cross-env DISABLE_EMAIL_VERIFICATION=true npx ts-node -T ./src/migracion/humhub_import_posts.js",
-    "dev": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts nodemon",
-    "build:payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload build",
-    "build:server": "tsc",
-    "build": "yarn copyfiles && yarn build:payload && yarn build:server",
-    "serve": "cross-env PAYLOAD_CONFIG_PATH=dist/payload.config.js NODE_ENV=production node dist/server.js",
-    "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png}\" dist/",
-    "generate:types": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload generate:types",
-    "generate:graphQLSchema": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload generate:graphQLSchema",
-    "payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload"
+    "build": "cross-env NODE_OPTIONS=--no-deprecation next build",
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
+    "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "lint": "cross-env NODE_OPTIONS=--no-deprecation next lint",
+    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.670.0",
-    "@aws-sdk/lib-storage": "^3.670.0",
-    "@innovixx/payload-color-picker-field": "^1.1.1",
-    "@payloadcms/bundler-webpack": "^1.0.0",
-    "@payloadcms/db-mongodb": "^1.0.0",
-    "@payloadcms/plugin-cloud": "^3.0.2",
-    "@payloadcms/plugin-cloud-storage": "^1.2.0",
-    "@payloadcms/richtext-slate": "^1.0.0",
-    "aws-crt": "^1.22.0",
-    "axios": "^1.7.7",
-    "cheerio": "^1.0.0",
-    "cors": "^2.8.5",
+    "@payloadcms/db-mongodb": "latest",
+    "@payloadcms/next": "latest",
+    "@payloadcms/payload-cloud": "latest",
+    "@payloadcms/plugin-cloud-storage": "^3.5.0",
+    "@payloadcms/richtext-lexical": "latest",
+    "@payloadcms/storage-s3": "^3.5.0",
     "cross-env": "^7.0.3",
-    "dotenv": "^8.2.0",
-    "express": "^4.19.2",
-    "htmlparser2": "^9.1.0",
-    "jose": "^5.9.6",
-    "payload": "^2.0.0",
-    "showdown": "^2.1.0",
+    "graphql": "^16.8.1",
+    "next": "15.0.0",
+    "payload": "latest",
+    "react": "19.0.0-rc-65a56d0e-20241020",
+    "react-dom": "19.0.0-rc-65a56d0e-20241020",
+    "sharp": "0.32.6",
     "slugify": "^1.6.6"
   },
   "devDependencies": {
-    "@types/express": "^4.17.9",
-    "copyfiles": "^2.4.1",
-    "nodemon": "^2.0.6",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.8.4"
+    "@types/node": "^22.5.4",
+    "@types/react": "npm:types-react@19.0.0-rc.1",
+    "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1",
+    "eslint": "^8",
+    "eslint-config-next": "15.0.0",
+    "typescript": "5.7.2"
   },
-  "resolutions": {
-    "wrap-ansi": "7.0.0",
-    "string-width": "4.1.0"
-  }
+  "engines": {
+    "node": "^18.20.2 || >=20.9.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "npm:types-react@19.0.0-rc.1",
+      "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1"
+    }
+  },
+  "overrides": {
+    "@types/react": "npm:types-react@19.0.0-rc.1",
+    "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1"
+  },
+  "packageManager": "pnpm@9.14.4+sha512.c8180b3fbe4e4bca02c94234717896b5529740a6cbadf19fa78254270403ea2f27d4e1d46a08a0f56c89b63dc8ebfd3ee53326da720273794e6200fcf0d184ab"
 }

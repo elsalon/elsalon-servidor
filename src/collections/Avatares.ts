@@ -1,4 +1,4 @@
-import { CollectionConfig } from 'payload/types'
+import { CollectionConfig } from 'payload'
 
 const Avatares: CollectionConfig = {
     slug: 'avatares',
@@ -10,8 +10,8 @@ const Avatares: CollectionConfig = {
       group: 'Medios',
   },
     upload: {
-        staticURL: '/avatares',
-        staticDir: 'avatares',
+        // staticURL: '/avatares',
+        // staticDir: 'avatares',
         imageSizes: [
           {
             name: 'thumbnail',

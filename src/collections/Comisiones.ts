@@ -1,5 +1,5 @@
 import { SlugField } from '../SlugField'
-import { CollectionConfig } from 'payload/types'
+import { CollectionConfig } from 'payload'
 import { isAdminOrDocente } from '../helper'
 import { unirme, abandonar, feed } from './ComisionesEndpoints'
 
@@ -30,18 +30,12 @@ const Comisiones: CollectionConfig = {
             relationTo: 'users',
             hasMany: true,
         },
-        // {
-        //     name: 'grupos',
-        //     type: 'relationship',
-        //     relationTo: 'grupos',
-        //     hasMany: true,
-        // },
         {
             name: 'contexto',
             type: 'relationship',
             relationTo: 'salones',
         },
-        SlugField(),
+        SlugField({collection: 'comisiones'}),
     ],
     endpoints: [
         {
