@@ -123,6 +123,7 @@ export interface User {
  */
 export interface Avatare {
   id: string;
+  prefix?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -281,6 +282,7 @@ export interface Imagene {
 export interface Archivo {
   id: string;
   uploader?: (string | null) | User;
+  prefix?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -737,6 +739,7 @@ export interface ImagenesSelect<T extends boolean = true> {
  */
 export interface ArchivosSelect<T extends boolean = true> {
   uploader?: T;
+  prefix?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -754,6 +757,7 @@ export interface ArchivosSelect<T extends boolean = true> {
  * via the `definition` "avatares_select".
  */
 export interface AvataresSelect<T extends boolean = true> {
+  prefix?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

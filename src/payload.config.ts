@@ -27,15 +27,18 @@ import Aprecio from './collections/Aprecio'
 import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
 import Etiquetas from './collections/Etiquetas'
-// import { cloudStorage } from '@payloadcms/plugin-cloud-storage'
 import MailQueue from './collections/MailQueue'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 const GenerateFileURL = ( filename:string, prefix:string ) => {
-  const fullUrl = process.env.DO_SPACES_CDN_URL
-  console.log('Generating URL for', filename, prefix, fullUrl)
+  let fullUrl = process.env.DO_SPACES_CDN_URL || ""
+  // Remove url trailing slash
+  if (fullUrl.endsWith('/')) {
+    fullUrl = fullUrl.substring(0, fullUrl.length - 1)
+  }
+  // console.log('Generating URL for', filename, prefix, fullUrl)
   return [fullUrl, prefix, filename].filter(Boolean).join('/')
 }
 
@@ -47,8 +50,16 @@ const DOSpacesAdapter = s3Storage({
       prefix: 'media/imagenes',
       generateFileURL: ({ filename, prefix }) => GenerateFileURL( filename, prefix || "" )
     },
-    archivos: true,
-    avatares: true,
+    archivos: {
+      disablePayloadAccessControl: true,
+      prefix: 'media/archivos',
+      generateFileURL: ({ filename, prefix }) => GenerateFileURL( filename, prefix || "" )
+    },
+    avatares: {
+      disablePayloadAccessControl: true,
+      prefix: 'media/avatares',
+      generateFileURL: ({ filename, prefix }) => GenerateFileURL( filename, prefix || "" )
+    },
   },
   bucket: process.env.DO_SPACES_BUCKET || "",
   acl: 'public-read',
@@ -103,6 +114,9 @@ export default buildConfig({
   plugins: [
     payloadCloudPlugin(),
     DOSpacesAdapter,
-    // storage-adapter-placeholder
   ],
+  cors: [
+    'http://localhost:8080', 
+    'http://localhost:3000'
+  ]
 })
