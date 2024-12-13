@@ -45,13 +45,7 @@ const DOSpacesAdapter = s3Adapter({
 });
 
 const GenerateFileURL = ({ filename, prefix }) => {
-  const endpoint = process.env.DO_SPACES_ENDPOINT; // "https://nyc3.digitaloceanspaces.com"
-  const bucket = process.env.DO_SPACES_BUCKET; // "elsalon-test"
-  // Extract the region from the endpoint (in this case, "nyc3")
-  const url = new URL(endpoint);
-  const region = url.hostname.split('.')[0]; // Extract "nyc3"
-  // Create the new URL
-  const fullUrl = `https://${bucket}.${region}.digitaloceanspaces.com`;
+  const fullUrl = process.env.DO_SPACES_CDN_URL
   return [fullUrl, prefix, filename].filter(Boolean).join('/')
 }
 
