@@ -8,7 +8,7 @@ import { webpackBundler } from '@payloadcms/bundler-webpack'
 import { slateEditor } from '@payloadcms/richtext-slate'
 import { buildConfig } from 'payload/config'
 import { searchQuery } from './SearchQuery'
-import {DesuscribirUsuario} from './GeneradorNotificacionesMail'
+import { DesuscribirUsuario } from './GeneradorNotificacionesMail'
 
 import Ajustes from './collections/Ajustes'
 

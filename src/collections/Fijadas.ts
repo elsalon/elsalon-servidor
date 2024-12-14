@@ -39,6 +39,10 @@ const Fijadas: CollectionConfig = {
             type: 'relationship',
             relationTo: 'entradas',
         },
+        {
+            name: 'vencimiento',
+            type: 'date',
+        }
     ],
 }
 

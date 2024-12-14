@@ -2,6 +2,7 @@ import express from 'express'
 import payload from 'payload'
 const path = require('path');
 const globals = require('./globals');
+import { JobManager } from './Jobs/JobsManager'
 const { initializeMailQueue, cleanupFailedEmails } = require('./MailQueueProcessor');
 
 var cors = require('cors');
@@ -41,6 +42,8 @@ const start = async () => {
       setInterval(() => {
         cleanupFailedEmails(payload);
       }, 1000 * 60 * 60); // Run every hour
+
+      new JobManager();
     },
   })
 
