@@ -34,6 +34,8 @@ export class JobManager {
         })
   }
 
+  
+
   async runEveryMinute() {
     // Example: Sync external data or perform periodic tasks
     // const externalData = await this.fetchExternalData()
@@ -45,7 +47,7 @@ export class JobManager {
     //     dataCount: externalData.length
     //   }
     // })
-    console.log('Every minute job')
+    // console.log('Every minute job')
   }
 
   async runDailyCleanup() {

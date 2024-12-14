@@ -18,6 +18,33 @@ const Fijadas: CollectionConfig = {
             async ({ operation, data, req }) => {
                 if(operation === 'create'){
                     data.autor = req.user.id; // El autor es el usuario actual
+                    console.log('data', data);
+                    let vencimiento = new Date();
+                    if(data.duracion){
+                        switch(data.duracion){
+                            case "dia":
+                                vencimiento.setDate(vencimiento.getDate() + 1);
+                                break;
+                            case "semana":
+                                vencimiento.setDate(vencimiento.getDate() + 7);
+                                break;
+                            case "mes":
+                                vencimiento.setMonth(vencimiento.getMonth() + 1);
+                                break;
+                            case "anno":
+                                // Ultimo dia del año
+                                vencimiento.setMonth(11);
+                                vencimiento.setDate(31);
+                                break;
+                            default:
+                                // Default una semana
+                                vencimiento.setDate(vencimiento.getDate() + 7);
+                        }
+                    }else{
+                        // Default una semana
+                        vencimiento.setDate(vencimiento.getDate() + 7);
+                    }
+                    data.vencimiento = vencimiento;
                     return data;
                 }
             },
