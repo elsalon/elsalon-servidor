@@ -3,7 +3,7 @@ import cron from 'node-cron'
 
 export const EliminarFijadasVencidas = async () => {
     // Todos los dias a los 2am
-    cron.schedule('* 2 * * *', async () => {
+    cron.schedule('0 2 * * *', async () => {
       try {
         await TareaDesfijar()
       } catch (error) {
@@ -23,6 +23,10 @@ const TareaDesfijar = async () =>{
         limit: 100,
     })
     const idsVencidos = fijadas.docs.map(fijada => fijada.id)
+    if(!idsVencidos.length){
+        payload.logger.info('Cron: No hay fijadas vencidas para eliminar')
+        return
+    }
     const res = await payload.delete({
         collection: 'fijadas',
         where: {
@@ -31,8 +35,8 @@ const TareaDesfijar = async () =>{
             }
         }
     })
-    console.log('Cron: Fijadas vencidas eliminadas: ', res.docs.length)
+    payload.logger.info('Cron: Fijadas vencidas eliminadas: ', res.docs.length)
     if(res.errors.length){
-        console.error('Cron: Error eliminando fijadas vencidas:', res.errors)
+        payload.logger.error('Cron: Error eliminando fijadas vencidas:', res.errors)
     }
 }
