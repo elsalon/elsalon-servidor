@@ -19,6 +19,7 @@ export const SlugField = ({
 } = {}) => ({
     type: "text",
     name: slugField,
+    index: true,
     admin: {
         position: "sidebar",
         ...admin
