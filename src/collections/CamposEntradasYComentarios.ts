@@ -14,6 +14,7 @@ export const Campos: Field[] = [
     {
         name: 'extracto',
         type: 'text',
+        index: true,
     },
     {
         name: 'imagenes',

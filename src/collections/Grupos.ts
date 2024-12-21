@@ -15,6 +15,7 @@ const Grupos: CollectionConfig = {
         {
             name: 'nombre',
             type: 'text',
+            index: true,
         },
         {
             name: 'avatar',

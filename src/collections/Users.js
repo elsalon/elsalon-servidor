@@ -127,6 +127,7 @@ const Users = {
     {
       name: 'nombre',
       type: 'text',
+      index: true,
     },
     {
       name: 'avatar',
