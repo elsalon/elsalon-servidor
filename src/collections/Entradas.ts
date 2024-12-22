@@ -2,6 +2,7 @@ import { CollectionConfig } from 'payload/types'
 import { isAdminOrAutor, CrearExtracto, ValidarEntradaVacia } from '../helper'
 import { NotificarMencionEntrada } from '../GeneradorNotificacionesWeb'
 import { Campos } from './CamposEntradasYComentarios'
+import payload from 'payload'
 
 const Entradas: CollectionConfig = {
     slug: 'entradas',
@@ -23,6 +24,23 @@ const Entradas: CollectionConfig = {
         ],
         afterChange: [
             NotificarMencionEntrada,
+        ],
+        afterRead: [
+            async ({ doc }) => {
+                // Fetch de los comentarios
+                var comentarios = await payload.find({
+                    collection: 'comentarios',
+                    where: {
+                        entrada: {
+                            equals: doc.id,
+                        },
+                    },
+                    limit: 3,
+                    sort: '-createdAt',
+                });
+                comentarios.docs = comentarios.docs.length ? comentarios.docs.reverse() : [];
+                doc.comentarios = comentarios;
+            }
         ]
     },
     admin: {

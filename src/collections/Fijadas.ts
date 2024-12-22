@@ -18,7 +18,7 @@ const Fijadas: CollectionConfig = {
             async ({ operation, data, req }) => {
                 if(operation === 'create'){
                     data.autor = req.user.id; // El autor es el usuario actual
-                    console.log('data', data);
+                    // console.log('data', data);
                     let vencimiento = new Date();
                     if(data.duracion){
                         switch(data.duracion){
