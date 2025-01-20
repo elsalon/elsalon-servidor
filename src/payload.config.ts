@@ -2,6 +2,7 @@ import path from 'path'
 
 import { payloadCloud } from '@payloadcms/plugin-cloud'
 import { s3Adapter } from '@payloadcms/plugin-cloud-storage/s3'
+import { cloudStorage } from '@payloadcms/plugin-cloud-storage'
 
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { webpackBundler } from '@payloadcms/bundler-webpack'
@@ -26,7 +27,6 @@ import Aprecio from './collections/Aprecio'
 import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
 import Etiquetas from './collections/Etiquetas'
-import { cloudStorage } from '@payloadcms/plugin-cloud-storage'
 import MailQueue from './collections/MailQueue'
 
 // DigitalOcean Spaces

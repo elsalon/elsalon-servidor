@@ -9,6 +9,9 @@ La estructura de información se mantiene similar: hay usuarios que escriben ent
 ### Editor
 El editor de texto se purgó de botones innecesarios y se da acceso directo a las acciones comunes de formato o de subida de imagenes, o videos embebidos.
 
+### Imágenes
+Se le prestó especial atención a la posibilidad de navegar cómodamente las imágenes subidas en las entradas, manteniendo la mejor calidad posible al abrirlas como también la posibilidad de cómodamente poder hacer zoom y desplazarse.
+
 ### Grupos
 También se agregó el concepto de grupos, como una lista de usuarios, con un nombre y descripción; con la posibilidad de crear entradas bajo esta identidad. De esta forma una entrada, como por ejemplo una entrega puede ser compartida por distintos usuarios. Clickear sobre un grupo lleva rápidamente a obtener información sobre sus participantes.
 
