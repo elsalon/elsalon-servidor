@@ -39,6 +39,7 @@ class MailQueueProcessor {
             // Send email using Payload's native method
             // Use the configured from email from Payload config
             await this.payload.sendEmail({
+              from: process.env.EMAIL_FROM_ADDRESS,
               to: mail.to,
               subject: mail.subject,
               html: mail.body

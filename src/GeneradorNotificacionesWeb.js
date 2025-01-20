@@ -17,39 +17,7 @@ import { GetNuevosMencionados } from "./helper";
             {autor: {equals: autor}},
         ]
     };
-    // switch(tipoNotificacion){
-    //     case 'aprecio':
-    //         break;
-    //     case 'colaboracion':
-    //         where = {
-    //             and: [
-    //                 {tipoNotificacion: {equals: tipoNotificacion}},
-    //                 {autor: {equals: autor}},
-    //             ]
-    //         };
-    //         break
-    //     case 'comentario':
-    //         where = {
-    //             and: [
-    //                 {tipoNotificacion: {equals: tipoNotificacion}},
-    //                 {sourceEventId: {equals: sourceEventId}},
-    //                 {autor: {equals: autor}},
-    //             ]
-    //         };
-    //         break;
-    //     case 'mencion':
-    //         where = {
-    //             and: [
-    //                 {tipoNotificacion: {equals: tipoNotificacion}},
-    //                 {sourceEventId: {equals: sourceEventId}},
-    //                 {autor: {equals: autor}},
-    //             ]
-    //         };
-    //         // console.log("Notificar mencion ** ", where)
-    //         break;
-    // }
-
-        console.log({sourceDocumentId})
+    
     const existente = await payload.find({
         collection: "notificaciones",
         where: where,

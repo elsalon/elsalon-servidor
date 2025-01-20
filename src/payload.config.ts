@@ -110,17 +110,18 @@ export default buildConfig({
     url: process.env.DATABASE_URI,
   }),
   email: {
-    // transportOptions: {
-    //   host: 'smtp.ethereal.email',
-    //   port: 587,
-    //   auth: {
-    //       user: 'antone.streich@ethereal.email',
-    //       pass: 'UspHx1s8AKvK1Fn8Jj'
-    //   }
-    // },
-    fromName: 'hello',
-    fromAddress: 'hello@example.com',
-    logMockCredentials: true, // Optional
+    transportOptions: process.env.SMTP_HOST ? {
+      host: process.env.SMTP_HOST || 'smtp.mailersend.net',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    } : undefined,
+    fromName: process.env.EMAIL_FROM_NAME || 'hello',
+    fromAddress: process.env.EMAIL_FROM_ADDRESS || 'hello@example.com',
+    logMockCredentials: !process.env.SMTP_HOST, // Only log mock credentials if SMTP is not configured
   },
   endpoints: [
     {
