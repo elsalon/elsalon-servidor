@@ -33,3 +33,12 @@ volumes:
 
 # For production run
 # docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# Script migracion HumHub
+# docker-compose run --rm payload yarn migrate
+
+# Script backup db
+# ./backup_db.sh
+
+# Script restore db
+# ./restore_db.sh
