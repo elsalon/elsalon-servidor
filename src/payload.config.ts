@@ -50,6 +50,7 @@ const GenerateFileURL = ({ filename, prefix }) => {
 }
 
 export default buildConfig({
+  debug: process.env.NODE_ENV === 'development',
   admin: {
     user: Users.slug,
     bundler: webpackBundler(),
