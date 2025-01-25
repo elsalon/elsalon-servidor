@@ -23,7 +23,7 @@ const Notificaciones: CollectionConfig = {
         {
             name: 'tipoNotificacion',
             type: 'select',
-            options: ['aprecio', 'comentario', 'mencion', 'colaboracion'],
+            options: ['aprecio', 'comentario', 'mencion', 'colaboracion', 'comentario-grupal', 'entrada-grupal'],
         },
         {
             name: 'cantidad',

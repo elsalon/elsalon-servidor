@@ -5,8 +5,9 @@ import { GetNuevosMencionados } from "./helper";
  /**
  * @param {user} autor - Usuario siendo notificado
  * @param {user} usuario - Usuario que ejecutó la accion (se usará su avatar)
- * @param {string} tipoNotificacion - Tipo de notificación 'aprecio' | 'comentario' | 'mencion' | 'colaboracion']
+ * @param {string} tipoNotificacion - Tipo de notificación 'aprecio' | 'comentario' | 'mencion' | 'colaboracion' | 'comentario-grupal' | 'entrada-grupal']
  * @param {string} sourceDocumentId - ID de la entrada o comentario a la que se hace referencia
+ * @param {string} sourceDocumentCollection - Colección de la entrada o comentario a la que se hace referencia
  */
  const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, sourceDocumentId, sourceDocumentCollection) => {
     // var where;
@@ -155,12 +156,36 @@ export const NotificarNuevoComentario = async ({
     req, // full express request
     operation, // name of the operation ie. 'create', 'update'
 }, entrada) => {
-    if(operation != 'create') return;
-    if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+    if(operation == 'create') {
+        // No notificar si el autor del comentario es el mismo que el de la entrada
+        if(entrada.autor.id != doc.autor.id){
+            GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', doc.id, 'comentarios');
+        }
+    }
 
-    GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', doc.id, 'comentarios');
+    // Si es grupal notificar a otros integrantes
+    if(doc.autoriaGrupal){
+        doc.grupo.integrantes.forEach(async (integrante) => {
+            if(integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+            GenerarNotificacionOSumar(integrante.id, doc.autor, 'comentario-grupal', doc.id, 'comentarios');
+        });
+    }
 }
 
+
+export const NotificarNuevaEntrada = async ({
+    doc, // full document data
+    previousDoc, // document data before updating the collection
+    operation, // name of the operation ie. 'create', 'update'
+}) =>{
+    // Notificar a los integrantes del grupo
+    if(doc.autoriaGrupal){
+        doc.grupo.integrantes.forEach(async (integrante) => {
+            if(integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+            GenerarNotificacionOSumar(integrante.id, doc.autor, 'entrada-grupal', doc.id, 'entradas');
+        });
+    }
+}
 
 export const NotificarMencionEntrada = async ({
     doc, // full document data
