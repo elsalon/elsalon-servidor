@@ -47,6 +47,7 @@ const Users = {
   },
   admin: {
     useAsTitle: 'nombre',
+    listSearchableFields: ['nombre', 'email'],
   },
   // anyone can create user. data is only accessible to the user who created it
   access: {
