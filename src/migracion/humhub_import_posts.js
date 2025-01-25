@@ -138,6 +138,8 @@ const StartImport = async () => {
 const LoadLogsCreatedUsers = async () => {
     const filename = `humhub_importlogs_users.json`
     const filePath = `src/migracion/logs/${filename}`;
+    
+    await CreateFileIfNotExists(filePath);
 
     try {
         const data = await fsPromises.readFile(filePath, 'utf8');
@@ -145,6 +147,26 @@ const LoadLogsCreatedUsers = async () => {
     }
     catch (err) {
         console.log("No se pudo cargar el archivo de logs de usuarios creados");
+    }
+}
+
+const CreateFileIfNotExists = async (filePath) => {
+    try {
+        // Check if file exists, if not, create an empty file
+        await fsPromises.access(filePath, fsPromises.constants.F_OK)
+            .catch(async () => {
+                // Create directory if it doesn't exist
+                await fsPromises.mkdir(path.dirname(filePath), { recursive: true });
+                
+                // Create empty file
+                await fsPromises.writeFile(filePath, JSON.stringify([]));
+            });
+
+        const data = await fsPromises.readFile(filePath, 'utf8');
+        importedUsers = JSON.parse(data);
+    }
+    catch (err) {
+        console.log("Error loading user import logs:", err);
     }
 }
 
@@ -219,9 +241,10 @@ const SaveLogs = () => {
     console.log(`Guardando ${importedPosts.length} entradas del endpoint ${endpoint} al archivo ${filename}`);
     fs.writeFile(filePath, JSON.stringify(importedPosts), 'utf8', onWriteFile)
 }
-const SaveUserLogs = () => {
+const SaveUserLogs = async () => {
     const filename = `humhub_importlogs_users.json`
     const filePath = `src/migracion/logs/${filename}`;
+    await CreateFileIfNotExists(filePath);
     // console.log(`Guardando ${importedUsers.length} usuarios creados al archivo ${filename}`);
     fs.writeFile(filePath, JSON.stringify(importedUsers), 'utf8', onWriteFile)
 }
