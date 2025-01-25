@@ -8,6 +8,15 @@ export const Campos: Field[] = [
         hasMany: false,
     },
     {
+        name: 'autoriaGrupal',
+        type: 'checkbox',
+    },
+    {
+        name: 'grupo',
+        type: 'relationship',
+        relationTo: 'grupos',
+    },
+    {
         name: 'contenido',
         type: 'textarea',
     },

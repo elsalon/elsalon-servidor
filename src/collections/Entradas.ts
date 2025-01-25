@@ -49,15 +49,6 @@ const Entradas: CollectionConfig = {
     fields: [
         ...Campos,
         {
-            name: 'autoriaGrupal',
-            type: 'checkbox',
-        },
-        {
-            name: 'grupo',
-            type: 'relationship',
-            relationTo: 'grupos',
-        },
-        {
             name: 'sala',
             type: 'relationship',
             relationTo: 'salones',
