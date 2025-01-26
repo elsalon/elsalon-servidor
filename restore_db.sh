@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Set up using chmod +x restore_db.sh and a chron job to run it daily
+
 # Define the backup directory
 BACKUP_DIR="./backup/db"
 
@@ -61,7 +63,7 @@ fi
 
 # Perform the restore
 log "Starting restoration from '$BACKUP_FILE'..."
-docker-compose exec -T mongo mongorestore --archive --gzip < "$BACKUP_DIR/$BACKUP_FILE"
+docker-compose exec -T mongo mongorestore --archive --gzip --drop < "$BACKUP_DIR/$BACKUP_FILE"
 
 # Check if the restore was successful
 if [ $? -eq 0 ]; then

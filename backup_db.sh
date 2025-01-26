@@ -3,7 +3,7 @@
 # This script performs a mongodump of the elsalon database in the mongo container
 # and saves it to a .gz file in the backup directory. It also deletes .gz files older
 # than a specified number of days in the backup directory.
-# Set up using chmod +x backup.sh and a chron job to run it daily
+# Set up using chmod +x backup_db.sh and a chron job to run it daily
 
 # Define the backup directory
 BACKUP_DIR="./backup/db"
