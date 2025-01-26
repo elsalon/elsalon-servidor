@@ -97,6 +97,10 @@ const Salones: CollectionConfig = {
                     const createdGreaterThan = typeof req.query.createdGreaterThan === 'string'
                         ? req.query.createdGreaterThan
                         : null;
+                    
+                    const createdLessThan = typeof req.query.createdLessThan === 'string'
+                        ? req.query.createdLessThan
+                        : null;
 
                     const user = req.user;
 
@@ -157,6 +161,22 @@ const Salones: CollectionConfig = {
                                 query,
                                 {
                                     createdAt: { greater_than: dateValue }
+                                }
+                            ]
+                        };
+                    }
+                    if(createdLessThan) {
+                        // Validate the date string before creating Date object
+                        const dateValue = new Date(createdLessThan);
+                        if (isNaN(dateValue.getTime())) {
+                            return res.status(400).json({ error: 'Invalid date format for createdLessThan' });
+                        }
+
+                        query = {
+                            and: [
+                                query,
+                                {
+                                    createdAt: { less_than: dateValue }
                                 }
                             ]
                         };
