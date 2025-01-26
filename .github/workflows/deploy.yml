@@ -1,0 +1,46 @@
+name: Servidor Deploy a Droplet
+
+on:
+  push:
+    branches:
+      - main
+      - test
+
+jobs:
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy a Prod
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/v2/elsalon-servidor
+            git fetch --all
+            git reset --hard origin/main
+            git pull origin main
+            export NVM_DIR=~/.nvm
+            source ~/.nvm/nvm.sh
+            docker-compose restart
+
+  deploy-test:
+    if: github.ref == 'refs/heads/test'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy a Test
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/v2-test/elsalon-servidor
+            git fetch --all
+            git reset --hard origin/test
+            git pull origin test
+            export NVM_DIR=~/.nvm
+            source ~/.nvm/nvm.sh   
+            docker-compose restart
