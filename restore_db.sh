@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Set up using chmod +x restore_db.sh and a chron job to run it daily
+# Set up using chmod +x restore_db.sh and a cron job to run it daily
 
 # Define the backup directory
 BACKUP_DIR="./backup/db"
@@ -17,19 +17,31 @@ if [ ! -d "$BACKUP_DIR" ]; then
 fi
 
 # List available backup files in the backup directory
+BACKUP_FILES=($(ls "$BACKUP_DIR" | grep '\.gz$'))
+
+# Check if there are any backup files
+if [ ${#BACKUP_FILES[@]} -eq 0 ]; then
+  log "No backup files found in '$BACKUP_DIR'. Exiting."
+  exit 1
+fi
+
 log "Available backup files in '$BACKUP_DIR':"
-ls -lh "$BACKUP_DIR" | grep '\.gz$'
+for i in "${!BACKUP_FILES[@]}"; do
+  FILE_SIZE=$(du -h "$BACKUP_DIR/${BACKUP_FILES[$i]}" | cut -f1)
+  echo "$((i+1))) ${BACKUP_FILES[$i]} (Size: $FILE_SIZE)"
+done
 
-# Prompt the user to select a backup file
+# Prompt the user to select a file by number
 while true; do
-  read -p "Enter the name of the backup file to restore (e.g., dump_2023-10-01_12-34-56.gz): " BACKUP_FILE
+  read -p "Enter the number of the backup file to restore (1-${#BACKUP_FILES[@]}): " SELECTION
 
-  # Check if the file exists
-  if [ -f "$BACKUP_DIR/$BACKUP_FILE" ]; then
-    log "Backup file '$BACKUP_FILE' found."
+  # Validate the input
+  if [[ "$SELECTION" =~ ^[0-9]+$ ]] && [ "$SELECTION" -ge 1 ] && [ "$SELECTION" -le ${#BACKUP_FILES[@]} ]; then
+    BACKUP_FILE="${BACKUP_FILES[$((SELECTION-1))]}"
+    log "Backup file '$BACKUP_FILE' selected."
     break
   else
-    log "Backup file '$BACKUP_FILE' does not exist. Please try again."
+    log "Invalid selection. Please enter a number between 1 and ${#BACKUP_FILES[@]}."
   fi
 done
 
