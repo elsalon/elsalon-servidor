@@ -18,7 +18,7 @@ mkdir -p "$BACKUP_DIR"
 BACKUP_FILE="$BACKUP_DIR/dump_$(date +%Y-%m-%d_%H-%M-%S).gz"
 
 # Perform the mongodump and save it to the backup file
-docker-compose exec -T mongo mongodump --archive --gzip --db elsalon > "$BACKUP_FILE"
+docker-compose exec -T mongo mongodump --archive --gzip > "$BACKUP_FILE"
 
 # Check if the backup was successful
 if [ $? -eq 0 ]; then
