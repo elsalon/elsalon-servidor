@@ -24,6 +24,9 @@ jobs:
             git pull origin main
             export NVM_DIR=~/.nvm
             source ~/.nvm/nvm.sh
+            chmod +x backup_db.sh
+            chmod +x restore_db.sh
+            ./backup_db.sh
             docker-compose restart
 
   deploy-test:
@@ -43,4 +46,7 @@ jobs:
             git pull origin test
             export NVM_DIR=~/.nvm
             source ~/.nvm/nvm.sh   
+            chmod +x backup_db.sh
+            chmod +x restore_db.sh
+            ./backup_db.sh
             docker-compose restart
