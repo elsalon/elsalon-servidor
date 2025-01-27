@@ -177,7 +177,9 @@ export const NotificarNuevaEntrada = async ({
     doc, // full document data
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
+    context, // full context object
 }) =>{
+    if(context.skipHooks) return;
     // Notificar a los integrantes del grupo
     if(doc.autoriaGrupal){
         doc.grupo.integrantes.forEach(async (integrante) => {
@@ -191,7 +193,9 @@ export const NotificarMencionEntrada = async ({
     doc, // full document data
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
+    context,
 }) =>{
+    if(context.skipHooks) return;
     const nuevosMencionados = await GetNuevosMencionados({doc, previousDoc, operation});
 
     if (!Array.isArray(nuevosMencionados)) {
