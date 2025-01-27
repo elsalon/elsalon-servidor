@@ -1,12 +1,16 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, CrearExtracto, ValidarEntradaVacia } from '../helper'
+import { isAdminOrAutor, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete } from '../helper'
 import { NotificarNuevaEntrada, NotificarMencionEntrada } from '../GeneradorNotificacionesWeb'
 import { Campos } from './CamposEntradasYComentarios'
 import payload from 'payload'
 
 const Entradas: CollectionConfig = {
     slug: 'entradas',
-    access:{
+    versions: {
+        drafts: true,
+    },
+    access: {
+        read: PublicadasYNoBorradas,
         update: isAdminOrAutor,
         delete: isAdminOrAutor,
     },
@@ -15,7 +19,7 @@ const Entradas: CollectionConfig = {
             ValidarEntradaVacia,
             CrearExtracto,
             async ({ operation, data, req }) => {
-                if(operation === 'create' && req.user){
+                if (operation === 'create' && req.user) {
                     data.autor = req.user.id; // El autor es el usuario actual
                     return data;
                 }
@@ -27,8 +31,9 @@ const Entradas: CollectionConfig = {
             NotificarMencionEntrada,
         ],
         afterRead: [
-            async ({ doc }) => {
+            async ({ doc, context }) => {
                 // Fetch de los comentarios
+                if (context.skipHooks) return;
                 var comentarios = await payload.find({
                     collection: 'comentarios',
                     where: {
@@ -42,7 +47,7 @@ const Entradas: CollectionConfig = {
                 comentarios.docs = comentarios.docs.length ? comentarios.docs.reverse() : [];
                 doc.comentarios = comentarios;
             }
-        ]
+        ],
     },
     admin: {
         group: 'Interacciones',
@@ -59,6 +64,14 @@ const Entradas: CollectionConfig = {
             type: 'checkbox',
         },
     ],
+
+    endpoints: [
+        {
+          path: '/:id',
+          method: 'delete',
+          handler: SoftDelete('entradas'),
+        }
+      ]
 }
 
 export default Entradas

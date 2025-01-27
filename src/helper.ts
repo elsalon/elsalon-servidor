@@ -52,7 +52,7 @@ export const isAdmin: Access = ({ req: { user } }) => {
 };
 
 export const afterCreateAssignAutorToUser = async ({ operation, data, req }) => {
-    if(operation === 'create' && req.user){
+    if (operation === 'create' && req.user) {
         data.autor = req.user.id; // El autor es el usuario actual
         return data;
     }
@@ -61,9 +61,10 @@ export const afterCreateAssignAutorToUser = async ({ operation, data, req }) => 
 
 export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
     // CREATE
-    if(operation === 'create') return doc.mencionados;
-    
+    if (operation === 'create') return doc.mencionados;
+
     // UPDATE
+    if (!previousDoc.mencionados?.length && !doc.mencionados?.length) return [];
     let viejosMencionados = previousDoc.mencionados.map(m => m.id);
     let nuevosMencionados = doc.mencionados.map(m => m.id).filter(m => !viejosMencionados.includes(m));
     return nuevosMencionados;
@@ -93,22 +94,23 @@ export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
 //     }
 // };
 
-export const CrearExtracto = async ({ operation, data, req }) => {
+export const CrearExtracto = async ({ operation, data, req, context }) => {
+    if (context.skipHooks) return data;
     if (operation === 'create' || operation === 'update') {
         let text = data.contenido;
-        
+
         // Remove custom images tag
         text = text.replace(/\[image:[a-f0-9]+\]/g, '');
-        
+
         // Function to convert mentions and hashtags to plain text
         const convertToPlainText = (content, regex, caracter) => {
             return content.replace(regex, (match, name) => caracter + name);
         }
-        
+
         // Updated regex patterns
         const mentionRegex = /\[([^\]]+)\]\(mencion:[a-zA-Z0-9]+\)/g;
         const tagRegex = /\[([^\]]+)\]\(etiqueta:[a-zA-Z0-9]+\)/g;
-        
+
         // Convert mentions and hashtags to plain text
         text = convertToPlainText(text, mentionRegex, "@");
         text = convertToPlainText(text, tagRegex, "#");
@@ -121,21 +123,118 @@ export const CrearExtracto = async ({ operation, data, req }) => {
     }
 }
 
-export const ValidarEntradaVacia = async ({ operation, data, req }) => {
+export const ValidarEntradaVacia = async ({ context, operation, data, req }) => {
+    if (context.skipHooks) return data;
     var entradaVacia = true;
     if (data.contenido == "<p><br></p>") {
         data.contenido = "";
-    }else{
+    } else {
         entradaVacia = false;
     }
-    if(data.imagenes.length > 0){
+    if (data.imagenes.length > 0) {
         entradaVacia = false;
     }
-    if(data.archivos.length > 0){
+    if (data.archivos.length > 0) {
         entradaVacia = false;
     }
-    if(entradaVacia){
+    if (entradaVacia) {
         throw new Error('La entrada no puede estar vacía');
     }
- 
 }
+
+export const PublicadasYNoBorradas: Access = ({ req }) => {
+    if (!req.user) return false;
+
+    const reqIsAdminSite = req.headers?.referer?.includes('/admin') === true;
+
+    if (reqIsAdminSite) {
+        return true;
+    }
+
+    return {
+        and: [
+            {
+                _status: {
+                    equals: 'published',
+                }
+            },
+            {
+                isDeleted: {
+                    not_equals: true,
+                }
+            }
+        ]
+    };
+}
+
+export const SoftDelete  = (collection: string) => {
+ return async (req, res) => {
+      const { id } = req.params;
+      const { user } = req;
+      if (!user) {
+        res.status(401).json({
+          message: 'Unauthorized no user',
+        });
+        return;
+      }
+
+      const reqIsAdminSite = req.headers?.referer?.includes('/admin') === true;
+      if(reqIsAdminSite){
+          // Lo borramos en serio
+          await req.payload.delete({
+              collection,
+              id,
+          });
+          return;
+      }
+      
+      const doc = await req.payload.findByID({
+          collection,
+          id,
+      });
+      if(!doc){
+          res.status(404).json({
+              message: 'Document not found',
+          });
+          return;
+      }
+      if(doc.isDeleted){
+          res.status(404).json({
+              message: 'Document already deleted',
+          });
+          return;
+      }
+      if(doc.autoriaGrupal){
+            const integrantesIds = doc.grupo?.integrantes?.map(i => i.id);
+          if(!integrantesIds.includes(user.id)){
+              res.status(401).json({
+                  message: 'Unauthorized not integrante',
+              });
+              return;
+          }
+      }else{
+          if(doc.autor.id != user.id){
+              res.status(401).json({
+                  message: 'Unauthorized not autor',
+              });
+              return;
+          }
+      }
+      
+      await req.payload.update({
+        collection,
+        id,
+        data: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: req.user?.id,
+        },
+      });
+      
+      res.status(200).json({
+        message: 'Document deleted successfully',
+        doc: { id }
+      });
+    }
+}
+  
