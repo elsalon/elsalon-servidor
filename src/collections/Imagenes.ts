@@ -31,7 +31,7 @@ const Imagenes: CollectionConfig = {
             },
             {
                 name: 'thumbnail',
-                width: 200,
+                width: 250,
                 // By specifying `undefined` or leaving a height undefined,
                 // the image will be sized to a certain width,
                 // but it will retain its original aspect ratio
