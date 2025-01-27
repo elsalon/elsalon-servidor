@@ -67,4 +67,22 @@ export const Campos: Field[] = [
         name: 'embedsVimeo',
         type: 'text',
     },
+    {
+        type: 'row',
+        fields: [
+            {
+                name: 'isDeleted',
+                type: 'checkbox',
+            },
+            {
+                name: 'deletedAt',
+                type: 'date',
+            },
+            {
+                name: 'deletedBy',
+                type: 'relationship',
+                relationTo: 'users',
+            }
+        ]
+    }
 ]
