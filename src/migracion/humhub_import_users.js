@@ -190,8 +190,8 @@ async function UploadImageFromUrl(imageUrl, filename = 'image-from-url.jpg') {
             collection: 'avatares',
             filePath: tempFilePath,
             data: {
-                focalX: 0.5,
-                focalY: 0.5,
+                focalX: 50,
+                focalY: 50,
             }
         });
         // Clean up temporary file

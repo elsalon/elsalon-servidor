@@ -513,8 +513,8 @@ async function ProcessUploads(entry, autor) {
                     filePath: tempFilePath,
                     data: {
                         uploader: autor.id,
-                        focalX: 0.5,
-                        focalY: 0.5,
+                        focalX: 50,
+                        focalY: 50,
                     }
                 });
                 if (res.id) {
@@ -810,8 +810,8 @@ async function ImportUser(user) {
                 collection: 'avatares',
                 filePath: tempFilePath,
                 data: {
-                    focalX: 0.5,
-                    focalY: 0.5,
+                    focalX: 50,
+                    focalY: 50,
                 }
             });
             if (res.id) {
