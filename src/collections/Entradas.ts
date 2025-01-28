@@ -7,7 +7,7 @@ import payload from 'payload'
 const Entradas: CollectionConfig = {
     slug: 'entradas',
     versions: {
-        drafts: true,
+        drafts: false,
     },
     access: {
         read: PublicadasYNoBorradas,
