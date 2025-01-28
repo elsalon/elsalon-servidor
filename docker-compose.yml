@@ -35,7 +35,7 @@ volumes:
 # docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Script migracion HumHub
-# docker-compose run --rm payload yarn migrate
+# docker-compose run --rm payload yarn migrate:humhub
 
 # Script backup db
 # ./backup_db.sh
