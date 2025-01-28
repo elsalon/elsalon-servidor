@@ -37,9 +37,18 @@ const Entradas: CollectionConfig = {
                 var comentarios = await payload.find({
                     collection: 'comentarios',
                     where: {
-                        entrada: {
-                            equals: doc.id,
-                        },
+                        and: [
+                            {
+                                entrada: {
+                                    equals: doc.id,
+                                },
+                            },
+                            {
+                                isDeleted: {
+                                    not_equals: true,
+                                }
+                            }
+                        ]
                     },
                     limit: 3,
                     sort: '-createdAt',
@@ -67,11 +76,11 @@ const Entradas: CollectionConfig = {
 
     endpoints: [
         {
-          path: '/:id',
-          method: 'delete',
-          handler: SoftDelete('entradas'),
+            path: '/:id',
+            method: 'delete',
+            handler: SoftDelete('entradas'),
         }
-      ]
+    ]
 }
 
 export default Entradas

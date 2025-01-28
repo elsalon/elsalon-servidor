@@ -152,18 +152,24 @@ export const PublicadasYNoBorradas: Access = ({ req }) => {
     }
 
     return {
-        and: [
-            {
-                _status: {
-                    equals: 'published',
-                }
-            },
-            {
-                isDeleted: {
-                    not_equals: true,
-                }
-            }
-        ]
+        isDeleted: {
+            not_equals: true,
+        }
+        // Dejo esto comentado por si en algun momento queremos 
+        // volver a habilitar drafts
+        //
+        // and: [
+        //     {
+        //         _status: {
+        //             equals: 'published',
+        //         }
+        //     },
+        //     {
+        //         isDeleted: {
+        //             not_equals: true,
+        //         }
+        //     }
+        // ]
     };
 }
 
