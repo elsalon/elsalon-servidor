@@ -4,6 +4,11 @@ import payload from 'payload';
 
 
 // Helper acces function
+export const isLoggedIn: Access = ({ req: user }) => {
+    console.log("is logged in", Boolean(user));
+    return Boolean(user)
+};
+
 export const isAutor: Access = ({ req: { user }, id }) => {
     if (!user) return false;
     return {
@@ -173,8 +178,6 @@ export const PublicadasYNoBorradas: Access = ({ req }) => {
 
 export const SoftDelete = (collection: string) => {
     try {
-
-
         return async (req, res) => {
             const { id } = req.params;
             const { user } = req;
@@ -229,7 +232,7 @@ export const SoftDelete = (collection: string) => {
                     return;
                 }
             }
-
+            
             await req.payload.update({
                 collection,
                 id,
@@ -241,6 +244,16 @@ export const SoftDelete = (collection: string) => {
                     deletedBy: req.user?.id,
                 },
             });
+            
+            // Si es una entrada, borramos si esta fijada
+            if (collection == 'entradas') {
+                await req.payload.delete({
+                    collection: 'fijadas',
+                    where: {
+                        entrada: {equals: id},
+                    },
+                });
+            }
 
             res.status(200).json({
                 message: 'Document deleted successfully',
@@ -257,8 +270,7 @@ export const PopulateComentarios = async ({ doc, context, req }) => {
     // Fetch de los comentarios
     if (context.skipHooks) return;
     if(!req.user) return;
-
-    console.log("pop coments", req.user.nombre)
+    
     var comentarios = await payload.find({
         collection: 'comentarios',
         where: {
