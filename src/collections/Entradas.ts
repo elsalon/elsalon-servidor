@@ -31,25 +31,18 @@ const Entradas: CollectionConfig = {
             NotificarMencionEntrada,
         ],
         afterRead: [
-            async ({ doc, context }) => {
+            async ({ doc, context, req:{user} }) => {
                 // Fetch de los comentarios
                 if (context.skipHooks) return;
                 var comentarios = await payload.find({
                     collection: 'comentarios',
                     where: {
-                        and: [
-                            {
-                                entrada: {
-                                    equals: doc.id,
-                                },
-                            },
-                            {
-                                isDeleted: {
-                                    not_equals: true,
-                                }
-                            }
-                        ]
+                        entrada: {
+                            equals: doc.id,
+                        },
                     },
+                    overrideAccess: false,
+                    user,
                     limit: 3,
                     sort: '-createdAt',
                 });
