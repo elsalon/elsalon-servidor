@@ -29,7 +29,7 @@ jobs:
             ./backup_db.sh
             docker-compose restart
             sleep 60  # Wait for a minute
-            docker-compose run --rm payload yarn migrate:humhub
+            docker-compose run --rm payload yarn migrate
 
   deploy-test:
     if: github.ref == 'refs/heads/test'
@@ -53,4 +53,4 @@ jobs:
             ./backup_db.sh
             docker-compose restart
             sleep 60  # Wait for a minute
-            docker-compose run --rm payload yarn migrate:humhub
+            docker-compose run --rm payload yarn migrate
