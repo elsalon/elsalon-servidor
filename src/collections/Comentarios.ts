@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, CrearExtracto, PublicadasYNoBorradas, SoftDelete, } from '../helper'
+import { isAdminOrAutor, CrearExtracto, PublicadasYNoBorradas, SoftDelete, PopulateAprecios} from '../helper'
 import { NotificarNuevoComentario, NotificarMencionComentario } from '../GeneradorNotificacionesWeb'
 import { NotificarMailComentario } from '../GeneradorNotificacionesMail'
 import { Campos } from './CamposEntradasYComentarios'
@@ -32,7 +32,10 @@ const Comentarios: CollectionConfig = {
                 NotificarMailComentario(c, entrada);
                 NotificarMencionComentario(c, entrada)
             },
-        ]
+        ],
+        afterRead: [
+            PopulateAprecios,
+        ],
     },
     admin: {
         group: 'Interacciones',

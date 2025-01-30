@@ -22,6 +22,8 @@ import { GetNuevosMencionados } from "./helper";
     const existente = await payload.find({
         collection: "notificaciones",
         where: where,
+        overrideAccess: false,
+        user: usuario,
     });
 
     if(existente.totalDocs == 0){

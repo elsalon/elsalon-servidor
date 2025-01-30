@@ -9,7 +9,7 @@ const Notificaciones: CollectionConfig = {
     access:{
         read: isAutor, // isAutor,
         // create: isAdminOrAutor,
-        update: isAdminOrAutor,
+        // update: isAdminOrAutor,
         delete: isAdminOrAutor,
     },
     hooks: {
