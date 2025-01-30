@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete } from '../helper'
+import { isAdminOrAutor, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios } from '../helper'
 import { NotificarNuevaEntrada, NotificarMencionEntrada } from '../GeneradorNotificacionesWeb'
 import { Campos } from './CamposEntradasYComentarios'
 import payload from 'payload'
@@ -31,24 +31,8 @@ const Entradas: CollectionConfig = {
             NotificarMencionEntrada,
         ],
         afterRead: [
-            async ({ doc, context, req:{user} }) => {
-                // Fetch de los comentarios
-                if (context.skipHooks) return;
-                var comentarios = await payload.find({
-                    collection: 'comentarios',
-                    where: {
-                        entrada: {
-                            equals: doc.id,
-                        },
-                    },
-                    overrideAccess: false,
-                    user,
-                    limit: 3,
-                    sort: '-createdAt',
-                });
-                comentarios.docs = comentarios.docs.length ? comentarios.docs.reverse() : [];
-                doc.comentarios = comentarios;
-            }
+            PopulateComentarios,
+            PopulateAprecios,
         ],
     },
     admin: {

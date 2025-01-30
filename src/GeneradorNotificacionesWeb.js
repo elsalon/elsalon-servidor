@@ -24,12 +24,13 @@ import { GetNuevosMencionados } from "./helper";
         where: where,
     });
 
-    // console.log({existente})
     if(existente.totalDocs == 0){
         // Primera vez que se aprecia esta entrada
         console.log("Creando nueva notificacion")
         await payload.create({
             collection: 'notificaciones',
+            overrideAccess: false,
+            user: usuario,
             data: {
                 autor: autor,  // El autor de la entrada que fue apreciada
                 usuario: usuario.id, // El usuario que aprecio
@@ -47,6 +48,8 @@ import { GetNuevosMencionados } from "./helper";
         await payload.update({
             collection: 'notificaciones',
             id: notificacion.id,
+            overrideAccess: false,
+            user: usuario,
             data: {
                 cantidad: notificacion.cantidad + 1,
                 usuario: usuario.id, // El último usuario que aprecio
@@ -63,8 +66,8 @@ export const NotificarAprecio = async ({
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
     }) => {
-    if(operation === 'create' && req.body?.contenidotipo){
-        // console.log("*** notificacion aprecio***", req.body.contenidotipo, req.body.contenidoid);
+    if(operation == 'create' && req.body?.contenidotipo){
+        // console.log("*** notificacion aprecio***", operation, req.body.contenidotipo, req.body.contenidoid);
         switch(req.body.contenidotipo){
             case 'entrada':
                 // console.log("Crear notificacion aprecio de entrada");
@@ -82,6 +85,8 @@ export const NotificacionAprecioEntrada = async (doc, req) => {
     const entrada = await req.payload.findByID({
         collection: 'entradas',
         id: doc.contenidoid,
+        overrideAccess: false,
+        user: req.user,
     });
     if(!entrada) return;
     let destinatarios = [];
@@ -100,6 +105,8 @@ export const NotificacionAprecioComentario = async (doc, req) => {
     const comentario = await req.payload.findByID({
         collection: 'comentarios',
         id: doc.contenidoid,
+        overrideAccess: false,
+        user: req.user,
     });
     if(!comentario) return;
     GenerarNotificacionOSumar(comentario.autor.id, req.user, 'aprecio', comentario.id, 'comentarios');

@@ -8,7 +8,7 @@ const Notificaciones: CollectionConfig = {
     },
     access:{
         read: isAutor, // isAutor,
-        create: isAdmin,
+        // create: isAdminOrAutor,
         update: isAdminOrAutor,
         delete: isAdminOrAutor,
     },

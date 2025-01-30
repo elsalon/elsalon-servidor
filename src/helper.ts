@@ -173,74 +173,117 @@ export const PublicadasYNoBorradas: Access = ({ req }) => {
     };
 }
 
-export const SoftDelete  = (collection: string) => {
- return async (req, res) => {
-      const { id } = req.params;
-      const { user } = req;
-      if (!user) {
-        res.status(401).json({
-          message: 'Unauthorized no user',
-        });
-        return;
-      }
+export const SoftDelete = (collection: string) => {
+    return async (req, res) => {
+        const { id } = req.params;
+        const { user } = req;
+        if (!user) {
+            res.status(401).json({
+                message: 'Unauthorized no user',
+            });
+            return;
+        }
 
-      const reqIsAdminSite = req.headers?.referer?.includes('/admin') === true;
-      if(reqIsAdminSite){
-          // Lo borramos en serio
-          await req.payload.delete({
-              collection,
-              id,
-          });
-          return;
-      }
-      
-      const doc = await req.payload.findByID({
-          collection,
-          id,
-      });
-      if(!doc){
-          res.status(404).json({
-              message: 'Document not found',
-          });
-          return;
-      }
-      if(doc.isDeleted){
-          res.status(404).json({
-              message: 'Document already deleted',
-          });
-          return;
-      }
-      if(doc.autoriaGrupal){
+        const reqIsAdminSite = req.headers?.referer?.includes('/admin') === true;
+        if (reqIsAdminSite) {
+            // Lo borramos en serio
+            await req.payload.delete({
+                collection,
+                id,
+            });
+            return;
+        }
+
+        const doc = await req.payload.findByID({
+            collection,
+            id,
+        });
+        if (!doc) {
+            res.status(404).json({
+                message: 'Document not found',
+            });
+            return;
+        }
+        if (doc.isDeleted) {
+            res.status(404).json({
+                message: 'Document already deleted',
+            });
+            return;
+        }
+        if (doc.autoriaGrupal) {
             const integrantesIds = doc.grupo?.integrantes?.map(i => i.id);
-          if(!integrantesIds.includes(user.id)){
-              res.status(401).json({
-                  message: 'Unauthorized not integrante',
-              });
-              return;
-          }
-      }else{
-          if(doc.autor.id != user.id){
-              res.status(401).json({
-                  message: 'Unauthorized not autor',
-              });
-              return;
-          }
-      }
-      
-      await req.payload.update({
-        collection,
-        id,
-        data: {
-          isDeleted: true,
-          deletedAt: new Date(),
-          deletedBy: req.user?.id,
-        },
-      });
-      
-      res.status(200).json({
-        message: 'Document deleted successfully',
-        doc: { id }
-      });
+            if (!integrantesIds.includes(user.id)) {
+                res.status(401).json({
+                    message: 'Unauthorized not integrante',
+                });
+                return;
+            }
+        } else {
+            if (doc.autor.id != user.id) {
+                res.status(401).json({
+                    message: 'Unauthorized not autor',
+                });
+                return;
+            }
+        }
+
+        await req.payload.update({
+            collection,
+            id,
+            data: {
+                isDeleted: true,
+                deletedAt: new Date(),
+                deletedBy: req.user?.id,
+            },
+        });
+
+        res.status(200).json({
+            message: 'Document deleted successfully',
+            doc: { id }
+        });
     }
 }
-  
+
+
+export const PopulateComentarios = async ({ doc, context, req: { user } }) => {
+    // Fetch de los comentarios
+    if (context.skipHooks) return;
+    var comentarios = await payload.find({
+        collection: 'comentarios',
+        where: {
+            entrada: {
+                equals: doc.id,
+            },
+        },
+        overrideAccess: false,
+        user,
+        limit: 3,
+        sort: '-createdAt',
+    });
+    comentarios.docs = comentarios.docs.length ? comentarios.docs.reverse() : [];
+    doc.comentarios = comentarios;
+}
+
+export const PopulateAprecios = async({ doc, context, req: { user } }) => {
+    if (context.skipHooks) return;
+    
+    var aprecios = await payload.find({
+        collection: 'aprecio',
+        where: {
+            contenidoid: {
+                equals: doc.id,
+            },
+        },
+        overrideAccess: false,
+        user,
+        limit: 0,
+        depth: 1,
+        sort: '-createdAt',
+    });
+    // console.log("populate aprecios", aprecios);
+    aprecios.docs.forEach((aprecio) => {
+        // Reducimos el objeto
+        aprecio.autor = {id: aprecio.autor.id, nombre: aprecio.autor.nombre};
+    });
+    doc.aprecios = aprecios;
+}
