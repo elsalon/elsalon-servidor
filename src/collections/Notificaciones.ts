@@ -7,9 +7,9 @@ const Notificaciones: CollectionConfig = {
         group: 'Interacciones',
     },
     access:{
-        read: isAutor, // isAutor,
-        // create: isAdminOrAutor,
-        // update: isAdminOrAutor,
+        read: isAutor,
+        create: isAdminOrAutor,
+        update: isAdminOrAutor,
         delete: isAdminOrAutor,
     },
     hooks: {

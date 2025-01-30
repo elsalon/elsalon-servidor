@@ -176,7 +176,7 @@ function GenerarAvatar(autor){
             />`;
     }else{
         // Genero un cuadrado con las iniciales del nombre
-        const initials = autor.nombre.split(' ').map(word => word[0]).join('');
+        const initials = autor.nombre?.split(' ').map(word => word[0]).join('');
         return `
             <div 
                 style="width: 48px; height: 48px; background-color: #000; color: #fff; font-weight: bold; font-size: 20px; text-align: center; line-height: 48px;"
@@ -243,11 +243,15 @@ export const NotificarMailComentario = async ({
 }, entrada) => {
     if(operation != 'create') return;
     if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
-    if(!entrada.autor.notificacionesMail.activas || !entrada.autor.notificacionesMail.comentarioNuevo) return; // Chequear si el usuario tiene notificaciones por mail habilitadas
-
-    var body = mailHeader;
-    body += BloqueComentario(doc, entrada);
-    body += await mailFooter(entrada.autor.email);
-
-    AddToMailQueue(entrada.autor.email, `El Salon - ${doc.autor.nombre} comentó una entrada tuya`, body);
+    try{
+        if(!entrada.autor.notificacionesMail.activas || !entrada.autor.notificacionesMail.comentarioNuevo) return; // Chequear si el usuario tiene notificaciones por mail habilitadas
+    
+        var body = mailHeader;
+        body += BloqueComentario(doc, entrada);
+        body += await mailFooter(entrada.autor.email);
+    
+        AddToMailQueue(entrada.autor.email, `El Salon - ${doc.autor.nombre} comentó una entrada tuya`, body);
+    }catch(e){
+        console.error('Error al notificar por mail:', e);
+    }
 }

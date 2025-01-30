@@ -1,8 +1,7 @@
 // Helper functions
 import { Access, FieldAccess } from 'payload/types';
 import payload from 'payload';
-import { EnviarMailMencion } from './GeneradorNotificacionesMail';
-import { NotificarMencionEntrada, NotificarMencionComentario } from './GeneradorNotificacionesWeb';
+
 
 // Helper acces function
 export const isAutor: Access = ({ req: { user }, id }) => {
@@ -150,7 +149,6 @@ export const PublicadasYNoBorradas: Access = ({ req }) => {
     if (reqIsAdminSite) {
         return true;
     }
-
     return {
         isDeleted: {
             not_equals: true,
@@ -174,80 +172,93 @@ export const PublicadasYNoBorradas: Access = ({ req }) => {
 }
 
 export const SoftDelete = (collection: string) => {
-    return async (req, res) => {
-        const { id } = req.params;
-        const { user } = req;
-        if (!user) {
-            res.status(401).json({
-                message: 'Unauthorized no user',
-            });
-            return;
-        }
+    try {
 
-        const reqIsAdminSite = req.headers?.referer?.includes('/admin') === true;
-        if (reqIsAdminSite) {
-            // Lo borramos en serio
-            await req.payload.delete({
+
+        return async (req, res) => {
+            const { id } = req.params;
+            const { user } = req;
+            if (!user) {
+                res.status(401).json({
+                    message: 'Unauthorized no user',
+                });
+                return;
+            }
+
+            const reqIsAdminSite = req.headers?.referer?.includes('/admin') === true;
+            if (reqIsAdminSite) {
+                // Lo borramos en serio
+                await req.payload.delete({
+                    collection,
+                    id,
+                });
+                return;
+            }
+
+            const doc = await req.payload.findByID({
                 collection,
                 id,
+                overrideAccess: false,
+                user: req.user,
             });
-            return;
-        }
-
-        const doc = await req.payload.findByID({
-            collection,
-            id,
-        });
-        if (!doc) {
-            res.status(404).json({
-                message: 'Document not found',
-            });
-            return;
-        }
-        if (doc.isDeleted) {
-            res.status(404).json({
-                message: 'Document already deleted',
-            });
-            return;
-        }
-        if (doc.autoriaGrupal) {
-            const integrantesIds = doc.grupo?.integrantes?.map(i => i.id);
-            if (!integrantesIds.includes(user.id)) {
-                res.status(401).json({
-                    message: 'Unauthorized not integrante',
+            if (!doc) {
+                res.status(404).json({
+                    message: 'Document not found',
                 });
                 return;
             }
-        } else {
-            if (doc.autor.id != user.id) {
-                res.status(401).json({
-                    message: 'Unauthorized not autor',
+            if (doc.isDeleted) {
+                res.status(404).json({
+                    message: 'Document already deleted',
                 });
                 return;
             }
+            if (doc.autoriaGrupal) {
+                const integrantesIds = doc.grupo?.integrantes?.map(i => i.id);
+                if (!integrantesIds.includes(user.id)) {
+                    res.status(401).json({
+                        message: 'Unauthorized not integrante',
+                    });
+                    return;
+                }
+            } else {
+                if (doc.autor.id != user.id) {
+                    res.status(401).json({
+                        message: 'Unauthorized not autor',
+                    });
+                    return;
+                }
+            }
+
+            await req.payload.update({
+                collection,
+                id,
+                overrideAccess: false,
+                user: req.user,
+                data: {
+                    isDeleted: true,
+                    deletedAt: new Date(),
+                    deletedBy: req.user?.id,
+                },
+            });
+
+            res.status(200).json({
+                message: 'Document deleted successfully',
+                doc: { id }
+            });
         }
-
-        await req.payload.update({
-            collection,
-            id,
-            data: {
-                isDeleted: true,
-                deletedAt: new Date(),
-                deletedBy: req.user?.id,
-            },
-        });
-
-        res.status(200).json({
-            message: 'Document deleted successfully',
-            doc: { id }
-        });
+    } catch (e) {
+        console.log("Error en soft delete", e);
     }
 }
 
 
-export const PopulateComentarios = async ({ doc, context, req: { user } }) => {
+export const PopulateComentarios = async ({ doc, context, req }) => {
     // Fetch de los comentarios
     if (context.skipHooks) return;
+    if(!req.user) return;
+
+    console.log("pop coments", req.user.nombre)
     var comentarios = await payload.find({
         collection: 'comentarios',
         where: {
@@ -256,7 +267,7 @@ export const PopulateComentarios = async ({ doc, context, req: { user } }) => {
             },
         },
         overrideAccess: false,
-        user,
+        user: req.user,
         limit: 3,
         sort: '-createdAt',
     });
@@ -264,9 +275,10 @@ export const PopulateComentarios = async ({ doc, context, req: { user } }) => {
     doc.comentarios = comentarios;
 }
 
-export const PopulateAprecios = async({ doc, context, req: { user } }) => {
+export const PopulateAprecios = async ({ doc, context, req }) => {
+    if(!req.user) return;
     if (context.skipHooks) return;
-    
+
     var aprecios = await payload.find({
         collection: 'aprecio',
         where: {
@@ -275,7 +287,7 @@ export const PopulateAprecios = async({ doc, context, req: { user } }) => {
             },
         },
         overrideAccess: false,
-        user,
+        user: req.user,
         limit: 0,
         depth: 1,
         sort: '-createdAt',
@@ -283,7 +295,7 @@ export const PopulateAprecios = async({ doc, context, req: { user } }) => {
     // console.log("populate aprecios", doc.id);
     aprecios.docs.forEach((aprecio) => {
         // Reducimos el objeto
-        aprecio.autor = {id: aprecio.autor.id, nombre: aprecio.autor.nombre};
+        aprecio.autor = { id: aprecio.autor.id, nombre: aprecio.autor.nombre };
     });
     doc.aprecios = aprecios;
 }

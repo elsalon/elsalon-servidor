@@ -165,19 +165,23 @@ export const NotificarNuevoComentario = async ({
     req, // full express request
     operation, // name of the operation ie. 'create', 'update'
 }, entrada) => {
-    if(operation == 'create') {
-        // No notificar si el autor del comentario es el mismo que el de la entrada
-        if(entrada.autor.id != doc.autor.id){
-            GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', doc.id, 'comentarios');
+    try{
+        if(operation == 'create') {
+            // No notificar si el autor del comentario es el mismo que el de la entrada
+            if(entrada.autor.id != doc.autor.id){
+                GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', doc.id, 'comentarios');
+            }
         }
-    }
-
-    // Si es grupal notificar a otros integrantes
-    if(doc.autoriaGrupal){
-        doc.grupo.integrantes.forEach(async (integrante) => {
-            if(integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
-            GenerarNotificacionOSumar(integrante.id, doc.autor, 'comentario-grupal', doc.id, 'comentarios');
-        });
+    
+        // Si es grupal notificar a otros integrantes
+        if(doc.autoriaGrupal){
+            doc.grupo.integrantes.forEach(async (integrante) => {
+                if(integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+                GenerarNotificacionOSumar(integrante.id, doc.autor, 'comentario-grupal', doc.id, 'comentarios');
+            });
+        }
+    }catch(e){
+        console.error("Error al notificar nuevo comentario", e);
     }
 }
 
@@ -190,11 +194,15 @@ export const NotificarNuevaEntrada = async ({
 }) =>{
     if(context.skipHooks) return;
     // Notificar a los integrantes del grupo
-    if(doc.autoriaGrupal){
-        doc.grupo.integrantes.forEach(async (integrante) => {
-            if(integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
-            GenerarNotificacionOSumar(integrante.id, doc.autor, 'entrada-grupal', doc.id, 'entradas');
-        });
+    try{
+        if(doc.autoriaGrupal){
+            doc.grupo.integrantes.forEach(async (integrante) => {
+                if(integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+                GenerarNotificacionOSumar(integrante.id, doc.autor, 'entrada-grupal', doc.id, 'entradas');
+            });
+        }
+    }catch(e){
+        console.error("Error al notificar nueva entrada", e);
     }
 }
 
@@ -205,25 +213,29 @@ export const NotificarMencionEntrada = async ({
     context,
 }) =>{
     if(context.skipHooks) return;
-    const nuevosMencionados = await GetNuevosMencionados({doc, previousDoc, operation});
-
-    if (!Array.isArray(nuevosMencionados)) {
-        console.error("Expected an array from GetNuevosMencionados, but got:", nuevosMencionados);
-        return;
-    }
-
-    // Process mentions sequentially with delay
-    for (const mencionado of nuevosMencionados) {    
-        if (mencionado.id === doc.autor.id) continue; // No notificar si el autor del comentario es el mismo que el de la entrada
-
-        try {
-            console.log(mencionado.nombre, mencionado.id, " --- ", doc.autor.nombre, doc.autor.id)
-            await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'entradas');
-            // Wait 500ms between operations
-            await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (error) {
-            console.error(`Error processing mention for user ${mencionado.id}:`, error);
+    try{
+        const nuevosMencionados = await GetNuevosMencionados({doc, previousDoc, operation});
+    
+        if (!Array.isArray(nuevosMencionados)) {
+            console.error("Expected an array from GetNuevosMencionados, but got:", nuevosMencionados);
+            return;
         }
+    
+        // Process mentions sequentially with delay
+        for (const mencionado of nuevosMencionados) {    
+            if (mencionado.id === doc.autor.id) continue; // No notificar si el autor del comentario es el mismo que el de la entrada
+    
+            try {
+                console.log(mencionado.nombre, mencionado.id, " --- ", doc.autor.nombre, doc.autor.id)
+                await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'entradas');
+                // Wait 500ms between operations
+                await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (error) {
+                console.error(`Error processing mention for user ${mencionado.id}:`, error);
+            }
+        }
+    }catch(e){
+        console.error("Error al notificar mencion en entrada", e);
     }
 }
 
@@ -232,24 +244,28 @@ export const NotificarMencionComentario = async ({
     previousDoc,
     operation, // name of the operation ie. 'create', 'update'
 }, entrada) => {
-    const nuevosMencionados = await GetNuevosMencionados({doc, previousDoc, operation});
-
-    if (!Array.isArray(nuevosMencionados)) {
-        console.error("Expected an array from GetNuevosMencionados, but got:", nuevosMencionados);
-        return;
-    }
-
-    // Process mentions sequentially with delay
-    for (const mencionado of nuevosMencionados) {
-        if (mencionado.id === entrada.autor.id) continue;
-        if (mencionado.id === doc.autor.id) continue; // No notificar si el autor del comentario es el mismo que el de la entrada
-        
-        try {
-            await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'comentarios');
-            // // Wait 500ms between operations
-            // await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (error) {
-            console.error(`Error processing mention for user ${mencionado.id}:`, error);
+    try{
+        const nuevosMencionados = await GetNuevosMencionados({doc, previousDoc, operation});
+    
+        if (!Array.isArray(nuevosMencionados)) {
+            console.error("Expected an array from GetNuevosMencionados, but got:", nuevosMencionados);
+            return;
         }
+    
+        // Process mentions sequentially with delay
+        for (const mencionado of nuevosMencionados) {
+            if (mencionado.id === entrada.autor.id) continue;
+            if (mencionado.id === doc.autor.id) continue; // No notificar si el autor del comentario es el mismo que el de la entrada
+            
+            try {
+                await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'comentarios');
+                // // Wait 500ms between operations
+                // await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (error) {
+                console.error(`Error processing mention for user ${mencionado.id}:`, error);
+            }
+        }
+    }catch(e){
+        console.error("Error al notificar mencion en comentario", e);
     }
 }

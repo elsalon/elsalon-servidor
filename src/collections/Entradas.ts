@@ -1,8 +1,7 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios } from '../helper'
+import { isAdminOrAutor, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios, isLoggedIn } from '../helper'
 import { NotificarNuevaEntrada, NotificarMencionEntrada } from '../GeneradorNotificacionesWeb'
 import { Campos } from './CamposEntradasYComentarios'
-import payload from 'payload'
 
 const Entradas: CollectionConfig = {
     slug: 'entradas',
