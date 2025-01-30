@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload/types'
+import { isAdminOrDocente } from '../helper'
 
 const Fijadas: CollectionConfig = {
     slug: 'fijadas',
@@ -10,8 +11,9 @@ const Fijadas: CollectionConfig = {
         plural: 'Entradas Fijas',
     },
     access: {
+        create: isAdminOrDocente,
+        delete: isAdminOrDocente,
         // update: isAdminOrIntegrante,
-        // delete: isAdminOrIntegrante,
     },
     hooks: {
         beforeChange: [
