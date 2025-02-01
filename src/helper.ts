@@ -300,7 +300,7 @@ export const PopulateAprecios = async ({ doc, context, req }) => {
         },
         overrideAccess: false,
         user: req.user,
-        limit: 0,
+        limit: 3,
         depth: 1,
         sort: '-createdAt',
     });

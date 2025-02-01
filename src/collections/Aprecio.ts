@@ -106,14 +106,16 @@ const Aprecio: CollectionConfig = {
 
         try {
           const { contenidoid } = req.params;
+          const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 3;
 
-          console.log('GET /aprecio/:contenidoid', { contenidoid });
+          console.log('GET /aprecio/:contenidoid', { contenidoid }, {limit});
           // Obtener los últimos 5 aprecios para este contenido
           const aprecios = await req.payload.find({
             collection: 'aprecio',
             where: {
               contenidoid: { equals: contenidoid },
             },
+            limit,
             overrideAccess: false,
             user: req.user,
           });
