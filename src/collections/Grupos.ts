@@ -1,6 +1,7 @@
 import { SlugField } from '../SlugField'
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrIntegrante } from '../helper'
+import { NotificarNuevoGrupo } from '../GeneradorNotificacionesWeb'
 
 const Grupos: CollectionConfig = {
     slug: 'grupos',
@@ -10,6 +11,17 @@ const Grupos: CollectionConfig = {
     access: {
         update: isAdminOrIntegrante,
         delete: isAdminOrIntegrante,
+    },
+    hooks: {
+        beforeChange: [
+            async ({ operation, data, req }) => {
+                // Revisar que no haya integrantes duplicados
+                if (data.integrantes) {
+                    data.integrantes = Array.from(new Set(data.integrantes));
+                }
+            },
+        ],
+        afterChange:[ NotificarNuevoGrupo ],
     },
     fields: [
         {

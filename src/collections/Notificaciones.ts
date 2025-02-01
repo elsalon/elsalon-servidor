@@ -8,7 +8,7 @@ const Notificaciones: CollectionConfig = {
     },
     access:{
         read: isAutor,
-        create: isAdminOrAutor,
+        create: isAdmin,
         update: isAdminOrAutor,
         delete: isAdminOrAutor,
     },
@@ -23,7 +23,7 @@ const Notificaciones: CollectionConfig = {
         {
             name: 'tipoNotificacion',
             type: 'select',
-            options: ['aprecio', 'comentario', 'mencion', 'colaboracion', 'comentario-grupal', 'entrada-grupal'],
+            options: ['aprecio', 'comentario', 'mencion', 'colaboracion', 'comentario-grupal', 'entrada-grupal', 'grupo-fuiste-agregado', 'grupo-integrante-nuevo', 'grupo-integrante-abandono'],
         },
         {
             name: 'cantidad',

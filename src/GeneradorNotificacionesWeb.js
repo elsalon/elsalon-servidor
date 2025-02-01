@@ -8,56 +8,59 @@ import { GetNuevosMencionados } from "./helper";
  * @param {string} tipoNotificacion - Tipo de notificación 'aprecio' | 'comentario' | 'mencion' | 'colaboracion' | 'comentario-grupal' | 'entrada-grupal']
  * @param {string} sourceDocumentId - ID de la entrada o comentario a la que se hace referencia
  * @param {string} sourceDocumentCollection - Colección de la entrada o comentario a la que se hace referencia
+ * @param {boolean} sumarExistentes - Si es false, deshabilita la suma de notificaciones existentes y crea una nueva
  */
- const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, sourceDocumentId, sourceDocumentCollection) => {
-    // var where;
-    let where = {
-        and: [
-            {tipoNotificacion: {equals: tipoNotificacion}},
-            {'sourceDocument.value': {equals: sourceDocumentId}},
-            {autor: {equals: autor}},
-        ]
-    };
-    
-    const existente = await payload.find({
-        collection: "notificaciones",
-        where: where,
-        overrideAccess: false,
-        user: usuario,
-    });
+ const GenerarNotificacionOSumar = async (autor, usuario, tipoNotificacion, sourceDocumentId, sourceDocumentCollection, sumarExistentes = true) => {
+    // console.log(autor, usuario, tipoNotificacion, sourceDocumentId, sourceDocumentCollection, sumarExistentes)
+    try{
+        var existente;
+        if(sumarExistentes){
+            // var where;
+            let where = {
+                and: [
+                    {tipoNotificacion: {equals: tipoNotificacion}},
+                    {'sourceDocument.value': {equals: sourceDocumentId}},
+                    {autor: {equals: autor}},
+                ]
+            };
+            existente = await payload.find({
+                collection: "notificaciones",
+                where: where,
+            });
+        }
+        const crearNueva = !sumarExistentes || existente?.totalDocs == 0;
 
-    if(existente.totalDocs == 0){
-        // Primera vez que se aprecia esta entrada
-        console.log("Creando nueva notificacion")
-        await payload.create({
-            collection: 'notificaciones',
-            overrideAccess: false,
-            user: usuario,
-            data: {
-                autor: autor,  // El autor de la entrada que fue apreciada
-                usuario: usuario.id, // El usuario que aprecio
-                tipoNotificacion,
-                sourceDocument: {
-                    relationTo: sourceDocumentCollection,
-                    value: sourceDocumentId
+        if(crearNueva){
+            // Primera vez que se aprecia esta entrada
+            // console.log("Creando nueva notificacion")
+            await payload.create({
+                collection: 'notificaciones',
+                data: {
+                    autor: typeof autor == "object" ? autor.id: autor,  // El autor de la entrada que fue apreciada
+                    usuario: typeof usuario == "object" ? usuario.id : usuario, // El usuario que aprecio
+                    tipoNotificacion,
+                    sourceDocument: {
+                        relationTo: sourceDocumentCollection,
+                        value: sourceDocumentId
+                    },
                 },
-            },
-        });
-    }else{
-        // Ya se aprecio antes. Modifico la cantidad
-        const notificacion = existente.docs[0];
-        console.log("Sumando a notificacion existente", notificacion.id)
-        await payload.update({
-            collection: 'notificaciones',
-            id: notificacion.id,
-            overrideAccess: false,
-            user: usuario,
-            data: {
-                cantidad: notificacion.cantidad + 1,
-                usuario: usuario.id, // El último usuario que aprecio
-                leida: false,
-            }
-        });
+            });
+        }else{
+            // Ya se aprecio antes. Modifico la cantidad
+            const notificacion = existente.docs[0];
+            // console.log("Sumando a notificacion existente", notificacion.id)
+            await payload.update({
+                collection: 'notificaciones',
+                id: notificacion.id,
+                data: {
+                    cantidad: notificacion.cantidad + 1,
+                    usuario: typeof usuario == "object" ? usuario.id : usuario, // El último usuario que aprecio
+                    leida: false,
+                }
+            });
+        }
+    }catch(e){
+        console.error("Error al generar notificacion", e);
     }
 }
 
@@ -267,5 +270,53 @@ export const NotificarMencionComentario = async ({
         }
     }catch(e){
         console.error("Error al notificar mencion en comentario", e);
+    }
+}
+
+export const NotificarNuevoGrupo = async ({
+    doc, // full document data
+    previousDoc,
+    operation, // name of the operation ie. 'create', 'update'
+    req,
+}) => {
+    if(operation === 'create'){
+        // Notificar a los integrantes del grupo
+        try{
+            console.log("Nuevo Grupo", doc.nombre, "integrantes:", doc.integrantes.map(i => i.nombre));
+            doc.integrantes.forEach(async (integrante) => {
+                if(integrante.id == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+                GenerarNotificacionOSumar(integrante.id, integrante.id, 'grupo-fuiste-agregado', doc.id, 'grupos', false);
+            });
+        }catch(e){
+            console.error("Error al notificar nuevo grupo", e);
+        }
+    }else if(operation === 'update'){
+        // Integrantes nuevos
+        const previousIntegrantesIds = new Set(previousDoc.integrantes);
+        const currentIntegrantesIds = new Set(doc.integrantes.map(i => i.id));
+
+        const integrantesNuevos = doc.integrantes.filter(i => !previousIntegrantesIds.has(i.id));
+        const integrantesAbandonaron = previousDoc.integrantes.filter(i => !currentIntegrantesIds.has(i));
+
+        console.log("Modificacion Grupo", doc.nombre, "integrantes nuevos:", integrantesNuevos.map(i => i.nombre), "abandonaron:", integrantesAbandonaron);
+        try{
+            doc.integrantes.forEach(async (integrante) => {
+                if(integrante.id == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+                // Aviso de los nuevos integrantes
+                integrantesNuevos.forEach(async (nuevo) => {
+                    if(nuevo.id == integrante.id) {
+                        GenerarNotificacionOSumar(integrante.id, nuevo.id, 'grupo-fuiste-agregado', doc.id, 'grupos', false);
+                    }else{
+                        GenerarNotificacionOSumar(integrante.id, nuevo.id, 'grupo-integrante-nuevo', doc.id, 'grupos', false);
+                    }
+                });
+                // Aviso de los que se fueron
+                integrantesAbandonaron.forEach(async (abandonaron) => {
+                    GenerarNotificacionOSumar(integrante.id, abandonaron, 'grupo-integrante-abandono', doc.id, 'grupos', false);
+                });
+            });
+        }catch(e){
+            console.error("Error al notificar nuevo grupo", e);
+        }
     }
 }
