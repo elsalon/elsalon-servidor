@@ -186,7 +186,7 @@ const Salones: CollectionConfig = {
                         collection: 'entradas',
                         where: query,
                         sort: "-createdAt",
-                        limit: 5,
+                        limit: 12,
                         page: page,
                         overrideAccess: false,
                         user: req.user,
