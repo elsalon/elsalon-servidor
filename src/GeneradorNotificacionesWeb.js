@@ -229,7 +229,7 @@ export const NotificarMencionEntrada = async ({
             if (mencionado.id === doc.autor.id) continue; // No notificar si el autor del comentario es el mismo que el de la entrada
     
             try {
-                console.log(mencionado.nombre, mencionado.id, " --- ", doc.autor.nombre, doc.autor.id)
+                // console.log(mencionado.nombre, mencionado.id, " --- ", doc.autor.nombre, doc.autor.id)
                 await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'entradas');
                 // Wait 500ms between operations
                 await new Promise(resolve => setTimeout(resolve, 500));
