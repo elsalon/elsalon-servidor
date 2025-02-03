@@ -108,23 +108,23 @@ const Salones: CollectionConfig = {
                     let idsUsuariosColabora: string[] = [];
                     let idsGruposColabora: string[] = [];
 
-                    const colaboraciones = await req.payload.find({
-                        collection: 'colaboraciones',
+                    const enlaces = await req.payload.find({
+                        collection: 'enlaces',
                         where: {
                             autor: { equals: user.id },
                         },
                     });
 
-                    colaboraciones.docs.forEach((colaboracion) => {
+                    enlaces.docs.forEach((colaboracion) => {
                         switch (colaboracion.tipo) {
                             case 'salon':
-                                idsSalonesColabora.push(colaboracion.idColaborador as string);
+                                idsSalonesColabora.push(colaboracion.idEnlazado as string);
                                 break;
                             case 'bitacora':
-                                idsUsuariosColabora.push(colaboracion.idColaborador as string);
+                                idsUsuariosColabora.push(colaboracion.idEnlazado as string);
                                 break;
                             case 'grupo':
-                                idsGruposColabora.push(colaboracion.idColaborador as string);
+                                idsGruposColabora.push(colaboracion.idEnlazado as string);
                                 break;
                         }
                     });

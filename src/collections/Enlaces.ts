@@ -2,8 +2,8 @@ import { CollectionConfig } from 'payload/types'
 import { isAdminOrAutor,  } from '../helper'
 import { NotificarNuevaColaboracion } from '../GeneradorNotificacionesWeb'
 
-const Colaboraciones: CollectionConfig = {
-    slug: 'colaboraciones',
+const Enlaces: CollectionConfig = {
+    slug: 'enlaces',
     access:{
         update: isAdminOrAutor,
         delete: isAdminOrAutor,
@@ -23,23 +23,13 @@ const Colaboraciones: CollectionConfig = {
         {
             name: 'tipo',
             type: 'select',
-            options: ['bitacora', 'salon', 'grupo'], // Tipos de colaboraciones
+            options: ['bitacora', 'salon', 'grupo'], // Tipos de enlaces
         },
         {
-            name: 'idColaborador', // ID de quien colabora
+            name: 'idEnlazado', // ID de quien colabora
             type: 'text',
         },
-        // {
-        //     name: 'colaborador',
-        //     type: 'relationship',
-        //     relationTo: 'users',
-        // },
-        // {
-        //     name: 'salon',
-        //     type: 'relationship',
-        //     relationTo: 'salones',
-        // }
     ]
 }
 
-export default Colaboraciones
+export default Enlaces

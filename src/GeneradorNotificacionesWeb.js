@@ -126,7 +126,8 @@ export const NotificarNuevaColaboracion = async ({
     if(operation === 'create'){
         // console.log("Usuario que empezo a colaborar:", req.user.slug)
         // console.log("Tipo de colaboracion:", doc.tipo);
-        // console.log("Objeto con el que colabora:", doc.idColaborador);
+        // console.log("Objeto con el que colabora:", doc.idEnlazado);
+        try{
 
         switch(doc.tipo){
             case 'salon':
@@ -134,19 +135,18 @@ export const NotificarNuevaColaboracion = async ({
                 break;
             case 'bitacora':
                 // Notifico al usuario de la bitacora
-                GenerarNotificacionOSumar(doc.idColaborador, req.user, 'colaboracion', req.user.id, 'users');
+                GenerarNotificacionOSumar(doc.idEnlazado, req.user, 'colaboracion', req.user.id, 'users');
 
                 // Dejo acá comentado. En principio no vamos a enviar mail por cada colaboración
-                // const receptor = await req.payload.findByID({collection: 'users', id: doc.idColaborador});
+                // const receptor = await req.payload.findByID({collection: 'users', id: doc.idEnlazado});
                 // if(receptor.notificacionesMail?.activas && receptor.notificacionesMail?.colaboradorNuevo){
                 //     await AddToMailQueue(receptor.email, 'Nueva colaboración', `${req.user.nombre} empezó a colaborar con vos`)
                 // }
                 break;
             case 'grupo':
-                // console.log('Colaboracion en grupo');
                 const grupo = await req.payload.findByID({
                     collection: 'grupos',
-                    id: doc.idColaborador,
+                    id: doc.idEnlazado,
                 });
                 if(grupo){
                     // Notificar a cada integrante del grupo
@@ -157,8 +157,13 @@ export const NotificarNuevaColaboracion = async ({
                         //     await AddToMailQueue(integrante.email, 'Nueva colaboración', `${req.user.nombre} empezó a colaborar con tu grupo ${grupo.nombre}`)
                         // }
                     });
+                }else{
+                    console.error("No se encontró el grupo con ID", doc.idEnlazado);
                 }
                 break;
+            }
+        }catch(e){
+            console.error("Error al notificar nueva colaboracion", e);
         }
     }
 }

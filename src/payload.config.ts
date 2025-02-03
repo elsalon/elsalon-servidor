@@ -22,7 +22,7 @@ import Comisiones from './collections/Comisiones'
 import Imagenes from './collections/Imagenes';
 import Archivos from './collections/Archivos';
 import Avatares from './collections/Avatares';
-import Colaboraciones from './collections/Colaboraciones';
+import Enlaces from './collections/Enlaces';
 import Aprecio from './collections/Aprecio'
 import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
@@ -63,7 +63,7 @@ export default buildConfig({
     Comisiones,
     Entradas,
     Comentarios,
-    Colaboraciones,
+    Enlaces,
     Aprecio,
     Imagenes,
     Archivos,

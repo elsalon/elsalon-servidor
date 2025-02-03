@@ -24,7 +24,7 @@ Contenido destacado. Los docentes tienen la opción de destacar contenido para p
 ### Contenido Fijado
 Esta es una función que la versión anterior ya contaba, pero ocurría muy seguido que el contenido no era desfijado, haciendo que las salas se tapen de contenido importante como distintas fechas de entrega en la parte de arriba y todo el contenido nuevo quede perdido. Para remediar esto los contenidos fijados tienen una opción de vencimiento, similar a la de whatsapp. Al fijar una ventana da la opción de duración a asignarle (24hrs / 7 dias / 30 dias / hasta fin de año). Internamente cada opción llena un campo de fecha de vencimiento de cada fijada y revisa diariamente para remover las que tienen una fecha ya vencida.
 
-### Colaboraciones
+### Enlaces
 El funcionamiento es el mismo como el antes conocido *seguir* pero, al igual que apreciar, la manera de nombrar es también la forma de dictar una relación. Por eso en vez de seguir como verbo pasivo, se implementó la colaboración para entender el intercambio como un trabajo activo.
 
 ### Búsqueda
