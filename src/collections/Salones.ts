@@ -77,7 +77,17 @@ const Salones: CollectionConfig = {
             admin: {
                 position: 'sidebar',
             }
-        }
+        },
+        {
+            name: 'agenda',
+            type: 'group',
+            fields: [
+                {
+                    name: 'activar',
+                    type: 'checkbox',
+                }
+            ]
+        },
     ],
 
     endpoints: [

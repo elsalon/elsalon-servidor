@@ -28,6 +28,7 @@ import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
 import Etiquetas from './collections/Etiquetas'
 import MailQueue from './collections/MailQueue'
+import Eventos from './collections/Eventos'
 
 // DigitalOcean Spaces
 const DOSpacesAdapter = s3Adapter({
@@ -56,6 +57,9 @@ export default buildConfig({
     bundler: webpackBundler(),
   },
   editor: slateEditor({}),
+  globals: [
+    Ajustes,
+  ],
   collections: [
     Users,
     Grupos,
@@ -70,11 +74,9 @@ export default buildConfig({
     Avatares,
     Notificaciones,
     Fijadas,
+    Eventos,
     Etiquetas,
     MailQueue,
-  ],
-  globals: [
-    Ajustes,
   ],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),
