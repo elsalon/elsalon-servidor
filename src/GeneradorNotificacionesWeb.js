@@ -5,7 +5,7 @@ import { GetNuevosMencionados } from "./helper";
  /**
  * @param {user} autor - Usuario siendo notificado
  * @param {user} usuario - Usuario que ejecutó la accion (se usará su avatar)
- * @param {string} tipoNotificacion - Tipo de notificación 'aprecio' | 'comentario' | 'mencion' | 'colaboracion' | 'comentario-grupal' | 'entrada-grupal']
+ * @param {string} tipoNotificacion - Tipo de notificación 'aprecio' | 'comentario' | 'mencion' | 'enlace' | 'comentario-grupal' | 'entrada-grupal']
  * @param {string} sourceDocumentId - ID de la entrada o comentario a la que se hace referencia
  * @param {string} sourceDocumentCollection - Colección de la entrada o comentario a la que se hace referencia
  * @param {boolean} sumarExistentes - Si es false, deshabilita la suma de notificaciones existentes y crea una nueva
@@ -117,16 +117,16 @@ export const NotificacionAprecioComentario = async (doc, req) => {
     GenerarNotificacionOSumar(comentario.autor.id, req.user, 'aprecio', comentario.id, 'comentarios');
 }
 
-export const NotificarNuevaColaboracion = async ({
+export const NotificarNuevoEnlace = async ({
     doc, // full document data
     req, // full express request
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
 }) => {
     if(operation === 'create'){
-        // console.log("Usuario que empezo a colaborar:", req.user.slug)
-        // console.log("Tipo de colaboracion:", doc.tipo);
-        // console.log("Objeto con el que colabora:", doc.idEnlazado);
+        // console.log("Usuario que enlazó:", req.user.slug)
+        // console.log("Tipo de enlace:", doc.tipo);
+        // console.log("Objeto con el que se enlaza:", doc.idEnlazado);
         try{
 
         switch(doc.tipo){
@@ -135,12 +135,12 @@ export const NotificarNuevaColaboracion = async ({
                 break;
             case 'bitacora':
                 // Notifico al usuario de la bitacora
-                GenerarNotificacionOSumar(doc.idEnlazado, req.user, 'colaboracion', req.user.id, 'users');
+                GenerarNotificacionOSumar(doc.idEnlazado, req.user, 'enlace', req.user.id, 'users');
 
-                // Dejo acá comentado. En principio no vamos a enviar mail por cada colaboración
+                // Dejo acá comentado. En principio no vamos a enviar mail por cada enlace
                 // const receptor = await req.payload.findByID({collection: 'users', id: doc.idEnlazado});
-                // if(receptor.notificacionesMail?.activas && receptor.notificacionesMail?.colaboradorNuevo){
-                //     await AddToMailQueue(receptor.email, 'Nueva colaboración', `${req.user.nombre} empezó a colaborar con vos`)
+                // if(receptor.notificacionesMail?.activas && receptor.notificacionesMail?.enlazadoNuevo){
+                //     await AddToMailQueue(receptor.email, 'Nuevo Enlace', `${req.user.nombre} se enlazó con vos`)
                 // }
                 break;
             case 'grupo':
@@ -151,10 +151,10 @@ export const NotificarNuevaColaboracion = async ({
                 if(grupo){
                     // Notificar a cada integrante del grupo
                     grupo.integrantes.forEach(async (integrante) => {
-                        GenerarNotificacionOSumar(integrante.id, req.user, 'colaboracion', grupo.id, 'grupos');
-                        // Dejo acá comentado. En principio no vamos a enviar mail por cada colaboración
-                        // if(integrante.notificacionesMail?.activas && integrante.notificacionesMail?.colaboradorNuevo){
-                        //     await AddToMailQueue(integrante.email, 'Nueva colaboración', `${req.user.nombre} empezó a colaborar con tu grupo ${grupo.nombre}`)
+                        GenerarNotificacionOSumar(integrante.id, req.user, 'enlace', grupo.id, 'grupos');
+                        // Dejo acá comentado. En principio no vamos a enviar mail por cada enlace
+                        // if(integrante.notificacionesMail?.activas && integrante.notificacionesMail?.enlazadoNuevo){
+                        //     await AddToMailQueue(integrante.email, 'Nuevo Enlace', `${req.user.nombre} se enlazó con tu grupo ${grupo.nombre}`)
                         // }
                     });
                 }else{
@@ -163,7 +163,7 @@ export const NotificarNuevaColaboracion = async ({
                 break;
             }
         }catch(e){
-            console.error("Error al notificar nueva colaboracion", e);
+            console.error("Error al notificar nuevo enlace", e);
         }
     }
 }

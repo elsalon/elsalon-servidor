@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrAutor,  } from '../helper'
-import { NotificarNuevaColaboracion } from '../GeneradorNotificacionesWeb'
+import { NotificarNuevoEnlace } from '../GeneradorNotificacionesWeb'
 
 const Enlaces: CollectionConfig = {
     slug: 'enlaces',
@@ -12,7 +12,7 @@ const Enlaces: CollectionConfig = {
         group: 'Interacciones',
     },
     hooks: {
-        afterChange: [NotificarNuevaColaboracion]
+        afterChange: [NotificarNuevoEnlace]
     },
     fields: [
         {
@@ -26,7 +26,7 @@ const Enlaces: CollectionConfig = {
             options: ['bitacora', 'salon', 'grupo'], // Tipos de enlaces
         },
         {
-            name: 'idEnlazado', // ID de quien colabora
+            name: 'idEnlazado', // ID de quien enlaza
             type: 'text',
         },
     ]

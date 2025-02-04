@@ -162,10 +162,10 @@ const Users = {
           defaultValue: true,
         },
         // {
-        //   name: 'colaboradorNuevo',
+        //   name: 'enlaceNuevo',
         //   type: 'checkbox',
         //   defaultValue: true,
-        //   // Recibir notificacion cuando alguien te sigue
+        //   // Recibir notificacion cuando alguien se enlaza
         // },
         // {
         //   name: 'grupoNuevo',
