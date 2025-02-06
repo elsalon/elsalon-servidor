@@ -79,7 +79,7 @@ const Salones: CollectionConfig = {
             }
         },
         {
-            name: 'agenda',
+            name: 'eventos',
             type: 'group',
             fields: [
                 {
