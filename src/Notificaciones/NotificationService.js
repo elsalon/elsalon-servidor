@@ -10,6 +10,7 @@ class NotificationService {
     const context = await this.buildContext(rawContext);
     
     // 3. Validate identidad type matches handler expectation
+    // ESto no creo lo use
     this.validateContext(handler, context);
 
     // 4. Execute notification flow
@@ -28,6 +29,7 @@ class NotificationService {
 
   async buildContext(raw) {
     // Example: Fetch needed entities from DB
+    // Por ejemplo aca chequear si tengo el objeto entero o solo el ID
     return {
       actor: await User.findById(raw.actorId),
       target: await IdentidadService.resolve(raw.targetId), // User/Group resolver
@@ -57,3 +59,23 @@ class NotificationService {
     );
   }
 }
+
+
+
+
+// EJEMPLO DE USO EN OTRO SCRIPTS
+// When someone mentions a user in an entry
+const notificationService = new NotificationService();
+
+await notificationService.triggerNotification('mencion-usuario-entrada', {
+  actorId: 'user_123',       // Who mentioned
+  targetId: 'user_456',      // Who was mentioned
+  entryId: 'entry_789'       // Which entry
+});
+
+// When a new member joins a group
+await notificationService.triggerNotification('grupo-integrante-nuevo', {
+  actorId: 'user_123',       // Who joined
+  groupId: 'group_789',      // Target group
+  newMemberId: 'user_123'    // Same as actor
+});
