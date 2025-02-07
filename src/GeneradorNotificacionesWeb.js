@@ -90,8 +90,6 @@ export const NotificacionAprecioEntrada = async (doc, req) => {
     const entrada = await req.payload.findByID({
         collection: 'entradas',
         id: doc.contenidoid,
-        overrideAccess: false,
-        user: req.user,
     });
     if(!entrada) return;
     let destinatarios = [];
@@ -101,7 +99,7 @@ export const NotificacionAprecioEntrada = async (doc, req) => {
         destinatarios.push(entrada.autor.id);
     }
     destinatarios.forEach(async (destinatario) => {
-        if(destinatario == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+        if(destinatario == req.user.id) return; // No notificar si el autor de la entrada es el mismo que el de la entrada
         GenerarNotificacionOSumar(destinatario, req.user, 'aprecio', entrada.id, 'entradas');
     });
 }
@@ -110,10 +108,9 @@ export const NotificacionAprecioComentario = async (doc, req) => {
     const comentario = await req.payload.findByID({
         collection: 'comentarios',
         id: doc.contenidoid,
-        overrideAccess: false,
-        user: req.user,
     });
     if(!comentario) return;
+    if(comentario.autor.id == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
     GenerarNotificacionOSumar(comentario.autor.id, req.user, 'aprecio', comentario.id, 'comentarios');
 }
 
