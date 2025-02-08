@@ -14,7 +14,7 @@ export class BaseNotificationHandler {
     async getRecipients(context) { 
       throw new Error('Base Notification Handler: Didnt implement getRecipients');
     }
-    requiresAggregation() { return false; }
+    requiresAggregation = false;
     createIdentidad(context) {
       throw new Error('Base Notification Handler: Didnt implement createIdentidad');
     }

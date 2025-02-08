@@ -1,17 +1,21 @@
 import { BaseNotificationHandler } from '../BaseNotificationHandler'
 import payload from 'payload';
 
+async function BuscarAprecios(contenidoid) {
+  return await payload.find({
+    collection: 'aprecio',
+    limit: 2,
+    where: {
+      contenidoid: {equals: contenidoid},
+    }
+  });
+}
+
 export class AprecioEntradaIndividualHandler extends BaseNotificationHandler {
   async enrichContext(baseContext) {
     // Chequeamos si ya existe una notificacion sobre este evento.
     // En ese caso no generamos una nueva sino que actualizamos la existente
-    baseContext.aprecios = await payload.find({
-      collection: 'aprecio',
-      limit: 2,
-      where: {
-        contenidoid: {equals: baseContext.link.id},
-      }
-    });
+    baseContext.aprecios = BuscarAprecios(baseContext.link.id);
     this.requiresAggregation = baseContext.aprecios.totalDocs > 0;
     return baseContext;
   }
