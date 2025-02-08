@@ -15,20 +15,17 @@ export class NotificationService {
     const fullContext = await handler.enrichContext(baseContext);
     
     // 4. Execute notification flow
-    const recipients = await handler.getRecipients(fullContext);
-    if(recipients.length === 0) {
-      console.error('Notification Service: Recipient se espera que sea un array de al menos 1 elemento');
-    }
-    const autor = handler.createAutor(fullContext); // A quien va dirijida la notificacion
     const identidad = handler.createIdentidad(fullContext); // Quien la envia o qué avatar poner
     const mensaje = handler.createMessage(fullContext);
     const link = handler.createLink(fullContext);
-
-    console.log("**", identidad)
+    const recipients = await handler.getRecipients(fullContext);
+    if(recipients.length === 0) {
+      console.warn(`Se saltea notificación, no hay destinatarios en ${type}`);
+      return;
+    }
 
     // 5. Persist to database
       await this.saveNotifications(recipients, {
-        autor,
         mensaje,
         identidad,
         link,
@@ -68,6 +65,7 @@ export class NotificationService {
     recipients.forEach(async recipient => {
       const data = {
         ...notification,
+        autor: recipient,
         leido: false,
       }
       console.log("Creando notificacion", data)

@@ -15,13 +15,9 @@ export class BaseNotificationHandler {
     getLinkType() { throw new Error('Not implemented'); }
     
     async getRecipients(context) { 
-      // Default: Notify the direct target
-      return [context.identidad]; 
-    }
-  
-    createAutor(context) {
       throw new Error('Not implemented');
     }
+  
     createIdentidad(context) {
       throw new Error('Not implemented');
     }

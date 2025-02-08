@@ -22,12 +22,11 @@ export class AprecioEntradaIndividualHandler extends BaseNotificationHandler {
   getLinkType() { return 'entrada'; }
 
   // Pasos finales para generar la notificacion
-  async getRecipients({ link }) {
+  async getRecipients({ link, identidad }) {
+    if(link.autor.id == identidad.id){
+      return [];
+    }
     return [link.autor.id];
-  }
-
-  createAutor({ link }) {
-    return link.autor.id;
   }
 
   createIdentidad({ identidad }) {
@@ -35,7 +34,7 @@ export class AprecioEntradaIndividualHandler extends BaseNotificationHandler {
   }
 
   createMessage({ identidad, link }) {
-    return `<strong>${identidad.nombre}</strong> apreció tu entrada <strong>${link.extracto}</strong>`;
+    return `<strong>${identidad.nombre}</strong> aprecia tu entrada <strong>${link.extracto}</strong>`;
   }
 
   createLink({ link }) {
