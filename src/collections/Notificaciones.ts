@@ -21,30 +21,29 @@ const Notificaciones: CollectionConfig = {
             relationTo: 'users',
         },
         {
-            name: 'tipoNotificacion',
-            type: 'select',
-            options: ['aprecio', 'comentario', 'mencion', 'enlace', 'comentario-grupal', 'entrada-grupal', 'grupo-fuiste-agregado', 'grupo-integrante-nuevo', 'grupo-integrante-abandono'],
+            name: 'mensaje',
+            type: 'text',
+        },
+        {
+            name: 'identidad',
+            type: 'relationship',
+            relationTo: ['users', 'grupos', 'salones'],
+        },
+        {
+            name: 'link',
+            type: 'relationship',
+            relationTo: ['entradas', 'grupos', 'salones', 'users'],
+        },
+        {
+            name: 'leida',
+            type: 'checkbox',
+            defaultValue: false,
         },
         {
             name: 'cantidad',
             type: 'number',
             defaultValue: 0,
         },
-        {
-            name: 'usuario',
-            type: 'relationship',
-            relationTo: 'users',
-        },
-        {
-            name: 'sourceDocument',
-            type: 'relationship',
-            relationTo: ['entradas', 'comentarios', 'grupos', 'salones', 'users'],
-        },
-        {
-            name: 'leida',
-            type: 'checkbox',
-            defaultValue: false,
-        }
     ],
     endpoints:[
         {

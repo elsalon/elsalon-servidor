@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrAutor, afterCreateAssignAutorToUser, PopulateAprecios } from '../helper'
-import { NotificarAprecio } from '../GeneradorNotificacionesWeb'
+import { NotificarAprecio } from '../hooks/Notificaciones/NotificationsHooks'
 
 const Aprecio: CollectionConfig = {
   slug: 'aprecio',
@@ -25,6 +25,10 @@ const Aprecio: CollectionConfig = {
       name: 'contenidoid',
       type: 'text',
       index: true,
+    },
+    {
+      name: 'contenidotipo',
+      type: 'text',
     }
   ],
   endpoints: [

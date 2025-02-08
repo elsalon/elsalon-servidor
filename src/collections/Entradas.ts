@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrAutor, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios, isLoggedIn } from '../helper'
-import { NotificarNuevaEntrada, NotificarMencionEntrada } from '../GeneradorNotificacionesWeb'
+import { NotificarNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
 import { Campos } from './CamposEntradasYComentarios'
 
 const Entradas: CollectionConfig = {

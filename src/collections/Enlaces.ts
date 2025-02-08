@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrAutor,  } from '../helper'
-import { NotificarNuevoEnlace } from '../GeneradorNotificacionesWeb'
+import { NotificarNuevoEnlace } from '../hooks/Notificaciones/NotificationsHooks'
 
 const Enlaces: CollectionConfig = {
     slug: 'enlaces',

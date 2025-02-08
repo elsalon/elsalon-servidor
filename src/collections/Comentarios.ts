@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrAutor, CrearExtracto, PublicadasYNoBorradas, SoftDelete, PopulateAprecios} from '../helper'
-import { NotificarNuevoComentario, NotificarMencionComentario } from '../GeneradorNotificacionesWeb'
+import { NotificarNuevoComentario, NotificarMencionComentario } from '../hooks/Notificaciones/NotificationsHooks'
 import { NotificarMailComentario } from '../GeneradorNotificacionesMail'
 import { Campos } from './CamposEntradasYComentarios'
 

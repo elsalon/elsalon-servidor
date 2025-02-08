@@ -1,7 +1,7 @@
 import { SlugField } from '../SlugField'
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrIntegrante } from '../helper'
-import { NotificarNuevoGrupo } from '../GeneradorNotificacionesWeb'
+import { NotificarNuevoGrupo } from '../hooks/Notificaciones/NotificationsHooks'
 
 const Grupos: CollectionConfig = {
     slug: 'grupos',
