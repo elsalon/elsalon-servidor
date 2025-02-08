@@ -11,21 +11,20 @@ export class BaseNotificationHandler {
     }
     
     // Must implement these methods in subclasses
-    getIdentidadType() { throw new Error('Not implemented'); }
-    getLinkType() { throw new Error('Not implemented'); }
-    
     async getRecipients(context) { 
-      throw new Error('Not implemented');
+      throw new Error('Base Notification Handler: Didnt implement getRecipients');
     }
-  
+    requiresAggregation() { return false; }
     createIdentidad(context) {
-      throw new Error('Not implemented');
+      throw new Error('Base Notification Handler: Didnt implement createIdentidad');
     }
     createMessage(context) {
-      throw new Error('Not implemented');
+      throw new Error('Base Notification Handler: Didnt implement createMessage');
     }
-  
+    createCategory() { 
+      throw new Error('Base Notification Handler: Didnt implement createCategory');
+    }
     createLink(context) {
-      throw new Error('Not implemented');
+      throw new Error('Base Notification Handler: Didnt implement createLink');
     }
   }

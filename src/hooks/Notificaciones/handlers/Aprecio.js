@@ -1,43 +1,43 @@
-import {BaseNotificationHandler} from '../BaseNotificationHandler'
+import { BaseNotificationHandler } from '../BaseNotificationHandler'
 import payload from 'payload';
 
 export class AprecioEntradaIndividualHandler extends BaseNotificationHandler {
+  async enrichContext(baseContext) {
+    // Chequeamos si ya existe una notificacion sobre este evento.
+    // En ese caso no generamos una nueva sino que actualizamos la existente
+    baseContext.aprecios = await payload.find({
+      collection: 'aprecio',
+      limit: 2,
+      where: {
+        contenidoid: {equals: baseContext.link.id},
+      }
+    });
+    this.requiresAggregation = baseContext.aprecios.totalDocs > 0;
+    return baseContext;
+  }
 
-  // async enrichContext(baseContext) {
-  //   // const entrada = payload.findByID({collection: 'entradas', id: baseContext.entrada})
-  //   // let where = {
-  //     //                 and: [
-  //     //                     {tipoNotificacion: {equals: tipoNotificacion}},
-  //     //                     {'sourceDocument.value': {equals: sourceDocumentId}},
-  //     //                     {autor: {equals: autor}},
-  //     //                 ]
-  //     //             };
-  //     //             existente = await payload.find({
-  //     //                 collection: "notificaciones",
-  //     //                 where: where,
-  //     //             });
-  // }
-  
-  getIdentidadType() { return 'user'; }
-  getLinkType() { return 'entrada'; }
+  createCategory() { return 'aprecio'; }
 
   // Pasos finales para generar la notificacion
   async getRecipients({ link, identidad }) {
-    if(link.autor.id == identidad.id){
+    if (link.autor.id == identidad.id) {
       return [];
     }
     return [link.autor.id];
   }
 
   createIdentidad({ identidad }) {
-    return {value: identidad.id, relationTo: 'users'};
+    return { value: identidad.id, relationTo: 'users' };
   }
 
-  createMessage({ identidad, link }) {
-    return `<strong>${identidad.nombre}</strong> aprecia tu entrada <strong>${link.extracto}</strong>`;
+  createMessage({ identidad, link, aprecios }) {
+    if(aprecios.totalDocs == 0) return `<strong>${identidad.nombre}</strong> aprecia tu entrada <strong>${link.extracto}</strong>`;
+    if(aprecios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> y alguien más aprecian tu entrada <strong>${link.extracto}</strong>`;
+    return `<strong>${identidad.nombre}</strong> y ${aprecios.totalDocs - 1} más aprecian tu entrada <strong>${link.extracto}</strong>`;
   }
 
   createLink({ link }) {
-    return {value: link.id, relationTo: 'entradas'};
+    return { value: link.id, relationTo: 'entradas' };
   }
 }
+

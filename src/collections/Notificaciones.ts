@@ -35,14 +35,14 @@ const Notificaciones: CollectionConfig = {
             relationTo: ['entradas', 'grupos', 'salones', 'users'],
         },
         {
+            name: 'categoria',
+            type: 'select',
+            options: ['aprecio', 'comentario', 'mencion', 'actividad-grupo', 'acciones-grupo', 'evento']
+        },
+        {
             name: 'leida',
             type: 'checkbox',
             defaultValue: false,
-        },
-        {
-            name: 'cantidad',
-            type: 'number',
-            defaultValue: 0,
         },
     ],
     endpoints:[
