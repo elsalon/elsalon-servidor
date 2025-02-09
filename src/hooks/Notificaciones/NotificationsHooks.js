@@ -104,7 +104,11 @@ export const NotificarAprecio = async ({
             });
 
         }else if(contenidotipo == 'comentario' && contenidoGrupal){
-            // aprecio-comentario-grupal
+            await notificationService.triggerNotification('aprecio-comentario-grupal', {
+                identidad: req.user, // quien la genero
+                link,
+                linkCollection: 'entradas',
+            });
             
         }else if(contenidotipo == 'comentario' && !contenidoGrupal){
             await notificationService.triggerNotification('aprecio-comentario-individual', {
@@ -181,7 +185,7 @@ export const NotificarNuevoEnlace = async ({
                 break;
             case 'bitacora':
                 // Notifico al usuario de la bitacora
-                GenerarNotificacionOSumar(doc.idEnlazado, req.user, 'enlace', req.user.id, 'users');
+                // GenerarNotificacionOSumar(doc.idEnlazado, req.user, 'enlace', req.user.id, 'users');
 
                 // Dejo acá comentado. En principio no vamos a enviar mail por cada enlace
                 // const receptor = await req.payload.findByID({collection: 'users', id: doc.idEnlazado});
@@ -197,7 +201,7 @@ export const NotificarNuevoEnlace = async ({
                 if(grupo){
                     // Notificar a cada integrante del grupo
                     grupo.integrantes.forEach(async (integrante) => {
-                        GenerarNotificacionOSumar(integrante.id, req.user, 'enlace', grupo.id, 'grupos');
+                        // GenerarNotificacionOSumar(integrante.id, req.user, 'enlace', grupo.id, 'grupos');
                         // Dejo acá comentado. En principio no vamos a enviar mail por cada enlace
                         // if(integrante.notificacionesMail?.activas && integrante.notificacionesMail?.enlazadoNuevo){
                         //     await AddToMailQueue(integrante.email, 'Nuevo Enlace', `${req.user.nombre} se enlazó con tu grupo ${grupo.nombre}`)
@@ -225,7 +229,7 @@ export const NotificarNuevoComentario = async ({
         if(operation == 'create') {
             // No notificar si el autor del comentario es el mismo que el de la entrada
             if(entrada.autor.id != doc.autor.id){
-                GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', doc.id, 'comentarios');
+                // GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', doc.id, 'comentarios');
             }
         }
     
@@ -233,7 +237,7 @@ export const NotificarNuevoComentario = async ({
         if(doc.autoriaGrupal){
             doc.grupo.integrantes.forEach(async (integrante) => {
                 if(integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
-                GenerarNotificacionOSumar(integrante.id, doc.autor, 'comentario-grupal', doc.id, 'comentarios');
+                // GenerarNotificacionOSumar(integrante.id, doc.autor, 'comentario-grupal', doc.id, 'comentarios');
             });
         }
     }catch(e){
@@ -254,7 +258,7 @@ export const NotificarNuevaEntrada = async ({
         if(doc.autoriaGrupal){
             doc.grupo.integrantes.forEach(async (integrante) => {
                 if(integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
-                GenerarNotificacionOSumar(integrante.id, doc.autor, 'entrada-grupal', doc.id, 'entradas');
+                // GenerarNotificacionOSumar(integrante.id, doc.autor, 'entrada-grupal', doc.id, 'entradas');
             });
         }
     }catch(e){
@@ -283,9 +287,8 @@ export const NotificarMencionEntrada = async ({
     
             try {
                 // console.log(mencionado.nombre, mencionado.id, " --- ", doc.autor.nombre, doc.autor.id)
-                await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'entradas');
+                // await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'entradas');
                 // Wait 500ms between operations
-                await new Promise(resolve => setTimeout(resolve, 500));
             } catch (error) {
                 console.error(`Error processing mention for user ${mencionado.id}:`, error);
             }
@@ -316,7 +319,7 @@ export const NotificarMencionComentario = async ({
             if (mencionado.id === doc.autor.id) continue; // No notificar si el autor del comentario es el mismo que el de la entrada
             
             try {
-                await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'comentarios');
+                // await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'comentarios');
                 // // Wait 500ms between operations
                 // await new Promise(resolve => setTimeout(resolve, 500));
             } catch (error) {
@@ -343,7 +346,7 @@ export const NotificarNuevoGrupo = async ({
             console.log("Nuevo Grupo", doc.nombre, "integrantes:", doc.integrantes.map(i => i.nombre));
             doc.integrantes.forEach(async (integrante) => {
                 if(integrante.id == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
-                GenerarNotificacionOSumar(integrante.id, integrante.id, 'grupo-fuiste-agregado', doc.id, 'grupos', false);
+                // GenerarNotificacionOSumar(integrante.id, integrante.id, 'grupo-fuiste-agregado', doc.id, 'grupos', false);
             });
         }catch(e){
             console.error("Error al notificar nuevo grupo", e);
@@ -362,15 +365,15 @@ export const NotificarNuevoGrupo = async ({
                 if(integrante.id == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
                 // Aviso de los nuevos integrantes
                 integrantesNuevos.forEach(async (nuevo) => {
-                    if(nuevo.id == integrante.id) {
-                        GenerarNotificacionOSumar(integrante.id, nuevo.id, 'grupo-fuiste-agregado', doc.id, 'grupos', false);
-                    }else{
-                        GenerarNotificacionOSumar(integrante.id, nuevo.id, 'grupo-integrante-nuevo', doc.id, 'grupos', false);
-                    }
+                    // if(nuevo.id == integrante.id) {
+                    //     GenerarNotificacionOSumar(integrante.id, nuevo.id, 'grupo-fuiste-agregado', doc.id, 'grupos', false);
+                    // }else{
+                    //     GenerarNotificacionOSumar(integrante.id, nuevo.id, 'grupo-integrante-nuevo', doc.id, 'grupos', false);
+                    // }
                 });
                 // Aviso de los que se fueron
                 integrantesAbandonaron.forEach(async (abandonaron) => {
-                    GenerarNotificacionOSumar(integrante.id, abandonaron, 'grupo-integrante-abandono', doc.id, 'grupos', false);
+                    // GenerarNotificacionOSumar(integrante.id, abandonaron, 'grupo-integrante-abandono', doc.id, 'grupos', false);
                 });
             });
         }catch(e){

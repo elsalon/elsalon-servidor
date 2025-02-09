@@ -3,14 +3,16 @@ const {
   AprecioEntradaIndividualHandler,
   AprecioEntradaGrupalHandler,
   AprecioComentarioIndividualHandler,
+  AprecioComentarioGrupalHandler,
 } = require('./handlers/Aprecio');
 
 
 const handlers = {
   //  Aprecio
-  'aprecio-entrada-individual': AprecioEntradaIndividualHandler,
-  'aprecio-entrada-grupal': AprecioEntradaGrupalHandler,
-  'aprecio-comentario-individual': AprecioComentarioIndividualHandler,
+  'aprecio-entrada-individual':     AprecioEntradaIndividualHandler,
+  'aprecio-entrada-grupal':         AprecioEntradaGrupalHandler,
+  'aprecio-comentario-individual':  AprecioComentarioIndividualHandler,
+  'aprecio-comentario-grupal':      AprecioComentarioGrupalHandler,
 
   // Mentions
   // 'mencion-usuario-entrada': UserMentionInEntryHandler,
