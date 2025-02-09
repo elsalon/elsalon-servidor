@@ -26,7 +26,7 @@ const Entradas: CollectionConfig = {
             // TODO revisar que si se esta fijando/desfijando o destacando/desdestacando, se chequee que el usuario sea admin o docente
         ],
         afterChange: [
-            NotificarNuevaEntrada,
+            NotificarNuevaEntrada, // Al resto de integrantes del grupo
             NotificarMencionEntrada,
         ],
         afterRead: [

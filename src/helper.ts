@@ -69,8 +69,8 @@ export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
 
     // UPDATE
     if (!previousDoc.mencionados?.length && !doc.mencionados?.length) return [];
-    let viejosMencionados = previousDoc.mencionados.map(m => m.id);
-    let nuevosMencionados = doc.mencionados.map(m => m.id).filter(m => !viejosMencionados.includes(m));
+    let viejosMencionados = previousDoc.mencionados.map(m => m.value.id);
+    let nuevosMencionados = doc.mencionados.map(m => m.value.id).filter(m => !viejosMencionados.includes(m));
     return nuevosMencionados;
 }
 

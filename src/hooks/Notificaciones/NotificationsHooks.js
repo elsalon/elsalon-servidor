@@ -271,6 +271,7 @@ export const NotificarMencionEntrada = async ({
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
     context,
+    req,
 }) =>{
     if(context.skipHooks) return;
     try{
@@ -280,17 +281,51 @@ export const NotificarMencionEntrada = async ({
             console.error("Expected an array from GetNuevosMencionados, but got:", nuevosMencionados);
             return;
         }
-    
-        // Process mentions sequentially with delay
-        for (const mencionado of nuevosMencionados) {    
-            if (mencionado.id === doc.autor.id) continue; // No notificar si el autor del comentario es el mismo que el de la entrada
-    
-            try {
-                // console.log(mencionado.nombre, mencionado.id, " --- ", doc.autor.nombre, doc.autor.id)
-                // await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'entradas');
-                // Wait 500ms between operations
-            } catch (error) {
-                console.error(`Error processing mention for user ${mencionado.id}:`, error);
+
+        const entradaGrupal = doc.autoriaGrupal;
+        const identidad = entradaGrupal ? doc.grupo : doc.autor;
+        
+        for (const mencionado of nuevosMencionados) {
+            if (mencionado.id === doc.autor.id) continue; // No notificar si es una automencion
+            const mencionAGrupo = mencionado.relationTo == 'grupos';
+            
+            if(entradaGrupal && mencionAGrupo){
+                await notificationService.triggerNotification('mencion-grupo-entrada-grupal', {
+                    identidad, // quien la genero
+                    identidadCollection: 'grupos',
+                    link: doc,
+                    linkCollection: 'entradas',
+                    mencionado,
+                });
+            }
+
+            else if(entradaGrupal && !mencionAGrupo){
+                await notificationService.triggerNotification('mencion-usuario-entrada-grupal', {
+                    identidad, // quien la genero
+                    identidadCollection: 'grupos',
+                    link: doc,
+                    linkCollection: 'entradas',
+                    mencionado,
+                });
+            }
+
+            else if(!entradaGrupal && mencionAGrupo){
+                await notificationService.triggerNotification('mencion-grupo-entrada-individual', {
+                    identidad, // quien la genero
+                    identidadCollection: 'users',
+                    link: doc,
+                    linkCollection: 'entradas',
+                    mencionado,
+                });
+
+            }else if(!entradaGrupal && !mencionAGrupo){
+                await notificationService.triggerNotification('mencion-usuario-entrada-individual', {
+                    identidad, // quien la genero
+                    identidadCollection: 'users',
+                    link: doc,
+                    linkCollection: 'entradas',
+                    mencionado,
+                });
             }
         }
     }catch(e){
