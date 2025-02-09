@@ -85,6 +85,7 @@ export const NotificarAprecio = async ({
             link = await req.payload.findByID({collection: 'entradas', id: doc.contenidoid});
         }else if(contenidotipo == 'comentario'){
             link = await req.payload.findByID({collection: 'comentarios', id: doc.contenidoid});
+            link = link;
         }
         const contenidoGrupal = link.autoriaGrupal;
 
@@ -104,8 +105,14 @@ export const NotificarAprecio = async ({
 
         }else if(contenidotipo == 'comentario' && contenidoGrupal){
             // aprecio-comentario-grupal
-        }else if(contenidotipo == 'comentario' && !entradaGrupal){
-            // aprecio-comentario-individual
+            
+        }else if(contenidotipo == 'comentario' && !contenidoGrupal){
+            await notificationService.triggerNotification('aprecio-comentario-individual', {
+                identidad: req.user, // quien la genero
+                link,
+                linkCollection: 'entradas',
+            });
+
         }else{
             console.warn("NotificarAprecio: Tipo de contenido no reconocido:", req.body.contenidotipo);
         }
@@ -211,8 +218,10 @@ export const NotificarNuevoComentario = async ({
     doc, // full document data
     req, // full express request
     operation, // name of the operation ie. 'create', 'update'
+    context,
 }, entrada) => {
     try{
+        if(context.skipHooks) return;
         if(operation == 'create') {
             // No notificar si el autor del comentario es el mismo que el de la entrada
             if(entrada.autor.id != doc.autor.id){

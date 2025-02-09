@@ -240,7 +240,9 @@ export const EnviarMailMencion = async (mencionado, doc, collection) => {
 export const NotificarMailComentario = async ({
     doc, // full document data
     operation, // name of the operation ie. 'create', 'update'
+    context,
 }, entrada) => {
+    if(context.skipHooks) return;
     if(operation != 'create') return;
     if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
     try{

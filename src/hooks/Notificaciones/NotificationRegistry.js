@@ -1,7 +1,8 @@
 // const UserMentionInEntryHandler = require('./handlers/MencionUsrHandler');
 const {
   AprecioEntradaIndividualHandler,
-  AprecioEntradaGrupalHandler
+  AprecioEntradaGrupalHandler,
+  AprecioComentarioIndividualHandler,
 } = require('./handlers/Aprecio');
 
 
@@ -9,6 +10,7 @@ const handlers = {
   //  Aprecio
   'aprecio-entrada-individual': AprecioEntradaIndividualHandler,
   'aprecio-entrada-grupal': AprecioEntradaGrupalHandler,
+  'aprecio-comentario-individual': AprecioComentarioIndividualHandler,
 
   // Mentions
   // 'mencion-usuario-entrada': UserMentionInEntryHandler,
