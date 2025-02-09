@@ -112,11 +112,13 @@ export const CrearExtracto = async ({ operation, data, req, context }) => {
         }
 
         // Updated regex patterns
-        const mentionRegex = /\[([^\]]+)\]\(mencion:[a-zA-Z0-9]+\)/g;
+        const mentionGrupoRegex = /\[([^\]]+)\]\(grupo:[a-zA-Z0-9]+\)/g;
+        const mentionUserRegex = /\[([^\]]+)\]\(usuario:[a-zA-Z0-9]+\)/g;
         const tagRegex = /\[([^\]]+)\]\(etiqueta:[a-zA-Z0-9]+\)/g;
 
         // Convert mentions and hashtags to plain text
-        text = convertToPlainText(text, mentionRegex, "@");
+        text = convertToPlainText(text, mentionGrupoRegex, "@");
+        text = convertToPlainText(text, mentionUserRegex, "@");
         text = convertToPlainText(text, tagRegex, "#");
 
         // Remove HTML tags and get first 120 characters
