@@ -50,7 +50,7 @@ export const Campos: Field[] = [
     {
         name: 'mencionados',
         type: 'relationship',
-        relationTo: 'users',
+        relationTo: ['users', 'grupos'],
         hasMany: true,
     },
     {
