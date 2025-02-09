@@ -96,27 +96,36 @@ export class NotificationService {
   }
   
   async CreateNotification(recipient, notificationData) {
-    console.log("Creando notificacion", notificationData)
-    await payload.create({
-      collection: 'notificaciones',
-      data: {
-        ...notificationData,
-        autor: recipient,
-        leido: false
-      }
-    })
+    try{
+      console.log("Creando notificacion", {recipient}, notificationData)
+      const res = await payload.create({
+        collection: 'notificaciones',
+        data: {
+          ...notificationData,
+          autor: recipient,
+          leido: false
+        }
+      })
+      console.log("Notificacion creada", res.id)
+    }catch(e){
+      console.error("Error en CreateNotification", e)
+    }
   }
 
   async UpdateNotification(id, recipient, notificationData) {
-    await payload.update({
-      collection: 'notificaciones',
-      id,
-      data: {
-        ...notificationData,
-        autor: recipient,
-        leido: false
-      }
-    })
+    try{
+      await payload.update({
+        collection: 'notificaciones',
+        id,
+        data: {
+          ...notificationData,
+          autor: recipient,
+          leido: false
+        }
+      })
+    }catch(e){
+      console.error("Error en UpdateNotification", e)
+    }
   }
 
 }

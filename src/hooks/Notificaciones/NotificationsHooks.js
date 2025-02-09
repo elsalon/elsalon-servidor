@@ -80,18 +80,29 @@ export const NotificarAprecio = async ({
     if(operation == 'create' && req.body?.contenidotipo){
 
         const contenidotipo = req.body.contenidotipo;
-        const entradaGrupal = req.body.autoriaGrupal;
+        let link;
+        if(contenidotipo == 'entrada'){
+            link = await req.payload.findByID({collection: 'entradas', id: doc.contenidoid});
+        }else if(contenidotipo == 'comentario'){
+            link = await req.payload.findByID({collection: 'comentarios', id: doc.contenidoid});
+        }
+        const contenidoGrupal = link.autoriaGrupal;
 
-        if(contenidotipo == 'entrada' && entradaGrupal){
-            // aprecio-entrada-grupal
-        }else if(contenidotipo == 'entrada' && !entradaGrupal){
-            // aprecio-entrada-individual
-            await notificationService.triggerNotification('aprecio-entrada-individual', {
+        if(contenidotipo == 'entrada' && contenidoGrupal){
+            await notificationService.triggerNotification('aprecio-entrada-grupal', {
                 identidad: req.user, // quien la genero
-                link: doc.contenidoid,
+                link,
                 linkCollection: 'entradas',
             });
-        }else if(contenidotipo == 'comentario' && entradaGrupal){
+
+        }else if(contenidotipo == 'entrada' && !contenidoGrupal){
+            await notificationService.triggerNotification('aprecio-entrada-individual', {
+                identidad: req.user, // quien la genero
+                link,
+                linkCollection: 'entradas',
+            });
+
+        }else if(contenidotipo == 'comentario' && contenidoGrupal){
             // aprecio-comentario-grupal
         }else if(contenidotipo == 'comentario' && !entradaGrupal){
             // aprecio-comentario-individual

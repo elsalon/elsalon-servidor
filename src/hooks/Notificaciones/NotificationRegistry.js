@@ -1,10 +1,14 @@
 // const UserMentionInEntryHandler = require('./handlers/MencionUsrHandler');
-const {AprecioEntradaIndividualHandler} = require('./handlers/Aprecio');
+const {
+  AprecioEntradaIndividualHandler,
+  AprecioEntradaGrupalHandler
+} = require('./handlers/Aprecio');
 
 
 const handlers = {
   //  Aprecio
   'aprecio-entrada-individual': AprecioEntradaIndividualHandler,
+  'aprecio-entrada-grupal': AprecioEntradaGrupalHandler,
 
   // Mentions
   // 'mencion-usuario-entrada': UserMentionInEntryHandler,
@@ -18,6 +22,7 @@ const handlers = {
 
 export function getHandler(type) {
   const Handler = handlers[type];
+  console.log("Geting handler", type)
   if (!Handler) throw new Error(`No handler registered for ${type}`);
   return new Handler();
 }
