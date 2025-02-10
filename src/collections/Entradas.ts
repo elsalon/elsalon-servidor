@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminAutorOrIntegrante, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios, isLoggedIn } from '../helper'
-import { NotificarNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
+import { NotificarGrupoNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
 import { Campos } from './CamposEntradasYComentarios'
 
 const Entradas: CollectionConfig = {
@@ -26,7 +26,7 @@ const Entradas: CollectionConfig = {
             // TODO revisar que si se esta fijando/desfijando o destacando/desdestacando, se chequee que el usuario sea admin o docente
         ],
         afterChange: [
-            NotificarNuevaEntrada, // Al resto de integrantes del grupo
+            NotificarGrupoNuevaEntrada, // Al resto de integrantes del grupo
             NotificarMencionEntrada,
         ],
         afterRead: [

@@ -142,8 +142,29 @@ export const NotificarNuevoComentario = async ({
     }
 }
 
+export const NotificarGrupoNuevoComentario = async ({
+    doc, // full document data
+    req, // full express request
+    operation, // name of the operation ie. 'create', 'update'
+    context,
+}, entrada) => {
+    if (context.skipHooks) return;
+    if (!doc.autoriaGrupal) return;
+    
+    const identidad = doc.grupo;
+    const link = entrada;
+    const rawData = {
+        identidad, // quien la genero
+        link,
+        linkCollection: 'entradas',
+        usuario: req.user,
+        comentario: doc,
+    }
+    const handleName = operation == 'create' ? 'actividad-grupo-nuevo-comentario' : 'actividad-grupo-edito-comentario';
+    await notificationService.triggerNotification(handleName, rawData);
+};
 
-export const NotificarNuevaEntrada = async ({
+export const NotificarGrupoNuevaEntrada = async ({
     doc, // full document data
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
@@ -151,21 +172,19 @@ export const NotificarNuevaEntrada = async ({
     req,
 }) => {
     if (context.skipHooks) return;
+    if (!doc.autoriaGrupal) return;
     // Notificar a los integrantes del grupo
     try {
-        if (doc.autoriaGrupal) {
-            const identidad = doc.grupo;
-            const link = doc;
-            const rawData = {
-                identidad, // quien la genero
-                link,
-                linkCollection: 'entradas',
-                usuario: req.user,
-            }
-            const handleName = operation == 'create' ? 'actividad-grupo-nueva-entrada' : 'actividad-grupo-edito-entrada';
-            await notificationService.triggerNotification(handleName, rawData);
-
+        const identidad = doc.grupo;
+        const link = doc;
+        const rawData = {
+            identidad, // quien la genero
+            link,
+            linkCollection: 'entradas',
+            usuario: req.user,
         }
+        const handleName = operation == 'create' ? 'actividad-grupo-nueva-entrada' : 'actividad-grupo-edito-entrada';
+        await notificationService.triggerNotification(handleName, rawData);
     } catch (e) {
         console.error("Error al notificar nueva entrada", e);
     }

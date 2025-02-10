@@ -1,4 +1,3 @@
-// const UserMentionInEntryHandler = require('./handlers/MencionUsrHandler');
 const {
   AprecioEntradaUsuarioHandler,
   AprecioEntradaGrupalHandler,
@@ -29,7 +28,9 @@ const {
 
 const {
   ActividadGrupoNuevaEntradaHandler,
-  ActividadGrupoEditoEntradaHandler
+  ActividadGrupoEditoEntradaHandler,
+  ActividadGrupoNuevoComentarioHandler,
+  ActividadGrupoEditoComentarioHandler
 } = require('./handlers/ActividadGrupo');
 
 
@@ -58,8 +59,10 @@ const handlers = {
   'comentario-usuario-entrada-usuario': ComentarioUsuarioEntradaUsuarioHandler,
 
   // Actividad de Grupo
-  'actividad-grupo-nueva-entrada': ActividadGrupoNuevaEntradaHandler,
-  'actividad-grupo-edito-entrada': ActividadGrupoEditoEntradaHandler,
+  'actividad-grupo-nueva-entrada':    ActividadGrupoNuevaEntradaHandler,
+  'actividad-grupo-edito-entrada':    ActividadGrupoEditoEntradaHandler,
+  'actividad-grupo-nuevo-comentario': ActividadGrupoNuevoComentarioHandler,
+  'actividad-grupo-edito-comentario': ActividadGrupoEditoComentarioHandler
 };
 
 export function getHandler(type) {
