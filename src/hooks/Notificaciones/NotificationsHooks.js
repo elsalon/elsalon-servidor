@@ -312,10 +312,15 @@ export const NotificarNuevoGrupo = async ({
         // Notificar a los integrantes del grupo
         try {
             console.log("Nuevo Grupo", doc.nombre, "integrantes:", doc.integrantes.map(i => i.nombre));
-            doc.integrantes.forEach(async (integrante) => {
-                if (integrante.id == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
-                // GenerarNotificacionOSumar(integrante.id, integrante.id, 'grupo-fuiste-agregado', doc.id, 'grupos', false);
+            
+            await notificationService.triggerNotification('grupo-nuevo', {
+                identidad: doc, // el grupo
+                identidadCollection: 'grupos',
+                link: doc,
+                linkCollection: 'grupos',
+                creador: req.user,
             });
+            
         } catch (e) {
             console.error("Error al notificar nuevo grupo", e);
         }
@@ -329,21 +334,28 @@ export const NotificarNuevoGrupo = async ({
 
         console.log("Modificacion Grupo", doc.nombre, "integrantes nuevos:", integrantesNuevos.map(i => i.nombre), "abandonaron:", integrantesAbandonaron);
         try {
-            doc.integrantes.forEach(async (integrante) => {
-                if (integrante.id == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
-                // Aviso de los nuevos integrantes
-                integrantesNuevos.forEach(async (nuevo) => {
-                    // if(nuevo.id == integrante.id) {
-                    //     GenerarNotificacionOSumar(integrante.id, nuevo.id, 'grupo-fuiste-agregado', doc.id, 'grupos', false);
-                    // }else{
-                    //     GenerarNotificacionOSumar(integrante.id, nuevo.id, 'grupo-integrante-nuevo', doc.id, 'grupos', false);
-                    // }
+            if(integrantesNuevos.length > 0){
+                // Aviso sobre los nuevos integrantes
+                await notificationService.triggerNotification('grupo-integrantes-nuevos', {
+                    identidad: doc, // el grupo
+                    identidadCollection: 'grupos',
+                    link: doc,
+                    linkCollection: 'grupos',
+                    integrantesNuevos,
+                    editor: req.user,
                 });
-                // Aviso de los que se fueron
-                integrantesAbandonaron.forEach(async (abandonaron) => {
-                    // GenerarNotificacionOSumar(integrante.id, abandonaron, 'grupo-integrante-abandono', doc.id, 'grupos', false);
+            }
+
+            if(integrantesAbandonaron.length > 0){
+                await notificationService.triggerNotification('grupo-integrantes-abandonaron', {
+                    identidad: doc, // el grupo
+                    identidadCollection: 'grupos',
+                    link: doc,
+                    linkCollection: 'grupos',
+                    integrantesAbandonaron,
+                    editor: req.user,
                 });
-            });
+            }
         } catch (e) {
             console.error("Error al notificar nuevo grupo", e);
         }

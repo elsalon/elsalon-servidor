@@ -1,6 +1,6 @@
 import { SlugField } from '../SlugField'
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrIntegrante } from '../helper'
+import { isAdminOrIntegrante, SacarEmojis } from '../helper'
 import { NotificarNuevoGrupo } from '../hooks/Notificaciones/NotificationsHooks'
 
 const Grupos: CollectionConfig = {
@@ -14,6 +14,13 @@ const Grupos: CollectionConfig = {
     },
     hooks: {
         beforeChange: [
+            async ({ data }) => {
+                // Saco los emojis del nombre     
+                if (data.nombre) {
+                    data.nombre = SacarEmojis(data.nombre);
+                }
+                return data;
+            },
             async ({ operation, data, req }) => {
                 // Revisar que no haya integrantes duplicados
                 if (data.integrantes) {

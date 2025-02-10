@@ -1,4 +1,4 @@
-import { isAdminOrSelf } from '../helper';
+import { isAdminOrSelf, SacarEmojis } from '../helper';
 import { SlugField } from '../SlugField'
 import { simpleEmailTemplate } from '../emailTemplates'
 
@@ -80,6 +80,15 @@ const Users = {
   },
 
   hooks: {
+    beforeChange: [
+      async ({ data }) => {
+        // Saco los emojis del nombre
+        if (data.nombre) {
+          data.nombre = SacarEmojis(data.nombre);
+        }
+        return data;
+      },
+    ]
   },
 
   fields: [

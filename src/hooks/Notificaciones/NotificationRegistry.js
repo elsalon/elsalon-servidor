@@ -33,6 +33,11 @@ const {
   ActividadGrupoEditoComentarioHandler
 } = require('./handlers/ActividadGrupo');
 
+const {
+  AccionGrupoNuevoHandler,
+  AccionGrupoIntegranteAgregadoHandler,
+  AccionGrupoIntegranteAbandonoHandler,
+} = require('./handlers/AccionesGrupo');
 
 const handlers = {
   // Aprecio
@@ -62,7 +67,13 @@ const handlers = {
   'actividad-grupo-nueva-entrada':    ActividadGrupoNuevaEntradaHandler,
   'actividad-grupo-edito-entrada':    ActividadGrupoEditoEntradaHandler,
   'actividad-grupo-nuevo-comentario': ActividadGrupoNuevoComentarioHandler,
-  'actividad-grupo-edito-comentario': ActividadGrupoEditoComentarioHandler
+  'actividad-grupo-edito-comentario': ActividadGrupoEditoComentarioHandler,
+
+  // Acciones de Grupo
+  'grupo-nuevo':                    AccionGrupoNuevoHandler,
+  'grupo-integrantes-nuevos':       AccionGrupoIntegranteAgregadoHandler,
+  'grupo-integrantes-abandonaron':  AccionGrupoIntegranteAbandonoHandler,
+
 };
 
 export function getHandler(type) {
