@@ -27,6 +27,10 @@ const {
   ComentarioUsuarioEntradaUsuarioHandler,  
 } = require('./handlers/ComentarioNuevo');
 
+const {
+  ActividadGrupoNuevaEntradaHandler,
+} = require('./handlers/ActividadGrupo');
+
 
 const handlers = {
   // Aprecio
@@ -52,11 +56,8 @@ const handlers = {
   'comentario-grupal-entrada-usuario':  ComentarioGrupalEntradaUsuarioHandler,
   'comentario-usuario-entrada-usuario': ComentarioUsuarioEntradaUsuarioHandler,
 
-
-  // // Group Activities
-  // 'grupo-integrante-nuevo': NewGroupMemberHandler,
-
-  // Add more handlers here...
+  // Actividad de Grupo
+  'actividad-grupo-nueva-entrada': ActividadGrupoNuevaEntradaHandler,
 };
 
 export function getHandler(type) {

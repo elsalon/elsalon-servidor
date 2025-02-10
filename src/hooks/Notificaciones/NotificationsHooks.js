@@ -148,15 +148,23 @@ export const NotificarNuevaEntrada = async ({
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
     context, // full context object
+    req,
 }) => {
     if (context.skipHooks) return;
     // Notificar a los integrantes del grupo
     try {
         if (doc.autoriaGrupal) {
-            doc.grupo.integrantes.forEach(async (integrante) => {
-                if (integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
-                // GenerarNotificacionOSumar(integrante.id, doc.autor, 'entrada-grupal', doc.id, 'entradas');
-            });
+            const identidad = doc.grupo;
+            const link = doc;
+            const rawData = {
+                identidad, // quien la genero
+                link,
+                linkCollection: 'entradas',
+                usuario: req.user,
+            }
+            const handleName = operation === 'create' ? 'actividad-grupo-nueva-entrada' : 'actividad-grupo-edito-entrada';
+            await notificationService.triggerNotification(handleName, rawData);
+
         }
     } catch (e) {
         console.error("Error al notificar nueva entrada", e);
@@ -172,15 +180,16 @@ export const NotificarMencionEntrada = async ({
     if (context.skipHooks) return;
     try {
         const nuevosMencionados = await GetNuevosMencionados({ doc, previousDoc, operation });
-
+        
         if (!Array.isArray(nuevosMencionados)) {
             console.error("Expected an array from GetNuevosMencionados, but got:", nuevosMencionados);
             return;
         }
+        if(nuevosMencionados.length == 0) return;
 
         const entradaGrupal = doc.autoriaGrupal;
         const identidad = entradaGrupal ? doc.grupo : doc.autor;
-        const identidadCollection = comentarioGrupal ? 'grupos' : 'users';
+        const identidadCollection = entradaGrupal ? 'grupos' : 'users';
 
         for (const mencionado of nuevosMencionados) {
             if (mencionado.id === doc.autor.id) continue; // No notificar si es una automencion

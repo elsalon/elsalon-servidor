@@ -8,10 +8,6 @@ export class MencionUsuarioEntradaIndividualHandler extends BaseNotificationHand
 
   // Pasos finales para generar la notificacion
   async getRecipients({ mencionado }) {
-    // if(mencionado.relationTo == 'grupos'){
-    //   // La mencion es a un grupo pero tenemos que notificar a los integrantes
-    //   return mencionado.integrandes.map(i => i.id);
-    // }
     return [mencionado.value.id];
   }
 
@@ -35,10 +31,6 @@ export class MencionUsuarioEntradaGrupalHandler extends BaseNotificationHandler{
   createCategory() { return 'mencion'; }
 
   async getRecipients({ mencionado }) {
-    // if(mencionado.relationTo == 'grupos'){
-    //   // La mencion es a un grupo pero tenemos que notificar a los integrantes
-    //   return mencionado.integrandes.map(i => i.id);
-    // }
     return [mencionado.value.id];
   }
 
