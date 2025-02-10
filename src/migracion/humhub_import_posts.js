@@ -754,7 +754,7 @@ async function ReplaceMencionados(htmlString) {
             const _user = response.data;
             user = await ImportUser(_user);
         }
-        mencionados.push(user.id);
+        mencionados.push({value: user.id, relationTo: 'users'});
         // Formato de menciones salon: 
         // [nombre](mencion:id)
         // [gonza](mencion:66dce3b5d0a303ddc377b366)
