@@ -1,6 +1,6 @@
 // import payload from "payload"
 import { GetNuevosMencionados } from "../../helper";
-import {NotificationService} from "./NotificationService"
+import { NotificationService } from "./NotificationService"
 
 //  /**
 //  * @param {user} autor - Usuario siendo notificado
@@ -67,61 +67,61 @@ import {NotificationService} from "./NotificationService"
 
 const notificationService = new NotificationService();
 
-export const NotificarAprecio = async ({ 
+export const NotificarAprecio = async ({
     doc,
     req, // full express request
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
     context,
-    }) => {
-        
-    if(context.skipHooks) return;
+}) => {
 
-    if(operation == 'create' && req.body?.contenidotipo){
+    if (context.skipHooks) return;
+
+    if (operation == 'create' && req.body?.contenidotipo) {
 
         const contenidotipo = req.body.contenidotipo;
         let link;
-        if(contenidotipo == 'entrada'){
-            link = await req.payload.findByID({collection: 'entradas', id: doc.contenidoid});
-        }else if(contenidotipo == 'comentario'){
-            link = await req.payload.findByID({collection: 'comentarios', id: doc.contenidoid});
+        if (contenidotipo == 'entrada') {
+            link = await req.payload.findByID({ collection: 'entradas', id: doc.contenidoid });
+        } else if (contenidotipo == 'comentario') {
+            link = await req.payload.findByID({ collection: 'comentarios', id: doc.contenidoid });
             link = link;
         }
         const contenidoGrupal = link.autoriaGrupal;
 
-        if(contenidotipo == 'entrada' && contenidoGrupal){
+        if (contenidotipo == 'entrada' && contenidoGrupal) {
             await notificationService.triggerNotification('aprecio-entrada-grupal', {
                 identidad: req.user, // quien la genero
                 link,
                 linkCollection: 'entradas',
             });
 
-        }else if(contenidotipo == 'entrada' && !contenidoGrupal){
+        } else if (contenidotipo == 'entrada' && !contenidoGrupal) {
             await notificationService.triggerNotification('aprecio-entrada-individual', {
                 identidad: req.user, // quien la genero
                 link,
                 linkCollection: 'entradas',
             });
 
-        }else if(contenidotipo == 'comentario' && contenidoGrupal){
+        } else if (contenidotipo == 'comentario' && contenidoGrupal) {
             await notificationService.triggerNotification('aprecio-comentario-grupal', {
                 identidad: req.user, // quien la genero
                 link,
                 linkCollection: 'entradas',
             });
-            
-        }else if(contenidotipo == 'comentario' && !contenidoGrupal){
+
+        } else if (contenidotipo == 'comentario' && !contenidoGrupal) {
             await notificationService.triggerNotification('aprecio-comentario-individual', {
                 identidad: req.user, // quien la genero
                 link,
                 linkCollection: 'entradas',
             });
 
-        }else{
+        } else {
             console.warn("NotificarAprecio: Tipo de contenido no reconocido:", req.body.contenidotipo);
         }
-        
-        
+
+
         // grupo-aprecio-entrada-individual
         // usr-aprecio-entrada-individual
 
@@ -173,46 +173,46 @@ export const NotificarNuevoEnlace = async ({
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
 }) => {
-    if(operation === 'create'){
+    if (operation === 'create') {
         // console.log("Usuario que enlazó:", req.user.slug)
         // console.log("Tipo de enlace:", doc.tipo);
         // console.log("Objeto con el que se enlaza:", doc.idEnlazado);
-        try{
+        try {
 
-        switch(doc.tipo){
-            case 'salon':
-                // Nadie a quien notificar :)
-                break;
-            case 'bitacora':
-                // Notifico al usuario de la bitacora
-                // GenerarNotificacionOSumar(doc.idEnlazado, req.user, 'enlace', req.user.id, 'users');
+            switch (doc.tipo) {
+                case 'salon':
+                    // Nadie a quien notificar :)
+                    break;
+                case 'bitacora':
+                    // Notifico al usuario de la bitacora
+                    // GenerarNotificacionOSumar(doc.idEnlazado, req.user, 'enlace', req.user.id, 'users');
 
-                // Dejo acá comentado. En principio no vamos a enviar mail por cada enlace
-                // const receptor = await req.payload.findByID({collection: 'users', id: doc.idEnlazado});
-                // if(receptor.notificacionesMail?.activas && receptor.notificacionesMail?.enlazadoNuevo){
-                //     await AddToMailQueue(receptor.email, 'Nuevo Enlace', `${req.user.nombre} se enlazó con vos`)
-                // }
-                break;
-            case 'grupo':
-                const grupo = await req.payload.findByID({
-                    collection: 'grupos',
-                    id: doc.idEnlazado,
-                });
-                if(grupo){
-                    // Notificar a cada integrante del grupo
-                    grupo.integrantes.forEach(async (integrante) => {
-                        // GenerarNotificacionOSumar(integrante.id, req.user, 'enlace', grupo.id, 'grupos');
-                        // Dejo acá comentado. En principio no vamos a enviar mail por cada enlace
-                        // if(integrante.notificacionesMail?.activas && integrante.notificacionesMail?.enlazadoNuevo){
-                        //     await AddToMailQueue(integrante.email, 'Nuevo Enlace', `${req.user.nombre} se enlazó con tu grupo ${grupo.nombre}`)
-                        // }
+                    // Dejo acá comentado. En principio no vamos a enviar mail por cada enlace
+                    // const receptor = await req.payload.findByID({collection: 'users', id: doc.idEnlazado});
+                    // if(receptor.notificacionesMail?.activas && receptor.notificacionesMail?.enlazadoNuevo){
+                    //     await AddToMailQueue(receptor.email, 'Nuevo Enlace', `${req.user.nombre} se enlazó con vos`)
+                    // }
+                    break;
+                case 'grupo':
+                    const grupo = await req.payload.findByID({
+                        collection: 'grupos',
+                        id: doc.idEnlazado,
                     });
-                }else{
-                    console.error("No se encontró el grupo con ID", doc.idEnlazado);
-                }
-                break;
+                    if (grupo) {
+                        // Notificar a cada integrante del grupo
+                        grupo.integrantes.forEach(async (integrante) => {
+                            // GenerarNotificacionOSumar(integrante.id, req.user, 'enlace', grupo.id, 'grupos');
+                            // Dejo acá comentado. En principio no vamos a enviar mail por cada enlace
+                            // if(integrante.notificacionesMail?.activas && integrante.notificacionesMail?.enlazadoNuevo){
+                            //     await AddToMailQueue(integrante.email, 'Nuevo Enlace', `${req.user.nombre} se enlazó con tu grupo ${grupo.nombre}`)
+                            // }
+                        });
+                    } else {
+                        console.error("No se encontró el grupo con ID", doc.idEnlazado);
+                    }
+                    break;
             }
-        }catch(e){
+        } catch (e) {
             console.error("Error al notificar nuevo enlace", e);
         }
     }
@@ -224,23 +224,23 @@ export const NotificarNuevoComentario = async ({
     operation, // name of the operation ie. 'create', 'update'
     context,
 }, entrada) => {
-    try{
-        if(context.skipHooks) return;
-        if(operation == 'create') {
+    try {
+        if (context.skipHooks) return;
+        if (operation == 'create') {
             // No notificar si el autor del comentario es el mismo que el de la entrada
-            if(entrada.autor.id != doc.autor.id){
+            if (entrada.autor.id != doc.autor.id) {
                 // GenerarNotificacionOSumar(entrada.autor.id, doc.autor, 'comentario', doc.id, 'comentarios');
             }
         }
-    
+
         // Si es grupal notificar a otros integrantes
-        if(doc.autoriaGrupal){
+        if (doc.autoriaGrupal) {
             doc.grupo.integrantes.forEach(async (integrante) => {
-                if(integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+                if (integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
                 // GenerarNotificacionOSumar(integrante.id, doc.autor, 'comentario-grupal', doc.id, 'comentarios');
             });
         }
-    }catch(e){
+    } catch (e) {
         console.error("Error al notificar nuevo comentario", e);
     }
 }
@@ -251,17 +251,17 @@ export const NotificarNuevaEntrada = async ({
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
     context, // full context object
-}) =>{
-    if(context.skipHooks) return;
+}) => {
+    if (context.skipHooks) return;
     // Notificar a los integrantes del grupo
-    try{
-        if(doc.autoriaGrupal){
+    try {
+        if (doc.autoriaGrupal) {
             doc.grupo.integrantes.forEach(async (integrante) => {
-                if(integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+                if (integrante.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
                 // GenerarNotificacionOSumar(integrante.id, doc.autor, 'entrada-grupal', doc.id, 'entradas');
             });
         }
-    }catch(e){
+    } catch (e) {
         console.error("Error al notificar nueva entrada", e);
     }
 }
@@ -271,12 +271,11 @@ export const NotificarMencionEntrada = async ({
     previousDoc, // document data before updating the collection
     operation, // name of the operation ie. 'create', 'update'
     context,
-    req,
-}) =>{
-    if(context.skipHooks) return;
-    try{
-        const nuevosMencionados = await GetNuevosMencionados({doc, previousDoc, operation});
-    
+}) => {
+    if (context.skipHooks) return;
+    try {
+        const nuevosMencionados = await GetNuevosMencionados({ doc, previousDoc, operation });
+
         if (!Array.isArray(nuevosMencionados)) {
             console.error("Expected an array from GetNuevosMencionados, but got:", nuevosMencionados);
             return;
@@ -284,51 +283,34 @@ export const NotificarMencionEntrada = async ({
 
         const entradaGrupal = doc.autoriaGrupal;
         const identidad = entradaGrupal ? doc.grupo : doc.autor;
-        
+
         for (const mencionado of nuevosMencionados) {
             if (mencionado.id === doc.autor.id) continue; // No notificar si es una automencion
             const mencionAGrupo = mencionado.relationTo == 'grupos';
-            
-            if(entradaGrupal && mencionAGrupo){
-                await notificationService.triggerNotification('mencion-grupo-entrada-grupal', {
-                    identidad, // quien la genero
-                    identidadCollection: 'grupos',
-                    link: doc,
-                    linkCollection: 'entradas',
-                    mencionado,
-                });
+            const rawContext = {
+                identidad, // quien la genero
+                identidadCollection: 'grupos',
+                link: doc,
+                linkCollection: 'entradas',
+                mencionado,
             }
 
-            else if(entradaGrupal && !mencionAGrupo){
-                await notificationService.triggerNotification('mencion-usuario-entrada-grupal', {
-                    identidad, // quien la genero
-                    identidadCollection: 'grupos',
-                    link: doc,
-                    linkCollection: 'entradas',
-                    mencionado,
-                });
+            if (entradaGrupal && mencionAGrupo) {
+                await notificationService.triggerNotification('mencion-grupo-entrada-grupal', rawContext);
             }
 
-            else if(!entradaGrupal && mencionAGrupo){
-                await notificationService.triggerNotification('mencion-grupo-entrada-individual', {
-                    identidad, // quien la genero
-                    identidadCollection: 'users',
-                    link: doc,
-                    linkCollection: 'entradas',
-                    mencionado,
-                });
+            else if (entradaGrupal && !mencionAGrupo) {
+                await notificationService.triggerNotification('mencion-usuario-entrada-grupal', rawContext);
+            }
 
-            }else if(!entradaGrupal && !mencionAGrupo){
-                await notificationService.triggerNotification('mencion-usuario-entrada-individual', {
-                    identidad, // quien la genero
-                    identidadCollection: 'users',
-                    link: doc,
-                    linkCollection: 'entradas',
-                    mencionado,
-                });
+            else if (!entradaGrupal && mencionAGrupo) {
+                await notificationService.triggerNotification('mencion-grupo-entrada-individual', rawContext);
+
+            } else if (!entradaGrupal && !mencionAGrupo) {
+                await notificationService.triggerNotification('mencion-usuario-entrada-individual', rawContext);
             }
         }
-    }catch(e){
+    } catch (e) {
         console.error("Error al notificar mencion en entrada", e);
     }
 }
@@ -339,29 +321,53 @@ export const NotificarMencionComentario = async ({
     operation, // name of the operation ie. 'create', 'update'
     context
 }, entrada) => {
-    if(context.skipHooks) return;
-    try{
-        const nuevosMencionados = await GetNuevosMencionados({doc, previousDoc, operation});
-    
+    if (context.skipHooks) return;
+    try {
+        const nuevosMencionados = await GetNuevosMencionados({ doc, previousDoc, operation });
+
         if (!Array.isArray(nuevosMencionados)) {
             console.error("Expected an array from GetNuevosMencionados, but got:", nuevosMencionados);
             return;
         }
-    
+
+        const comentarioGrupal = doc.autoriaGrupal;
+        const identidad = comentarioGrupal ? doc.grupo : doc.autor;
+
         // Process mentions sequentially with delay
         for (const mencionado of nuevosMencionados) {
             if (mencionado.id === entrada.autor.id) continue;
             if (mencionado.id === doc.autor.id) continue; // No notificar si el autor del comentario es el mismo que el de la entrada
-            
-            try {
-                // await GenerarNotificacionOSumar(mencionado.id, doc.autor, 'mencion', doc.id, 'comentarios');
-                // // Wait 500ms between operations
-                // await new Promise(resolve => setTimeout(resolve, 500));
-            } catch (error) {
-                console.error(`Error processing mention for user ${mencionado.id}:`, error);
+
+            console.log("Notificar mencionado", mencionado);
+            const mencionAGrupo = mencionado.relationTo == 'grupos';
+
+            const rawContext = {
+                identidad, // quien la genero
+                identidadCollection: 'grupos',
+                link: entrada,
+                linkCollection: 'entradas',
+                mencionado,
+                comentario: doc,
             }
+
+            if (comentarioGrupal && mencionAGrupo) {
+                await notificationService.triggerNotification('mencion-grupo-comentario-grupal', rawContext);
+            }
+
+            else if (comentarioGrupal && !mencionAGrupo) {
+                await notificationService.triggerNotification('mencion-usuario-comentario-grupal', rawContext);
+            }
+
+            else if (!comentarioGrupal && mencionAGrupo) {
+                await notificationService.triggerNotification('mencion-grupo-comentario-individual', rawContext);
+            }
+
+            else if (!comentarioGrupal && !mencionAGrupo) {
+                await notificationService.triggerNotification('mencion-usuario-comentario-individual', rawContext);
+            }
+
         }
-    }catch(e){
+    } catch (e) {
         console.error("Error al notificar mencion en comentario", e);
     }
 }
@@ -373,20 +379,20 @@ export const NotificarNuevoGrupo = async ({
     req,
     context,
 }) => {
-    
-    if(context.skipHooks) return;
-    if(operation === 'create'){
+
+    if (context.skipHooks) return;
+    if (operation === 'create') {
         // Notificar a los integrantes del grupo
-        try{
+        try {
             console.log("Nuevo Grupo", doc.nombre, "integrantes:", doc.integrantes.map(i => i.nombre));
             doc.integrantes.forEach(async (integrante) => {
-                if(integrante.id == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+                if (integrante.id == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
                 // GenerarNotificacionOSumar(integrante.id, integrante.id, 'grupo-fuiste-agregado', doc.id, 'grupos', false);
             });
-        }catch(e){
+        } catch (e) {
             console.error("Error al notificar nuevo grupo", e);
         }
-    }else if(operation === 'update'){
+    } else if (operation === 'update') {
         // Integrantes nuevos
         const previousIntegrantesIds = new Set(previousDoc.integrantes);
         const currentIntegrantesIds = new Set(doc.integrantes.map(i => i.id));
@@ -395,9 +401,9 @@ export const NotificarNuevoGrupo = async ({
         const integrantesAbandonaron = previousDoc.integrantes.filter(i => !currentIntegrantesIds.has(i));
 
         console.log("Modificacion Grupo", doc.nombre, "integrantes nuevos:", integrantesNuevos.map(i => i.nombre), "abandonaron:", integrantesAbandonaron);
-        try{
+        try {
             doc.integrantes.forEach(async (integrante) => {
-                if(integrante.id == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
+                if (integrante.id == req.user.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
                 // Aviso de los nuevos integrantes
                 integrantesNuevos.forEach(async (nuevo) => {
                     // if(nuevo.id == integrante.id) {
@@ -411,7 +417,7 @@ export const NotificarNuevoGrupo = async ({
                     // GenerarNotificacionOSumar(integrante.id, abandonaron, 'grupo-integrante-abandono', doc.id, 'grupos', false);
                 });
             });
-        }catch(e){
+        } catch (e) {
             console.error("Error al notificar nuevo grupo", e);
         }
     }

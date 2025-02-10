@@ -11,21 +11,35 @@ const {
   MencionUsuarioEntradaGrupalHandler,
   MencionGrupoEntradaIndividualHandler,
   MencionGrupoEntradaGrupalHandler
-} = require('./handlers/MencionEntradas');
+} = require('./handlers/MencionEntrada');
+
+const {
+  MencionUsuarioComentarioIndividualHandler,
+  MencionGrupoComentarioGrupalHandler,
+  MencionUsuarioComentarioGrupalHandler,
+  MencionGrupoComentarioIndividualHandler,
+} = require('./handlers/MencionComentario');
 
 
 const handlers = {
-  //  Aprecio
+  // Aprecio
   'aprecio-entrada-individual':     AprecioEntradaIndividualHandler,
   'aprecio-entrada-grupal':         AprecioEntradaGrupalHandler,
   'aprecio-comentario-individual':  AprecioComentarioIndividualHandler,
   'aprecio-comentario-grupal':      AprecioComentarioGrupalHandler,
   
-  // Menciones
+  // Mencion en Entrada
   'mencion-usuario-entrada-individual': MencionUsuarioEntradaIndividualHandler,
   'mencion-usuario-entrada-grupal':     MencionUsuarioEntradaGrupalHandler,
   'mencion-grupo-entrada-individual':   MencionGrupoEntradaIndividualHandler,
   'mencion-grupo-entrada-grupal':       MencionGrupoEntradaGrupalHandler,
+  // Mencion en Comentario
+  'mencion-usuario-comentario-individual': MencionUsuarioComentarioIndividualHandler,
+  'mencion-grupo-comentario-grupal':       MencionGrupoComentarioGrupalHandler,
+  'mencion-usuario-comentario-grupal':     MencionUsuarioComentarioGrupalHandler,
+  'mencion-grupo-comentario-individual':   MencionGrupoComentarioIndividualHandler,
+
+
   // // Group Activities
   // 'grupo-integrante-nuevo': NewGroupMemberHandler,
 
