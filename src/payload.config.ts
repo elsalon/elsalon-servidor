@@ -56,6 +56,11 @@ export default buildConfig({
     user: Users.slug,
     bundler: webpackBundler(),
   },
+  // Desactivar rateLimit, por estar detras de un proxy toma todos los requests del mismo IP
+  // https://payloadcms.com/docs/v2/production/preventing-abuse#rate-limiting-requests
+  rateLimit:{
+    trustProxy: true,
+  },
   editor: slateEditor({}),
   globals: [
     Ajustes,
