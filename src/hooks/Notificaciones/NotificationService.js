@@ -82,15 +82,21 @@ export class NotificationService {
     console.log("Requiere agregación. Buscando notificacion existente")
     const notificacionExistente = await payload.find({
       collection: 'notificaciones',
+      limit: 1,
       where: {
-        autor: recipient,
-        categoria: notificationData.categoria,
-        'link.id': notificationData.link.value
+        and: [
+          { autor: {equals: recipient} },
+          { categoria: {equals: notificationData.categoria} },
+          { 'link.value': {equals: notificationData.link.value} }
+        ]
       }
     })
+    console.log({notificacionExistente})
+    
     if (notificacionExistente.totalDocs === 0) {
       // POST nueva notificacion
-      console.warn(`No se encontró notificación existente para ${notificationData.categoria} - ${notificationData.link.value}`);
+      console.log(`No se encontró notificación existente para ${notificationData.categoria} - ${notificationData.link.value}`);
+      return this.CreateNotification(recipient, notificationData)
     }
     console.log("Modificando notificacion existente", notificacionExistente.docs[0].id)
     return this.UpdateNotification(notificacionExistente.docs[0].id, recipient, notificationData)
@@ -121,7 +127,7 @@ export class NotificationService {
         data: {
           ...notificationData,
           autor: recipient,
-          leido: false
+          leida: false
         }
       })
     } catch (e) {

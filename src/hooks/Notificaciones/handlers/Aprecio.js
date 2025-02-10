@@ -7,13 +7,14 @@ async function BuscarAprecios(contenidoid) {
     limit: 2,
     where: {
       contenidoid: {equals: contenidoid},
+      depth: 0,
     }
   });
 }
 /************************************************************
-Notificacion cuando un usuario APRECIA UNA ENTRADA INDIVIDUAL
+Notificacion cuando un USUARIO APRECIA UNA ENTRADA INDIVIDUAL
 **************************************************************/ 
-export class AprecioEntradaIndividualHandler extends BaseNotificationHandler {
+export class AprecioEntradaUsuarioHandler extends BaseNotificationHandler {
   async enrichContext(baseContext) {
     // Chequeamos si ya existe una notificacion sobre este evento.
     // En ese caso no generamos una nueva sino que actualizamos la existente
@@ -48,7 +49,7 @@ export class AprecioEntradaIndividualHandler extends BaseNotificationHandler {
 }
 
 /************************************************************
-  Notificacion cuando un usuario APRECIA UNA ENTRADA GRUPAL
+  Notificacion cuando un USUARIO APRECIA UNA ENTRADA GRUPAL
 **************************************************************/
 export class AprecioEntradaGrupalHandler extends BaseNotificationHandler{
   async enrichContext(baseContext) {
@@ -87,9 +88,9 @@ export class AprecioEntradaGrupalHandler extends BaseNotificationHandler{
 }
 
 /************************************************************
-Notificacion cuando un usuario APRECIA UN COMENTARIO INDIVIDUAL
+Notificacion cuando un USUARIO APRECIA UN COMENTARIO INDIVIDUAL
 **************************************************************/
-export class AprecioComentarioIndividualHandler extends BaseNotificationHandler {
+export class AprecioComentarioUsuarioHandler extends BaseNotificationHandler {
   async enrichContext(baseContext) {
     // Chequeamos si ya existe una notificacion sobre este evento.
     // En ese caso no generamos una nueva sino que actualizamos la existente
@@ -125,14 +126,12 @@ export class AprecioComentarioIndividualHandler extends BaseNotificationHandler 
 }
 
 /************************************************************
-  Notificacion cuando un usuario APRECIA UN COMENTARIO GRUPAL
+  Notificacion cuando un USUARIO APRECIA UN COMENTARIO GRUPAL
 **************************************************************/
 export class AprecioComentarioGrupalHandler extends BaseNotificationHandler{
   async enrichContext(baseContext) {
-    // Chequeamos si ya existe una notificacion sobre este evento.
-    // En ese caso no generamos una nueva sino que actualizamos la existente
+    // Chequeamos si ya existen aprecios a este evento
     baseContext.aprecios = await BuscarAprecios(baseContext.link.id);
-    // console.log(baseContext.aprecios)
     this.requiresAggregation = baseContext.aprecios.totalDocs > 0;
     return baseContext;
   }
