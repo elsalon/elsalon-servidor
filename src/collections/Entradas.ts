@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios, isLoggedIn } from '../helper'
+import { isAdminAutorOrIntegrante, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios, isLoggedIn } from '../helper'
 import { NotificarNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
 import { Campos } from './CamposEntradasYComentarios'
 
@@ -10,15 +10,15 @@ const Entradas: CollectionConfig = {
     },
     access: {
         read: PublicadasYNoBorradas,
-        update: isAdminOrAutor,
-        delete: isAdminOrAutor,
+        update: isAdminAutorOrIntegrante,
+        delete: isAdminAutorOrIntegrante,
     },
     hooks: {
         beforeChange: [
             ValidarEntradaVacia,
             CrearExtracto,
-            async ({ operation, data, req }) => {
-                if (operation === 'create' && req.user) {
+            async ({ data, req }) => {
+                if (req.user) {
                     data.autor = req.user.id; // El autor es el usuario actual
                     return data;
                 }

@@ -13,7 +13,6 @@ const Fijadas: CollectionConfig = {
     access: {
         create: isAdminOrDocente,
         delete: isAdminOrDocente,
-        // update: isAdminOrIntegrante,
     },
     hooks: {
         beforeChange: [

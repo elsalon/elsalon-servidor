@@ -162,7 +162,7 @@ export const NotificarNuevaEntrada = async ({
                 linkCollection: 'entradas',
                 usuario: req.user,
             }
-            const handleName = operation === 'create' ? 'actividad-grupo-nueva-entrada' : 'actividad-grupo-edito-entrada';
+            const handleName = operation == 'create' ? 'actividad-grupo-nueva-entrada' : 'actividad-grupo-edito-entrada';
             await notificationService.triggerNotification(handleName, rawData);
 
         }

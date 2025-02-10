@@ -28,7 +28,7 @@ export const isAdminOrAutor: Access = ({ req: { user }, id }) => {
     };
 };
 
-export const isAdminOrIntegrante: Access = ({ req: { user }, id }) => {
+export const isAdminOrIntegrante: Access = ({ req: { user } }) => {
     if (!user) return false;
     if (user.isAdmin) return true;
     return {
@@ -37,7 +37,25 @@ export const isAdminOrIntegrante: Access = ({ req: { user }, id }) => {
         },
     };
 };
-
+export const isAdminAutorOrIntegrante: Access = ({ req: { user } }) => {
+    if (!user) return false;
+    if (user.isAdmin) return true;
+    if (user.isAdmin) return true;
+    return {
+        or: [
+            {
+                'autor': {
+                    equals: user.id,
+                },
+            },
+            {
+                'grupo.integrantes': {
+                    contains: user.id,
+                },
+            },
+        ]
+    }
+}
 export const isAdminOrSelf: Access = ({ req: { user }, id }) => {
     if (!user) return false;
     if (user.isAdmin) return true;
@@ -68,37 +86,13 @@ export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
     if (operation === 'create') return doc.mencionados;
 
     // UPDATE
-// console.log(previousDoc.mencionados, doc.mencionados);
-
+    // console.log(previousDoc.mencionados, doc.mencionados);
     if (!previousDoc.mencionados?.length && !doc.mencionados?.length) return [];
     let viejosMencionados = previousDoc.mencionados.map(m => m.value);
     let nuevosMencionados = doc.mencionados.filter(m => !viejosMencionados.includes(m.value.id));
     return nuevosMencionados;
 }
 
-// export const HandleMencionados = async ({
-//     doc, // full document data
-//     req, // full express request
-//     previousDoc, // document data before updating the collection
-//     operation, // name of the operation ie. 'create', 'update'
-// }) => {
-//     const collection = req.collection.config.slug;
-//     if(operation === 'create'){
-//         doc.mencionados?.forEach(async (mencionado) => {
-//             if(collection == "comentarios"){
-//                 NotificarMencionComentario(mencionado, doc);
-//             // NotificarMencion(mencionado, doc, collection)
-//             EnviarMailMencion(mencionado, doc, collection);
-//         });
-//     }else if (operation === 'update'){
-//         let viejosMencionados = previousDoc.mencionados.map(m => m.id);
-//         let nuevosMencionados = doc.mencionados.map(m => m.id).filter(m => !viejosMencionados.includes(m));
-//         nuevosMencionados.forEach(async (mencionado) => {
-//             NotificarMencion(mencionado, doc, collection)
-//             EnviarMailMencion(mencionado, doc, collection);
-//         });
-//     }
-// };
 
 export const CrearExtracto = async ({ operation, data, req, context }) => {
     if (context.skipHooks) return data;
@@ -221,7 +215,7 @@ export const SoftDelete = (collection: string) => {
                 return;
             }
             if (doc.autoriaGrupal) {
-                const integrantesIds = doc.grupo?.integrantes?.map(i => i.id);
+                const integrantesIds = doc.grupo?.integrantes?.map(i => i.value.id);
                 if (!integrantesIds.includes(user.id)) {
                     res.status(401).json({
                         message: 'Unauthorized not integrante',

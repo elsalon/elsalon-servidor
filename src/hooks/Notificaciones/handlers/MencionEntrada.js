@@ -39,7 +39,7 @@ export class MencionUsuarioEntradaGrupalHandler extends BaseNotificationHandler{
   }
 
   createMessage({ identidad, link }) {
-    return `<strong>${identidad.nombre}</strong> te mencionó en <strong>${link.extracto}</strong>`;
+    return `El grupo <strong>${identidad.nombre}</strong> te mencionó en <strong>${link.extracto}</strong>`;
   }
 
   createLink({ link }) {
@@ -91,7 +91,7 @@ export class MencionGrupoEntradaGrupalHandler extends BaseNotificationHandler{
   }
 
   createMessage({ identidad, link, mencionado }) {
-    return `<strong>${identidad.nombre}</strong> mencionó a tu grupo <strong>${mencionado.value.nombre}</strong> en <strong>${link.extracto}</strong>`;
+    return `El grupo <strong>${identidad.nombre}</strong> mencionó a tu grupo <strong>${mencionado.value.nombre}</strong> en <strong>${link.extracto}</strong>`;
   }
 
   createLink({ link }) {

@@ -29,6 +29,7 @@ const {
 
 const {
   ActividadGrupoNuevaEntradaHandler,
+  ActividadGrupoEditoEntradaHandler
 } = require('./handlers/ActividadGrupo');
 
 
@@ -58,6 +59,7 @@ const handlers = {
 
   // Actividad de Grupo
   'actividad-grupo-nueva-entrada': ActividadGrupoNuevaEntradaHandler,
+  'actividad-grupo-edito-entrada': ActividadGrupoEditoEntradaHandler,
 };
 
 export function getHandler(type) {
