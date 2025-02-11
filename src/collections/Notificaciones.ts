@@ -69,6 +69,74 @@ const Notificaciones: CollectionConfig = {
                     return res.status(500).json({ error: 'Internal Server Error' });
                 }
             }
+        },
+        {
+            path: '/nuevas',
+            method: 'get',
+            handler: async (req, res, next) => {
+                if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
+                try {
+                    const userId = req.user?.id; // Obteniendo el ID del usuario actual
+                    const includeDocs = req.query.includeDocs || false;
+                    // Buscar todas las notificaciones no leídas
+                    const fechaLecturaNotificaciones = req.user.lectura_notificaciones || 0;
+                    let result;
+                    const where = {
+                        and: [
+                            { autor: { equals: userId } },
+                            { createdAt: { greater_than_equal: fechaLecturaNotificaciones } },
+                        ]
+                    }
+                    if(includeDocs){
+                        // Buscar todas las notificaciones no leídas
+                        result = await req.payload.find({
+                            collection: 'notificaciones',
+                            where,
+                            sort: 'updatedAt',
+                            limit: 10,
+                        });
+                        // Asumo que la ventana está abierta asi que si hay notificaciones, actualizo la fecha de lectura
+                        if(result.docs.length > 0){
+                            await req.payload.update({
+                                collection: 'users',
+                                id: userId,
+                                data: {
+                                    lectura_notificaciones: new Date(),
+                                },
+                            });
+                        }
+                    }else{
+                        // Solo cuento las notificaciones no leídas
+                        result = await req.payload.count({collection: 'notificaciones', where});
+                    }
+                    return res.json({ result });
+                } catch (error) {
+                    console.error('Error', error);
+                    return res.status(500).json({ error: 'Internal Server Error' });
+                }
+            }
+        },
+        {
+            path: '/resetnuevas',
+            method: 'patch',
+            handler: async (req, res, next) => {
+                if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
+                try {
+                    const userId = req.user?.id; // Obteniendo el ID del usuario actual
+                    // Marcar todas las notificaciones como leídas
+                    const result = await req.payload.update({
+                        collection: 'users',
+                        id: userId,
+                        data: {
+                            lectura_notificaciones: new Date(),
+                        },
+                    });
+                    return res.status(200).json( result );
+                } catch (error) {
+                    console.error('Error', error);
+                    return res.status(500).json({ error: 'Internal Server Error' });
+                }
+            }
         }
     ]
 }

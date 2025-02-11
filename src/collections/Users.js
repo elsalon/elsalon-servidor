@@ -158,6 +158,19 @@ const Users = {
       defaultValue: false,
     },
     {
+      name: 'lectura_notificaciones',
+      type: 'date',
+      admin: {
+        date: {
+          pickerAppearance: 'dayAndTime',
+        },
+      },
+      access: {
+        read: isAdminOrSelf,
+        update: isAdminOrSelf,
+      },
+    },
+    {
       name: 'notificacionesMail',
       type: 'group',
       access: {
