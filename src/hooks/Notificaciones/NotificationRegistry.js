@@ -45,7 +45,8 @@ const {
 } = require('./handlers/Enlace');
 
 const {
-  EventoNuevoHandler
+  EventoNuevoHandler,
+  EventoModificadoHandler,
 } = require('./handlers/Eventos');
 
 const handlers = {
@@ -88,7 +89,8 @@ const handlers = {
   'enlace-usuario': EnlaceUsuarioHandler,
 
   // Eventos
-  'evento-nuevo': EventoNuevoHandler,
+  'evento-nuevo':       EventoNuevoHandler,
+  'evento-modificado':  EventoModificadoHandler,
 
 };
 

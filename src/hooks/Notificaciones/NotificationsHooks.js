@@ -20,6 +20,17 @@ export const NotificarEvento = async ({
             evento: doc,
         }
         await notificationService.triggerNotification('evento-nuevo', rawData);
+    }else if(operation == 'update'){
+        if(doc.fecha != previousDoc.fecha){
+            console.log("Fecha del evento modificada", doc.fecha, previousDoc.fecha);
+            const rawData = {
+                identidad: req.user,
+                link: doc,
+                linkCollection: 'salones',
+                evento: doc,
+            }
+            await notificationService.triggerNotification('evento-modificado', rawData);
+        }
     }
 }
 
