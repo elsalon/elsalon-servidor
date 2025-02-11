@@ -3,6 +3,26 @@ import { GetNuevosMencionados } from "../../helper";
 import { NotificationService } from "./NotificationService"
 const notificationService = new NotificationService();
 
+export const NotificarEvento = async ({
+    doc,
+    req,
+    previousDoc,
+    operation,
+    context,
+}) => {
+    if(context.skipHooks) return;
+
+    if(operation == 'create'){
+        const rawData = {
+            identidad: req.user,
+            link: doc,
+            linkCollection: 'salones',
+            evento: doc,
+        }
+        await notificationService.triggerNotification('evento-nuevo', rawData);
+    }
+}
+
 export const NotificarAprecio = async ({
     doc,
     req, // full express request
@@ -60,38 +80,22 @@ export const NotificarNuevoEnlace = async ({
         // console.log("Tipo de enlace:", doc.tipo);
         // console.log("Objeto con el que se enlaza:", doc.idEnlazado);
         try {
-
+            let rawData = {
+                identidad: req.user,
+                link: doc.idEnlazado,
+            };
             switch (doc.tipo) {
                 case 'salon':
                     // Nadie a quien notificar :)
                     break;
                 case 'bitacora':
-                    // Notifico al usuario de la bitacora
-                    // GenerarNotificacionOSumar(doc.idEnlazado, req.user, 'enlace', req.user.id, 'users');
-
-                    // Dejo acá comentado. En principio no vamos a enviar mail por cada enlace
-                    // const receptor = await req.payload.findByID({collection: 'users', id: doc.idEnlazado});
-                    // if(receptor.notificacionesMail?.activas && receptor.notificacionesMail?.enlazadoNuevo){
-                    //     await AddToMailQueue(receptor.email, 'Nuevo Enlace', `${req.user.nombre} se enlazó con vos`)
-                    // }
+                    rawData.linkCollection = 'users',
+                    await notificationService.triggerNotification('enlace-usuario', rawData);
                     break;
                 case 'grupo':
-                    const grupo = await req.payload.findByID({
-                        collection: 'grupos',
-                        id: doc.idEnlazado,
-                    });
-                    if (grupo) {
-                        // Notificar a cada integrante del grupo
-                        grupo.integrantes.forEach(async (integrante) => {
-                            // GenerarNotificacionOSumar(integrante.id, req.user, 'enlace', grupo.id, 'grupos');
-                            // Dejo acá comentado. En principio no vamos a enviar mail por cada enlace
-                            // if(integrante.notificacionesMail?.activas && integrante.notificacionesMail?.enlazadoNuevo){
-                            //     await AddToMailQueue(integrante.email, 'Nuevo Enlace', `${req.user.nombre} se enlazó con tu grupo ${grupo.nombre}`)
-                            // }
-                        });
-                    } else {
-                        console.error("No se encontró el grupo con ID", doc.idEnlazado);
-                    }
+                    rawData.linkCollection = 'grupos'
+                    await notificationService.triggerNotification('enlace-grupo', rawData);
+
                     break;
             }
         } catch (e) {

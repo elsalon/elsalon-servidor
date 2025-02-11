@@ -1,5 +1,6 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrDocente } from '../helper'
+import { NotificarEvento} from '../hooks/Notificaciones/NotificationsHooks'
 
 const Eventos: CollectionConfig = {
     slug: 'eventos',
@@ -14,7 +15,9 @@ const Eventos: CollectionConfig = {
     },
     hooks: {
         beforeChange: [],
-        afterChange:[],
+        afterChange:[
+            NotificarEvento
+        ],
     },
     fields: [
         {

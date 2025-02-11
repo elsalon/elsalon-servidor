@@ -26,8 +26,9 @@ const Enlaces: CollectionConfig = {
             options: ['bitacora', 'salon', 'grupo'], // Tipos de enlaces
         },
         {
-            name: 'idEnlazado', // ID de quien enlaza
+            name: 'idEnlazado', // ID del user, entrada, grupo o salon
             type: 'text',
+            index: true,
         },
     ]
 }

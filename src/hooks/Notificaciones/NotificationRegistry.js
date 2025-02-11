@@ -39,6 +39,15 @@ const {
   AccionGrupoIntegranteAbandonoHandler,
 } = require('./handlers/AccionesGrupo');
 
+const {
+  EnlaceGrupoHandler,
+  EnlaceUsuarioHandler,
+} = require('./handlers/Enlace');
+
+const {
+  EventoNuevoHandler
+} = require('./handlers/Eventos');
+
 const handlers = {
   // Aprecio
   'aprecio-entrada-usuario':     AprecioEntradaUsuarioHandler,
@@ -73,6 +82,13 @@ const handlers = {
   'grupo-nuevo':                    AccionGrupoNuevoHandler,
   'grupo-integrantes-nuevos':       AccionGrupoIntegranteAgregadoHandler,
   'grupo-integrantes-abandonaron':  AccionGrupoIntegranteAbandonoHandler,
+
+  // Enlace
+  'enlace-grupo':   EnlaceGrupoHandler,
+  'enlace-usuario': EnlaceUsuarioHandler,
+
+  // Eventos
+  'evento-nuevo': EventoNuevoHandler,
 
 };
 
