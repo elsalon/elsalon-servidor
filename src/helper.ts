@@ -2,6 +2,23 @@
 import { Access, FieldAccess } from 'payload/types';
 import payload from 'payload';
 
+const trimHtml = (html) => {
+    return html
+        // Remove empty paragraphs or paragraphs with just a line break
+        .replace(/<p>\s*<br>\s*<\/p>/g, '')
+        .replace(/<p>\s*<\/p>/g, '')
+        // Remove leading/trailing whitespace within paragraphs
+        .replace(/<p>\s+/g, '<p>')
+        .replace(/\s+<\/p>/g, '</p>')
+        // Trim the whole string
+        .trim();
+}
+
+export const LimpiarContenido = async ({ data }) => {
+    data.contenido = trimHtml(data.contenido);
+    return data;
+}
+
 export const SacarEmojis = (texto: string) => {
     return texto.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
 }

@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminAutorOrIntegrante, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios, isLoggedIn } from '../helper'
+import { isAdminAutorOrIntegrante, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios, LimpiarContenido } from '../helper'
 import { NotificarGrupoNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
 import { Campos } from './CamposEntradasYComentarios'
 
@@ -16,6 +16,7 @@ const Entradas: CollectionConfig = {
     hooks: {
         beforeChange: [
             ValidarEntradaVacia,
+            LimpiarContenido,
             CrearExtracto,
             async ({ data, req }) => {
                 if (req.user) {
