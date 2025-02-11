@@ -7,7 +7,7 @@ const Notificaciones: CollectionConfig = {
         group: 'Interacciones',
     },
     access:{
-        read: isAutor,
+        read: isAdminOrAutor,
         create: isAdmin,
         update: isAdminOrAutor,
         delete: isAdminOrAutor,
@@ -37,7 +37,7 @@ const Notificaciones: CollectionConfig = {
         {
             name: 'categoria',
             type: 'select',
-            options: ['aprecio', 'comentario', 'mencion', 'actividad-grupo', 'acciones-grupo', 'evento']
+            options: ['aprecio', 'comentario', 'mencion', 'actividad-grupo', 'acciones-grupo', 'enlace', 'evento']
         },
         {
             name: 'leida',
