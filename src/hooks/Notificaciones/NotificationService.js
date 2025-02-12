@@ -3,7 +3,42 @@ import payload from "payload"
 import { getHandler } from './NotificationRegistry.js';
 
 export class NotificationService {
+  constructor() {
+    this.queue = [];
+    this.isProcessing = false;
+    this.startQueueProcessor();
+  }
+
+  startQueueProcessor() {
+    // Process queue every 5 seconds (adjust as needed)
+    setInterval(() => this.processQueue(), 5000);
+  }
+
+  async processQueue() {
+    if (this.isProcessing || this.queue.length === 0) return;
+    this.isProcessing = true;
+
+    try {
+      // Create a copy of current queue and clear original
+      const jobs = this.queue.splice(0, this.queue.length);
+      await Promise.all(
+        jobs.map(job => 
+          this.processJob(job).catch(e => 
+            console.error('Error processing notification job', e)
+          )
+        )
+      );
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
   async triggerNotification(type, rawContext) {
+    this.queue.push({ type, rawContext });
+  }
+
+  async processJob(job){
+    const { type, rawContext } = job;
     try {
 
       // 1. Get the appropriate handler

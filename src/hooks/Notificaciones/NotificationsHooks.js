@@ -19,7 +19,7 @@ export const NotificarEvento = async ({
             linkCollection: 'salones',
             evento: doc,
         }
-        await notificationService.triggerNotification('evento-nuevo', rawData);
+        notificationService.triggerNotification('evento-nuevo', rawData);
     }else if(operation == 'update'){
         if(doc.fecha != previousDoc.fecha){
             console.log("Fecha del evento modificada", doc.fecha, previousDoc.fecha);
@@ -29,7 +29,7 @@ export const NotificarEvento = async ({
                 linkCollection: 'salones',
                 evento: doc,
             }
-            await notificationService.triggerNotification('evento-modificado', rawData);
+            notificationService.triggerNotification('evento-modificado', rawData);
         }
     }
 }
@@ -63,16 +63,16 @@ export const NotificarAprecio = async ({
         }
 
         if (contenidotipo == 'entrada' && contenidoGrupal) {
-            await notificationService.triggerNotification('aprecio-entrada-grupal', rawData);
+            notificationService.triggerNotification('aprecio-entrada-grupal', rawData);
 
         } else if (contenidotipo == 'entrada' && !contenidoGrupal) {
-            await notificationService.triggerNotification('aprecio-entrada-usuario', rawData);
+            notificationService.triggerNotification('aprecio-entrada-usuario', rawData);
 
         } else if (contenidotipo == 'comentario' && contenidoGrupal) {
-            await notificationService.triggerNotification('aprecio-comentario-grupal', rawData);
+            notificationService.triggerNotification('aprecio-comentario-grupal', rawData);
 
         } else if (contenidotipo == 'comentario' && !contenidoGrupal) {
-            await notificationService.triggerNotification('aprecio-comentario-usuario', rawData);
+            notificationService.triggerNotification('aprecio-comentario-usuario', rawData);
 
         } else {
             console.warn("NotificarAprecio: Tipo de contenido no reconocido:", req.body.contenidotipo);
@@ -101,11 +101,11 @@ export const NotificarNuevoEnlace = async ({
                     break;
                 case 'bitacora':
                     rawData.linkCollection = 'users',
-                    await notificationService.triggerNotification('enlace-usuario', rawData);
+                    notificationService.triggerNotification('enlace-usuario', rawData);
                     break;
                 case 'grupo':
                     rawData.linkCollection = 'grupos'
-                    await notificationService.triggerNotification('enlace-grupo', rawData);
+                    notificationService.triggerNotification('enlace-grupo', rawData);
 
                     break;
             }
@@ -140,16 +140,16 @@ export const NotificarNuevoComentario = async ({
 
             if (entrada.autor.id == doc.autor.id && !entradaGrupal) return; // No notificar si el autor del comentario es el mismo que el de la entrada, y la entrada es individual
             if (comentarioGrupal && entradaGrupal) {
-                await notificationService.triggerNotification('comentario-grupal-entrada-grupal', rawData);
+                notificationService.triggerNotification('comentario-grupal-entrada-grupal', rawData);
             
             }else if(!comentarioGrupal && entradaGrupal){
-                await notificationService.triggerNotification('comentario-usuario-entrada-grupal', rawData);
+                notificationService.triggerNotification('comentario-usuario-entrada-grupal', rawData);
 
             }else if(comentarioGrupal && !entradaGrupal){
-                await notificationService.triggerNotification('comentario-grupal-entrada-usuario', rawData);
+                notificationService.triggerNotification('comentario-grupal-entrada-usuario', rawData);
 
             }else if(!comentarioGrupal && !entradaGrupal){
-                await notificationService.triggerNotification('comentario-usuario-entrada-usuario', rawData);
+                notificationService.triggerNotification('comentario-usuario-entrada-usuario', rawData);
             }
         }
     } catch (e) {
@@ -176,7 +176,7 @@ export const NotificarGrupoNuevoComentario = async ({
         comentario: doc,
     }
     const handleName = operation == 'create' ? 'actividad-grupo-nuevo-comentario' : 'actividad-grupo-edito-comentario';
-    await notificationService.triggerNotification(handleName, rawData);
+    notificationService.triggerNotification(handleName, rawData);
 };
 
 export const NotificarGrupoNuevaEntrada = async ({
@@ -199,7 +199,7 @@ export const NotificarGrupoNuevaEntrada = async ({
             usuario: req.user,
         }
         const handleName = operation == 'create' ? 'actividad-grupo-nueva-entrada' : 'actividad-grupo-edito-entrada';
-        await notificationService.triggerNotification(handleName, rawData);
+        notificationService.triggerNotification(handleName, rawData);
     } catch (e) {
         console.error("Error al notificar nueva entrada", e);
     }
@@ -237,18 +237,18 @@ export const NotificarMencionEntrada = async ({
             }
 
             if (entradaGrupal && mencionAGrupo) {
-                await notificationService.triggerNotification('mencion-grupo-entrada-grupal', rawContext);
+                notificationService.triggerNotification('mencion-grupo-entrada-grupal', rawContext);
             }
 
             else if (entradaGrupal && !mencionAGrupo) {
-                await notificationService.triggerNotification('mencion-usuario-entrada-grupal', rawContext);
+                notificationService.triggerNotification('mencion-usuario-entrada-grupal', rawContext);
             }
 
             else if (!entradaGrupal && mencionAGrupo) {
-                await notificationService.triggerNotification('mencion-grupo-entrada-individual', rawContext);
+                notificationService.triggerNotification('mencion-grupo-entrada-individual', rawContext);
 
             } else if (!entradaGrupal && !mencionAGrupo) {
-                await notificationService.triggerNotification('mencion-usuario-entrada-individual', rawContext);
+                notificationService.triggerNotification('mencion-usuario-entrada-individual', rawContext);
             }
         }
     } catch (e) {
@@ -293,19 +293,19 @@ export const NotificarMencionComentario = async ({
 
             if (comentarioGrupal && mencionAGrupo) {
                 rawContext.identidadCollection = 'grupos';
-                await notificationService.triggerNotification('mencion-grupo-comentario-grupal', rawContext);
+                notificationService.triggerNotification('mencion-grupo-comentario-grupal', rawContext);
             }
 
             else if (comentarioGrupal && !mencionAGrupo) {
-                await notificationService.triggerNotification('mencion-usuario-comentario-grupal', rawContext);
+                notificationService.triggerNotification('mencion-usuario-comentario-grupal', rawContext);
             }
 
             else if (!comentarioGrupal && mencionAGrupo) {
-                await notificationService.triggerNotification('mencion-grupo-comentario-individual', rawContext);
+                notificationService.triggerNotification('mencion-grupo-comentario-individual', rawContext);
             }
 
             else if (!comentarioGrupal && !mencionAGrupo) {
-                await notificationService.triggerNotification('mencion-usuario-comentario-individual', rawContext);
+                notificationService.triggerNotification('mencion-usuario-comentario-individual', rawContext);
             }
 
         }
@@ -328,7 +328,7 @@ export const NotificarNuevoGrupo = async ({
         try {
             console.log("Nuevo Grupo", doc.nombre, "integrantes:", doc.integrantes.map(i => i.nombre));
             
-            await notificationService.triggerNotification('grupo-nuevo', {
+            notificationService.triggerNotification('grupo-nuevo', {
                 identidad: doc, // el grupo
                 identidadCollection: 'grupos',
                 link: doc,
@@ -351,7 +351,7 @@ export const NotificarNuevoGrupo = async ({
         try {
             if(integrantesNuevos.length > 0){
                 // Aviso sobre los nuevos integrantes
-                await notificationService.triggerNotification('grupo-integrantes-nuevos', {
+                notificationService.triggerNotification('grupo-integrantes-nuevos', {
                     identidad: doc, // el grupo
                     identidadCollection: 'grupos',
                     link: doc,
@@ -362,7 +362,7 @@ export const NotificarNuevoGrupo = async ({
             }
 
             if(integrantesAbandonaron.length > 0){
-                await notificationService.triggerNotification('grupo-integrantes-abandonaron', {
+                notificationService.triggerNotification('grupo-integrantes-abandonaron', {
                     identidad: doc, // el grupo
                     identidadCollection: 'grupos',
                     link: doc,
