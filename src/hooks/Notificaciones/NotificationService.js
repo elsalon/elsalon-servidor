@@ -24,7 +24,7 @@ export class NotificationService {
       await Promise.all(
         jobs.map(job => 
           this.processJob(job).catch(e => 
-            console.error('Error processing notification job', e)
+            payload.logger.error('Error processing notification job', e)
           )
         )
       );
@@ -69,7 +69,7 @@ export class NotificationService {
         categoria,
       }
 
-      console.log({ recipients })
+      // console.log({ recipients })
 
       // 5. Persist to database
       await Promise.all(
@@ -78,7 +78,7 @@ export class NotificationService {
         )
       );
     } catch (e) {
-      console.error("Error en triggerNotification", e)
+      payload.logger.error("Error en triggerNotification", e)
     }
   }
 
@@ -95,7 +95,7 @@ export class NotificationService {
     if (identidad.id) {
       return usr
     }
-    console.error(`resolveIdentidad: Identidad not found for ${id}`);
+    payload.logger.error(`resolveIdentidad: Identidad not found for ${id}`);
   }
 
   async resolveLink(id, collection = 'entradas') {
@@ -103,18 +103,18 @@ export class NotificationService {
     if (link.id) {
       return link
     }
-    console.error(`resolveLink: Link not found for ${id}`);
+    payload.logger.error(`resolveLink: Link not found for ${id}`);
   }
 
   async handleRecipientNotification(recipient, handler, notificationData) {
     if (!handler.requiresAggregation) {
       // POST nueva notificacion
-      console.log("No requiere agregación. Creando notificacion")
+      // console.log("No requiere agregación. Creando notificacion")
       return this.CreateNotification(recipient, notificationData)
     }
 
     // Tengo que modificar notificacion existente
-    console.log("Requiere agregación. Buscando notificacion existente")
+    // console.log("Requiere agregación. Buscando notificacion existente")
     const notificacionExistente = await payload.find({
       collection: 'notificaciones',
       limit: 1,
@@ -130,16 +130,16 @@ export class NotificationService {
     
     if (notificacionExistente.totalDocs === 0) {
       // POST nueva notificacion
-      console.log(`No se encontró notificación existente para ${notificationData.categoria} - ${notificationData.link.value}`);
+      // console.log(`No se encontró notificación existente para ${notificationData.categoria} - ${notificationData.link.value}`);
       return this.CreateNotification(recipient, notificationData)
     }
-    console.log("Modificando notificacion existente", notificacionExistente.docs[0].id)
+    // console.log("Modificando notificacion existente", notificacionExistente.docs[0].id)
     return this.UpdateNotification(notificacionExistente.docs[0].id, recipient, notificationData)
   }
 
   async CreateNotification(recipient, notificationData) {
     try {
-      console.log("Creando notificacion", { recipient }, notificationData)
+      // console.log("Creando notificacion", { recipient }, notificationData)
       const res = await payload.create({
         collection: 'notificaciones',
         data: {
@@ -148,9 +148,9 @@ export class NotificationService {
           leido: false
         }
       })
-      console.log("Notificacion creada", res.id)
+      // console.log("Notificacion creada", res.id)
     } catch (e) {
-      console.error("Error en CreateNotification", e)
+      payload.logger.error("Error en CreateNotification", e)
     }
   }
 

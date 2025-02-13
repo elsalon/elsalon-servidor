@@ -96,7 +96,7 @@ const handlers = {
 
 export function getHandler(type) {
   const Handler = handlers[type];
-  console.log("Geting handler", type)
+  // console.log("Geting handler", type)
   if (!Handler) throw new Error(`No handler registered for ${type}`);
   return new Handler();
 }
