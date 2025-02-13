@@ -6,12 +6,15 @@ export class NotificationService {
   constructor() {
     this.queue = [];
     this.isProcessing = false;
-    this.startQueueProcessor();
+    this.queueProcessorStarted = false;
   }
 
   startQueueProcessor() {
+    if(this.queueProcessorStarted) return;
+    payload?.logger?.info('Starting notification queue processor');
     // Process queue every 5 seconds (adjust as needed)
     setInterval(() => this.processQueue(), 5000);
+    this.queueProcessorStarted = true;
   }
 
   async processQueue() {
@@ -23,9 +26,10 @@ export class NotificationService {
       const jobs = this.queue.splice(0, this.queue.length);
       await Promise.all(
         jobs.map(job => 
-          this.processJob(job).catch(e => 
-            payload.logger.error('Error processing notification job', e)
-          )
+          this.processJob(job).catch(e => {
+            payload.logger.error('Error processing notification job');
+            console.error(e)
+          })
         )
       );
     } finally {
@@ -35,6 +39,7 @@ export class NotificationService {
 
   async triggerNotification(type, rawContext) {
     this.queue.push({ type, rawContext });
+    this.startQueueProcessor();
   }
 
   async processJob(job){
@@ -78,7 +83,8 @@ export class NotificationService {
         )
       );
     } catch (e) {
-      payload.logger.error("Error en triggerNotification", e)
+      payload.logger.error("Error en triggerNotification")
+      console.error(e)
     }
   }
 
@@ -126,7 +132,6 @@ export class NotificationService {
         ]
       }
     })
-    console.log({notificacionExistente})
     
     if (notificacionExistente.totalDocs === 0) {
       // POST nueva notificacion
@@ -150,7 +155,8 @@ export class NotificationService {
       })
       // console.log("Notificacion creada", res.id)
     } catch (e) {
-      payload.logger.error("Error en CreateNotification", e)
+      payload.logger.error("Error en CreateNotification")
+      console.error(e)
     }
   }
 
