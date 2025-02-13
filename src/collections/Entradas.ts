@@ -53,6 +53,7 @@ const Entradas: CollectionConfig = {
             // Usada para ordenar las entradas y poder actualizarlo cuando alguien comenta
             // Y vaya para arriba. Pero no quiero usar updatedAt para no subir las que fueron editadas
             name: 'lastActivity', 
+            defaultValue: () => new Date(),
             type: 'date',
             admin: {
                 date: {
