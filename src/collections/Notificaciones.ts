@@ -1,5 +1,6 @@
 import { CollectionConfig } from 'payload/types'
 import { isAutor, isAdmin, isAdminOrAutor } from '../helper'
+import update from 'payload/dist/collections/operations/update';
 
 const Notificaciones: CollectionConfig = {
     slug: 'notificaciones',
@@ -79,12 +80,12 @@ const Notificaciones: CollectionConfig = {
                     const userId = req.user?.id; // Obteniendo el ID del usuario actual
                     const includeDocs = req.query.includeDocs || false;
                     // Buscar todas las notificaciones no leídas
-                    const fechaLecturaNotificaciones = req.user.lectura_notificaciones || 0;
+                    const fechaLecturaNotificaciones = req.user.lecturaNotificaciones || 0;
                     let result;
                     const where = {
                         and: [
                             { autor: { equals: userId } },
-                            { createdAt: { greater_than_equal: fechaLecturaNotificaciones } },
+                            { updatedAt: { greater_than_equal: fechaLecturaNotificaciones } },
                         ]
                     }
                     if(includeDocs){
@@ -101,7 +102,7 @@ const Notificaciones: CollectionConfig = {
                                 collection: 'users',
                                 id: userId,
                                 data: {
-                                    lectura_notificaciones: new Date(),
+                                    lecturaNotificaciones: new Date(),
                                 },
                             });
                         }
@@ -128,7 +129,7 @@ const Notificaciones: CollectionConfig = {
                         collection: 'users',
                         id: userId,
                         data: {
-                            lectura_notificaciones: new Date(),
+                            lecturaNotificaciones: new Date(),
                         },
                     });
                     return res.status(200).json( result );
