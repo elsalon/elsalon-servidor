@@ -13,16 +13,20 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
 
   for (const entry of entries.docs) {
     console.log("updating lastActivity of", entry.id)
-    await payload.update({
-      collection: 'entradas',
-      id: entry.id,
-      context: {
-        skipHooks: true
-      },
-      data: {
-        lastActivity: entry.createdAt
-      }
-    })
+    try{
+      await payload.update({
+        collection: 'entradas',
+        id: entry.id,
+        context: {
+          skipHooks: true
+        },
+        data: {
+          lastActivity: entry.createdAt
+        }
+      })
+    }catch(e){
+      console.warn("No se pudo actualizar", entry.id)
+    }
   }
 };
 
