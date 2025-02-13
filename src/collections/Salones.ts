@@ -170,7 +170,7 @@ const Salones: CollectionConfig = {
                             and: [
                                 query,
                                 {
-                                    createdAt: { greater_than: dateValue }
+                                    lastActivity: { greater_than: dateValue }
                                 }
                             ]
                         };
@@ -186,7 +186,7 @@ const Salones: CollectionConfig = {
                             and: [
                                 query,
                                 {
-                                    createdAt: { less_than: dateValue }
+                                    lastActivity: { less_than: dateValue }
                                 }
                             ]
                         };
@@ -195,7 +195,7 @@ const Salones: CollectionConfig = {
                     const feed = await req.payload.find({
                         collection: 'entradas',
                         where: query,
-                        sort: "-createdAt",
+                        sort: "-lastActivity",
                         limit: 12,
                         page: page,
                         overrideAccess: false,

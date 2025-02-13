@@ -330,3 +330,14 @@ export const PopulateAprecios = async ({ doc, context, req }) => {
     });
     doc.aprecios = aprecios;
 }
+
+export const ActualizarActividadEntrada = (entrada) => {
+    console.log("Actualizanod lastActivity", entrada.id)
+    payload.update({
+        collection: 'entradas',
+        id: entrada.id,
+        data:{
+            lastActivity: new Date()
+        }
+    })
+}

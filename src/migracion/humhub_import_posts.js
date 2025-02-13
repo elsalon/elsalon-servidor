@@ -331,7 +331,7 @@ const ImportPost = async (post) => {
     // Imagenes y archivos. Convertir array de ids en formato [{imagen:id}]
     imagenes = imagenes.map(i => ({ imagen: i }));
     archivos = archivos.map(i => ({ archivo: i }));
-
+    const fecha = new Date(post.content.metadata.created_at).toISOString();
     // TODO Parse markdown y formato especial de imagenes
     let data = {
         autor: autor.id, // id es el id de payload al importar
@@ -343,7 +343,8 @@ const ImportPost = async (post) => {
         embedsVimeo, 
         embedsYoutube,
         sala: sala ? sala.id : null,
-        createdAt: new Date(post.content.metadata.created_at).toISOString()
+        createdAt: fecha,
+        lastActivity: fecha,
     }
 
     try {

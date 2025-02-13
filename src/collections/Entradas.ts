@@ -49,6 +49,17 @@ const Entradas: CollectionConfig = {
             name: 'destacada',
             type: 'checkbox',
         },
+        {
+            // Usada para ordenar las entradas y poder actualizarlo cuando alguien comenta
+            // Y vaya para arriba. Pero no quiero usar updatedAt para no subir las que fueron editadas
+            name: 'lastActivity', 
+            type: 'date',
+            admin: {
+                date: {
+                  pickerAppearance: 'dayAndTime',
+                },
+            },
+        }
     ],
 
     endpoints: [

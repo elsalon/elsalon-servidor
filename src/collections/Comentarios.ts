@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminAutorOrIntegrante, CrearExtracto, PublicadasYNoBorradas, SoftDelete, PopulateAprecios, LimpiarContenido} from '../helper'
+import { isAdminAutorOrIntegrante, CrearExtracto, PublicadasYNoBorradas, SoftDelete, PopulateAprecios, LimpiarContenido, ActualizarActividadEntrada} from '../helper'
 import { NotificarNuevoComentario, NotificarGrupoNuevoComentario, NotificarMencionComentario } from '../hooks/Notificaciones/NotificationsHooks'
 import { NotificarMailComentario } from '../GeneradorNotificacionesMail'
 import { Campos } from './CamposEntradasYComentarios'
@@ -33,6 +33,7 @@ const Comentarios: CollectionConfig = {
                 NotificarGrupoNuevoComentario(c, entrada),
                 NotificarMencionComentario(c, entrada)
                 NotificarMailComentario(c, entrada);
+                ActualizarActividadEntrada(entrada);
             },
         ],
         afterRead: [

@@ -132,10 +132,10 @@ export const feed = async (req, res, next) => {
         let query = {
             and:[
                 {
-                    createdAt: { greater_than_equal: startDate },
+                    lastActivity: { greater_than_equal: startDate },
                 },
                 {
-                    createdAt: { less_than_equal: endDate },
+                    lastActivity: { less_than_equal: endDate },
                 },
                 {
                     or: [
@@ -166,7 +166,7 @@ export const feed = async (req, res, next) => {
                 and: [
                     query,
                     {
-                        createdAt: { greater_than: new Date(createdGreaterThan) }
+                        lastActivity: { greater_than: new Date(createdGreaterThan) }
                     }
                 ]
             }
@@ -175,7 +175,7 @@ export const feed = async (req, res, next) => {
         const feed = await req.payload.find({
             collection: 'entradas',
             where: query,
-            sort: "-createdAt",  // Ordenar por fecha de creación, de más reciente a más antigua
+            sort: "-lastActivity",  // Ordenar por fecha de creación, de más reciente a más antigua
             limit: 5,
             page: parseInt(page) || 1,
             overrideAccess: false,
