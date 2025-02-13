@@ -1,6 +1,7 @@
 import { SlugField } from '../SlugField'
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrIntegrante } from '../helper'
+import { isAdminOrIntegrante, SacarEmojis } from '../helper'
+import { NotificarNuevoGrupo } from '../hooks/Notificaciones/NotificationsHooks'
 
 const Grupos: CollectionConfig = {
     slug: 'grupos',
@@ -10,6 +11,24 @@ const Grupos: CollectionConfig = {
     access: {
         update: isAdminOrIntegrante,
         delete: isAdminOrIntegrante,
+    },
+    hooks: {
+        beforeChange: [
+            async ({ data }) => {
+                // Saco los emojis del nombre     
+                if (data.nombre) {
+                    data.nombre = SacarEmojis(data.nombre);
+                }
+                return data;
+            },
+            async ({ operation, data, req }) => {
+                // Revisar que no haya integrantes duplicados
+                if (data.integrantes) {
+                    data.integrantes = Array.from(new Set(data.integrantes));
+                }
+            },
+        ],
+        afterChange:[ NotificarNuevoGrupo ],
     },
     fields: [
         {

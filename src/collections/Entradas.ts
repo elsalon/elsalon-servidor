@@ -1,8 +1,7 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete } from '../helper'
-import { NotificarNuevaEntrada, NotificarMencionEntrada } from '../GeneradorNotificacionesWeb'
+import { isAdminAutorOrIntegrante, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios, LimpiarContenido } from '../helper'
+import { NotificarGrupoNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
 import { Campos } from './CamposEntradasYComentarios'
-import payload from 'payload'
 
 const Entradas: CollectionConfig = {
     slug: 'entradas',
@@ -11,15 +10,16 @@ const Entradas: CollectionConfig = {
     },
     access: {
         read: PublicadasYNoBorradas,
-        update: isAdminOrAutor,
-        delete: isAdminOrAutor,
+        update: isAdminAutorOrIntegrante,
+        delete: isAdminAutorOrIntegrante,
     },
     hooks: {
         beforeChange: [
             ValidarEntradaVacia,
+            LimpiarContenido,
             CrearExtracto,
-            async ({ operation, data, req }) => {
-                if (operation === 'create' && req.user) {
+            async ({ data, req }) => {
+                if (req.user) {
                     data.autor = req.user.id; // El autor es el usuario actual
                     return data;
                 }
@@ -27,35 +27,12 @@ const Entradas: CollectionConfig = {
             // TODO revisar que si se esta fijando/desfijando o destacando/desdestacando, se chequee que el usuario sea admin o docente
         ],
         afterChange: [
-            NotificarNuevaEntrada,
+            NotificarGrupoNuevaEntrada, // Al resto de integrantes del grupo
             NotificarMencionEntrada,
         ],
         afterRead: [
-            async ({ doc, context }) => {
-                // Fetch de los comentarios
-                if (context.skipHooks) return;
-                var comentarios = await payload.find({
-                    collection: 'comentarios',
-                    where: {
-                        and: [
-                            {
-                                entrada: {
-                                    equals: doc.id,
-                                },
-                            },
-                            {
-                                isDeleted: {
-                                    not_equals: true,
-                                }
-                            }
-                        ]
-                    },
-                    limit: 3,
-                    sort: '-createdAt',
-                });
-                comentarios.docs = comentarios.docs.length ? comentarios.docs.reverse() : [];
-                doc.comentarios = comentarios;
-            }
+            PopulateComentarios,
+            PopulateAprecios,
         ],
     },
     admin: {

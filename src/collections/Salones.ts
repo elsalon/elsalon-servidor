@@ -77,7 +77,17 @@ const Salones: CollectionConfig = {
             admin: {
                 position: 'sidebar',
             }
-        }
+        },
+        {
+            name: 'eventos',
+            type: 'group',
+            fields: [
+                {
+                    name: 'activar',
+                    type: 'checkbox',
+                }
+            ]
+        },
     ],
 
     endpoints: [
@@ -104,27 +114,27 @@ const Salones: CollectionConfig = {
 
                     const user = req.user;
 
-                    let idsSalonesColabora: string[] = [globals.elSalonId]; // Incluyo el salon principal
-                    let idsUsuariosColabora: string[] = [];
-                    let idsGruposColabora: string[] = [];
+                    let idsSalonesEnlazado: string[] = [globals.elSalonId]; // Incluyo el salon principal
+                    let idsUsuariosEnlazado: string[] = [];
+                    let idsGruposEnlazado: string[] = [];
 
-                    const colaboraciones = await req.payload.find({
-                        collection: 'colaboraciones',
+                    const enlaces = await req.payload.find({
+                        collection: 'enlaces',
                         where: {
                             autor: { equals: user.id },
                         },
                     });
 
-                    colaboraciones.docs.forEach((colaboracion) => {
-                        switch (colaboracion.tipo) {
+                    enlaces.docs.forEach((enlace) => {
+                        switch (enlace.tipo) {
                             case 'salon':
-                                idsSalonesColabora.push(colaboracion.idColaborador as string);
+                                idsSalonesEnlazado.push(enlace.idEnlazado as string);
                                 break;
                             case 'bitacora':
-                                idsUsuariosColabora.push(colaboracion.idColaborador as string);
+                                idsUsuariosEnlazado.push(enlace.idEnlazado as string);
                                 break;
                             case 'grupo':
-                                idsGruposColabora.push(colaboracion.idColaborador as string);
+                                idsGruposEnlazado.push(enlace.idEnlazado as string);
                                 break;
                         }
                     });
@@ -135,13 +145,13 @@ const Salones: CollectionConfig = {
                                 autor: { equals: user.id }
                             },
                             {
-                                sala: { in: idsSalonesColabora }
+                                sala: { in: idsSalonesEnlazado }
                             },
                             {
-                                autor: { in: idsUsuariosColabora }
+                                autor: { in: idsUsuariosEnlazado }
                             },
                             {
-                                grupo: { in: idsGruposColabora }
+                                grupo: { in: idsGruposEnlazado }
                             },
                             {
                                 destacada: { equals: true }
@@ -186,7 +196,7 @@ const Salones: CollectionConfig = {
                         collection: 'entradas',
                         where: query,
                         sort: "-createdAt",
-                        limit: 5,
+                        limit: 12,
                         page: page,
                         overrideAccess: false,
                         user: req.user,

@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, CrearExtracto, PublicadasYNoBorradas, SoftDelete, } from '../helper'
-import { NotificarNuevoComentario, NotificarMencionComentario } from '../GeneradorNotificacionesWeb'
+import { isAdminAutorOrIntegrante, CrearExtracto, PublicadasYNoBorradas, SoftDelete, PopulateAprecios, LimpiarContenido} from '../helper'
+import { NotificarNuevoComentario, NotificarGrupoNuevoComentario, NotificarMencionComentario } from '../hooks/Notificaciones/NotificationsHooks'
 import { NotificarMailComentario } from '../GeneradorNotificacionesMail'
 import { Campos } from './CamposEntradasYComentarios'
 
@@ -11,14 +11,15 @@ const Comentarios: CollectionConfig = {
     },
     access: {
         read: PublicadasYNoBorradas,
-        update: isAdminOrAutor,
-        delete: isAdminOrAutor,
+        update: isAdminAutorOrIntegrante,
+        delete: isAdminAutorOrIntegrante,
     },
     hooks: {
         beforeChange: [
+            LimpiarContenido,
             CrearExtracto,
-            async ({ operation, data, req }) => {
-                if (operation === 'create' && req.user) {
+            async ({data, req }) => {
+                if (req.user) {
                     // console.log('New entry created', data);
                     data.autor = req.user.id; // El autor es el usuario actual
                     return data;
@@ -29,10 +30,14 @@ const Comentarios: CollectionConfig = {
             async (c) => {
                 const entrada = await c.req.payload.findByID({ collection: 'entradas', id: c.doc.entrada });
                 NotificarNuevoComentario(c, entrada);
-                NotificarMailComentario(c, entrada);
+                NotificarGrupoNuevoComentario(c, entrada),
                 NotificarMencionComentario(c, entrada)
+                NotificarMailComentario(c, entrada);
             },
-        ]
+        ],
+        afterRead: [
+            PopulateAprecios,
+        ],
     },
     admin: {
         group: 'Interacciones',

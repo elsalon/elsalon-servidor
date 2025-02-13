@@ -7,7 +7,7 @@ const Notificaciones: CollectionConfig = {
         group: 'Interacciones',
     },
     access:{
-        read: isAutor, // isAutor,
+        read: isAdminOrAutor,
         create: isAdmin,
         update: isAdminOrAutor,
         delete: isAdminOrAutor,
@@ -21,30 +21,29 @@ const Notificaciones: CollectionConfig = {
             relationTo: 'users',
         },
         {
-            name: 'tipoNotificacion',
+            name: 'mensaje',
+            type: 'text',
+        },
+        {
+            name: 'identidad',
+            type: 'relationship',
+            relationTo: ['users', 'grupos', 'salones'],
+        },
+        {
+            name: 'link',
+            type: 'relationship',
+            relationTo: ['entradas', 'grupos', 'salones', 'users'],
+        },
+        {
+            name: 'categoria',
             type: 'select',
-            options: ['aprecio', 'comentario', 'mencion', 'colaboracion', 'comentario-grupal', 'entrada-grupal'],
-        },
-        {
-            name: 'cantidad',
-            type: 'number',
-            defaultValue: 0,
-        },
-        {
-            name: 'usuario',
-            type: 'relationship',
-            relationTo: 'users',
-        },
-        {
-            name: 'sourceDocument',
-            type: 'relationship',
-            relationTo: ['entradas', 'comentarios', 'grupos', 'salones', 'users'],
+            options: ['aprecio', 'comentario', 'mencion', 'actividad-grupo', 'acciones-grupo', 'enlace', 'evento']
         },
         {
             name: 'leida',
             type: 'checkbox',
             defaultValue: false,
-        }
+        },
     ],
     endpoints:[
         {
@@ -65,6 +64,74 @@ const Notificaciones: CollectionConfig = {
                         },
                     });
                     return res.json({ result });
+                } catch (error) {
+                    console.error('Error', error);
+                    return res.status(500).json({ error: 'Internal Server Error' });
+                }
+            }
+        },
+        {
+            path: '/nuevas',
+            method: 'get',
+            handler: async (req, res, next) => {
+                if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
+                try {
+                    const userId = req.user?.id; // Obteniendo el ID del usuario actual
+                    const includeDocs = req.query.includeDocs || false;
+                    // Buscar todas las notificaciones no leídas
+                    const fechaLecturaNotificaciones = req.user.lectura_notificaciones || 0;
+                    let result;
+                    const where = {
+                        and: [
+                            { autor: { equals: userId } },
+                            { createdAt: { greater_than_equal: fechaLecturaNotificaciones } },
+                        ]
+                    }
+                    if(includeDocs){
+                        // Buscar todas las notificaciones no leídas
+                        result = await req.payload.find({
+                            collection: 'notificaciones',
+                            where,
+                            sort: 'updatedAt',
+                            limit: 10,
+                        });
+                        // Asumo que la ventana está abierta asi que si hay notificaciones, actualizo la fecha de lectura
+                        if(result.docs.length > 0){
+                            await req.payload.update({
+                                collection: 'users',
+                                id: userId,
+                                data: {
+                                    lectura_notificaciones: new Date(),
+                                },
+                            });
+                        }
+                    }else{
+                        // Solo cuento las notificaciones no leídas
+                        result = await req.payload.count({collection: 'notificaciones', where});
+                    }
+                    return res.json({ result });
+                } catch (error) {
+                    console.error('Error', error);
+                    return res.status(500).json({ error: 'Internal Server Error' });
+                }
+            }
+        },
+        {
+            path: '/resetnuevas',
+            method: 'patch',
+            handler: async (req, res, next) => {
+                if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
+                try {
+                    const userId = req.user?.id; // Obteniendo el ID del usuario actual
+                    // Marcar todas las notificaciones como leídas
+                    const result = await req.payload.update({
+                        collection: 'users',
+                        id: userId,
+                        data: {
+                            lectura_notificaciones: new Date(),
+                        },
+                    });
+                    return res.status(200).json( result );
                 } catch (error) {
                     console.error('Error', error);
                     return res.status(500).json({ error: 'Internal Server Error' });

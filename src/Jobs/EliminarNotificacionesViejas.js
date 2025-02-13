@@ -24,7 +24,7 @@ const TareaEliminarNotificaciones = async () =>{
                     leida: {
                         equals: true
                     },
-                    createdAt: {
+                    updatedAt: {
                         less_than: haceDosSemanas
                     }
                 }

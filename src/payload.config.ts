@@ -22,12 +22,13 @@ import Comisiones from './collections/Comisiones'
 import Imagenes from './collections/Imagenes';
 import Archivos from './collections/Archivos';
 import Avatares from './collections/Avatares';
-import Colaboraciones from './collections/Colaboraciones';
+import Enlaces from './collections/Enlaces';
 import Aprecio from './collections/Aprecio'
 import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
 import Etiquetas from './collections/Etiquetas'
 import MailQueue from './collections/MailQueue'
+import Eventos from './collections/Eventos'
 
 // DigitalOcean Spaces
 const DOSpacesAdapter = s3Adapter({
@@ -55,7 +56,15 @@ export default buildConfig({
     user: Users.slug,
     bundler: webpackBundler(),
   },
+  // Desactivar rateLimit, por estar detras de un proxy toma todos los requests del mismo IP
+  // https://payloadcms.com/docs/v2/production/preventing-abuse#rate-limiting-requests
+  rateLimit:{
+    trustProxy: true,
+  },
   editor: slateEditor({}),
+  globals: [
+    Ajustes,
+  ],
   collections: [
     Users,
     Grupos,
@@ -63,18 +72,16 @@ export default buildConfig({
     Comisiones,
     Entradas,
     Comentarios,
-    Colaboraciones,
+    Enlaces,
     Aprecio,
     Imagenes,
     Archivos,
     Avatares,
     Notificaciones,
     Fijadas,
+    Eventos,
     Etiquetas,
     MailQueue,
-  ],
-  globals: [
-    Ajustes,
   ],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),

@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, afterCreateAssignAutorToUser } from '../helper'
-import { NotificarAprecio } from '../GeneradorNotificacionesWeb'
+import { isAdminOrAutor, afterCreateAssignAutorToUser, PopulateAprecios } from '../helper'
+import { NotificarAprecio } from '../hooks/Notificaciones/NotificationsHooks'
 
 const Aprecio: CollectionConfig = {
   slug: 'aprecio',
@@ -13,7 +13,7 @@ const Aprecio: CollectionConfig = {
   },
   hooks: {
     beforeChange: [afterCreateAssignAutorToUser],
-    afterChange: [NotificarAprecio]
+    afterChange: [NotificarAprecio],
   },
   fields: [
     {
@@ -25,107 +25,108 @@ const Aprecio: CollectionConfig = {
       name: 'contenidoid',
       type: 'text',
       index: true,
+    },
+    {
+      name: 'contenidotipo',
+      type: 'text',
     }
   ],
   endpoints: [
-    {
-      path: '/batch',
-      method: 'get', // POST to handle array input
-      handler: async (req, res) => {
-        if (!req.user) {
-          return res.status(401).json({ error: 'Unauthorized' });
-        }
+    // {
+    //   path: '/batch',
+    //   method: 'get', // POST to handle array input
+    //   handler: async (req, res) => {
+    //     if (!req.user) {
+    //       return res.status(401).json({ error: 'Unauthorized' });
+    //     }
+        
+    //     interface Like {
+    //       contenidoid: string; // or number, depending on your actual data type
+    //     }
+        
+    //     try {
+    //       var { ids } = req.query as { ids: string };
+    //       if (!ids?.trim()) {
+    //         return res.status(400).json({ error: 'Missing ids parameter' });
+    //       }
+    //       const postIds = ids.split(',');
+    //       if (!Array.isArray(postIds) || postIds.length === 0) {
+    //         return res.status(400).json({ error: 'Invalid or empty postIds array' });
+    //       }
 
-        interface Like {
-          contenidoid: string; // or number, depending on your actual data type
-        }
+    //       const userId = req.user.id;
 
-        try {
-          const { ids } = req.query as { ids: string };
-          const postIds = ids.split(',');
-          if (!Array.isArray(postIds) || postIds.length === 0) {
-            return res.status(400).json({ error: 'Invalid or empty postIds array' });
-          }
+    //       // Fetch all likes for the provided post IDs
+    //       const likesData = await req.payload.find({
+    //         collection: 'aprecio',
+    //         where: {
+    //           contenidoid: { in: postIds }, // Match any of the provided post IDs
+    //         },
+    //         depth: 1,
+    //         limit: 1000, // Adjust limit based on expected maximum number of likes
+    //       });
 
-          const userId = req.user.id;
+    //       // Group likes by post ID
+    //       const likesCount = postIds.reduce((acc, postId) => {
+    //         acc[postId] = [];
+    //         return acc;
+    //       }, {} as Record<string, number>);  // Explicitly type as Record<string, number>
 
-          // Fetch all likes for the provided post IDs
-          const likesData = await req.payload.find({
-            collection: 'aprecio',
-            where: {
-              contenidoid: { in: postIds }, // Match any of the provided post IDs
-            },
-            depth: 0,
-            limit: 1000, // Adjust limit based on expected maximum number of likes
-          });
+    //       likesData.docs.forEach((like: any) => {
+    //         // Assert that like has the `contenidoid` property as expected
+    //         // const typedLike = like as Like;
 
-          // Group likes by post ID
-          const likesCount = postIds.reduce((acc, postId) => {
-            acc[postId] = 0;
-            return acc;
-          }, {} as Record<string, number>);  // Explicitly type as Record<string, number>
+    //         if (likesCount[like?.contenidoid] !== undefined) {
+    //           const autor = {id: like.autor.id, nombre: like.autor.nombre, slug: like.autor.slug};
+    //           likesCount[like?.contenidoid].push({autor});
+    //         }
+    //       });
 
-          likesData.docs.forEach((like: unknown) => {
-            // Assert that like has the `contenidoid` property as expected
-            const typedLike = like as Like;
+    //       // Check which posts the user has liked
+    //       // const userLikes = likesData.docs.filter((like) => like.autor === userId);
 
-            if (likesCount[typedLike.contenidoid] !== undefined) {
-              likesCount[typedLike.contenidoid]++;
-            }
-          });
+    //       // Map the results into the desired format
+    //       const results = postIds.map((postId) => ({
+    //         contenidoid: postId,
+    //         totalDocs: likesCount[postId].length || 0,
+    //         docs: likesCount[postId] || [],
+    //         haApreciado: likesCount[postId].some((like: any) => like.autor.id === userId),
+    //       }));
 
-          // Check which posts the user has liked
-          const userLikes = likesData.docs.filter((like) => like.autor === userId);
-
-          // Map the results into the desired format
-          const results = postIds.map((postId) => ({
-            contenidoid: postId,
-            totalDocs: likesCount[postId] || 0,
-            haApreciado: userLikes.some((like) => like.contenidoid === postId),
-          }));
-
-          res.status(200).json(results);
-        } catch (error) {
-          console.error('Error fetching likes', error);
-          res.status(500).json({ error: 'Error fetching likes' });
-        }
-      }
-    },
+    //       res.status(200).json(results);
+    //     } catch (error) {
+    //       console.error('Error fetching likes', error);
+    //       res.status(500).json({ error: 'Error fetching likes' });
+    //     }
+    //   }
+    // },
     {
       path: '/:contenidoid',
       method: 'get',
       handler: async (req, res, next) => {
+        // Piso el get /id para que devuelva los aprecios de un contenido
         // console.log('GET /aprecio/:contenidoid');
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
         try {
           const { contenidoid } = req.params;
-          const userId = req.user?.id; // Obteniendo el ID del usuario actual
-          // Obtener si el usuario actual ha apreciado este contenido
-          const hasApreciado = await req.payload.find({
-            collection: 'aprecio',
-            where: {
-              autor: { equals: userId },
-              contenidoid: { equals: contenidoid },
-            },
-            limit: 1,
-          });
+          const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 3;
 
+          console.log('GET /aprecio/:contenidoid', { contenidoid }, {limit});
           // Obtener los últimos 5 aprecios para este contenido
           const aprecios = await req.payload.find({
             collection: 'aprecio',
             where: {
               contenidoid: { equals: contenidoid },
             },
-            limit: 5,
+            limit,
+            overrideAccess: false,
+            user: req.user,
           });
+          // console.log(aprecios)
 
           // Retornar siempre arrays vacíos si no hay documentos
-          res.status(200).json({
-            docs: aprecios.docs || [],  // Si no hay documentos, devolver un array vacío
-            totalDocs: aprecios.totalDocs || 0,  // Si no hay aprecios, devolver 0
-            haApreciado: (hasApreciado.docs && hasApreciado.docs.length > 0) ? hasApreciado.docs[0].id : false,  // True si el usuario ha apreciado
-          });
+          res.status(200).json(aprecios);
         } catch (error) {
           console.error('Error fetching aprecios', error);
           res.status(500).json({ error: 'Error fetching aprecios' });

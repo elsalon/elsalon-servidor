@@ -1,4 +1,4 @@
-import { isAdminOrSelf } from '../helper';
+import { isAdminOrSelf, SacarEmojis } from '../helper';
 import { SlugField } from '../SlugField'
 import { simpleEmailTemplate } from '../emailTemplates'
 
@@ -80,6 +80,15 @@ const Users = {
   },
 
   hooks: {
+    beforeChange: [
+      async ({ data }) => {
+        // Saco los emojis del nombre
+        if (data.nombre) {
+          data.nombre = SacarEmojis(data.nombre);
+        }
+        return data;
+      },
+    ]
   },
 
   fields: [
@@ -149,6 +158,19 @@ const Users = {
       defaultValue: false,
     },
     {
+      name: 'lectura_notificaciones',
+      type: 'date',
+      admin: {
+        date: {
+          pickerAppearance: 'dayAndTime',
+        },
+      },
+      access: {
+        read: isAdminOrSelf,
+        update: isAdminOrSelf,
+      },
+    },
+    {
       name: 'notificacionesMail',
       type: 'group',
       access: {
@@ -162,10 +184,10 @@ const Users = {
           defaultValue: true,
         },
         // {
-        //   name: 'colaboradorNuevo',
+        //   name: 'enlaceNuevo',
         //   type: 'checkbox',
         //   defaultValue: true,
-        //   // Recibir notificacion cuando alguien te sigue
+        //   // Recibir notificacion cuando alguien se enlaza
         // },
         // {
         //   name: 'grupoNuevo',

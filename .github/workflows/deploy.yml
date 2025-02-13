@@ -28,8 +28,8 @@ jobs:
             chmod +x restore_db.sh
             ./backup_db.sh
             docker-compose restart
-            sleep 60  # Wait for a minute
-            docker-compose run --rm payload yarn migrate
+            # sleep 60  # Wait for a minute
+            # docker-compose run --rm payload yarn migrate
 
   deploy-test:
     if: github.ref == 'refs/heads/test'
@@ -52,5 +52,5 @@ jobs:
             chmod +x restore_db.sh
             ./backup_db.sh
             docker-compose restart
-            sleep 60  # Wait for a minute
-            docker-compose run --rm payload yarn migrate
+            # sleep 60  # Wait for a minute
+            # docker-compose run --rm payload yarn migrate

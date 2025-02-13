@@ -24,14 +24,14 @@ Contenido destacado. Los docentes tienen la opción de destacar contenido para p
 ### Contenido Fijado
 Esta es una función que la versión anterior ya contaba, pero ocurría muy seguido que el contenido no era desfijado, haciendo que las salas se tapen de contenido importante como distintas fechas de entrega en la parte de arriba y todo el contenido nuevo quede perdido. Para remediar esto los contenidos fijados tienen una opción de vencimiento, similar a la de whatsapp. Al fijar una ventana da la opción de duración a asignarle (24hrs / 7 dias / 30 dias / hasta fin de año). Internamente cada opción llena un campo de fecha de vencimiento de cada fijada y revisa diariamente para remover las que tienen una fecha ya vencida.
 
-### Colaboraciones
-El funcionamiento es el mismo como el antes conocido *seguir* pero, al igual que apreciar, la manera de nombrar es también la forma de dictar una relación. Por eso en vez de seguir como verbo pasivo, se implementó la colaboración para entender el intercambio como un trabajo activo.
+### Enlaces
+El funcionamiento es el mismo como el antes conocido *seguir* pero, al igual que apreciar, la manera de nombrar es también la forma de dictar una relación. Por eso en vez de seguir como verbo pasivo, se implementaron los enlaces para entender el intercambio como un trabajo activo.
 
 ### Búsqueda
 Esta función siempre funcionó de manera incómoda en HumHub, por cuestiones técnicas o de diseño. En el nuevo Salón priorizamos que la búsqueda sea clara y cómoda, por eso permite elegir sobre qué colección busacar: usuarios, entradas o grupos.
 
 ### Filtro por Comisiones
-Para los docentes navegar por los aportes de una comisión siempre fue confuso. En el nuevo Salón, los alumnxs pueden colaborar no solo en una sala, sino también dentro de una comisión específica.
+Para los docentes navegar por los aportes de una comisión siempre fue confuso. En el nuevo Salón, los alumnxs pueden enlazarse no solo en una sala, sino también dentro de una comisión específica.
 Esta nueva funcionalidad genera una vista unificada que agrupa automáticamente:
 
 - Todas las entradas individuales de los usuarios de la comisión

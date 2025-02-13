@@ -1,10 +1,34 @@
 // Helper functions
 import { Access, FieldAccess } from 'payload/types';
 import payload from 'payload';
-import { EnviarMailMencion } from './GeneradorNotificacionesMail';
-import { NotificarMencionEntrada, NotificarMencionComentario } from './GeneradorNotificacionesWeb';
+
+const trimHtml = (html) => {
+    return html
+        // Remove empty paragraphs or paragraphs with just a line break
+        .replace(/<p>\s*<br>\s*<\/p>/g, '')
+        .replace(/<p>\s*<\/p>/g, '')
+        // Remove leading/trailing whitespace within paragraphs
+        .replace(/<p>\s+/g, '<p>')
+        .replace(/\s+<\/p>/g, '</p>')
+        // Trim the whole string
+        .trim();
+}
+
+export const LimpiarContenido = async ({ data }) => {
+    data.contenido = trimHtml(data.contenido);
+    return data;
+}
+
+export const SacarEmojis = (texto: string) => {
+    return texto.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
+}
 
 // Helper acces function
+export const isLoggedIn: Access = ({ req: user }) => {
+    console.log("is logged in", Boolean(user));
+    return Boolean(user)
+};
+
 export const isAutor: Access = ({ req: { user }, id }) => {
     if (!user) return false;
     return {
@@ -24,7 +48,7 @@ export const isAdminOrAutor: Access = ({ req: { user }, id }) => {
     };
 };
 
-export const isAdminOrIntegrante: Access = ({ req: { user }, id }) => {
+export const isAdminOrIntegrante: Access = ({ req: { user } }) => {
     if (!user) return false;
     if (user.isAdmin) return true;
     return {
@@ -33,7 +57,25 @@ export const isAdminOrIntegrante: Access = ({ req: { user }, id }) => {
         },
     };
 };
-
+export const isAdminAutorOrIntegrante: Access = ({ req: { user } }) => {
+    if (!user) return false;
+    if (user.isAdmin) return true;
+    if (user.isAdmin) return true;
+    return {
+        or: [
+            {
+                'autor': {
+                    equals: user.id,
+                },
+            },
+            {
+                'grupo.integrantes': {
+                    contains: user.id,
+                },
+            },
+        ]
+    }
+}
 export const isAdminOrSelf: Access = ({ req: { user }, id }) => {
     if (!user) return false;
     if (user.isAdmin) return true;
@@ -64,35 +106,13 @@ export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
     if (operation === 'create') return doc.mencionados;
 
     // UPDATE
+    // console.log(previousDoc.mencionados, doc.mencionados);
     if (!previousDoc.mencionados?.length && !doc.mencionados?.length) return [];
-    let viejosMencionados = previousDoc.mencionados.map(m => m.id);
-    let nuevosMencionados = doc.mencionados.map(m => m.id).filter(m => !viejosMencionados.includes(m));
+    let viejosMencionados = previousDoc.mencionados.map(m => m.value);
+    let nuevosMencionados = doc.mencionados.filter(m => !viejosMencionados.includes(m.value.id));
     return nuevosMencionados;
 }
 
-// export const HandleMencionados = async ({
-//     doc, // full document data
-//     req, // full express request
-//     previousDoc, // document data before updating the collection
-//     operation, // name of the operation ie. 'create', 'update'
-// }) => {
-//     const collection = req.collection.config.slug;
-//     if(operation === 'create'){
-//         doc.mencionados?.forEach(async (mencionado) => {
-//             if(collection == "comentarios"){
-//                 NotificarMencionComentario(mencionado, doc);
-//             // NotificarMencion(mencionado, doc, collection)
-//             EnviarMailMencion(mencionado, doc, collection);
-//         });
-//     }else if (operation === 'update'){
-//         let viejosMencionados = previousDoc.mencionados.map(m => m.id);
-//         let nuevosMencionados = doc.mencionados.map(m => m.id).filter(m => !viejosMencionados.includes(m));
-//         nuevosMencionados.forEach(async (mencionado) => {
-//             NotificarMencion(mencionado, doc, collection)
-//             EnviarMailMencion(mencionado, doc, collection);
-//         });
-//     }
-// };
 
 export const CrearExtracto = async ({ operation, data, req, context }) => {
     if (context.skipHooks) return data;
@@ -108,11 +128,13 @@ export const CrearExtracto = async ({ operation, data, req, context }) => {
         }
 
         // Updated regex patterns
-        const mentionRegex = /\[([^\]]+)\]\(mencion:[a-zA-Z0-9]+\)/g;
+        const mentionGrupoRegex = /\[([^\]]+)\]\(grupo:[a-zA-Z0-9]+\)/g;
+        const mentionUserRegex = /\[([^\]]+)\]\(usuario:[a-zA-Z0-9]+\)/g;
         const tagRegex = /\[([^\]]+)\]\(etiqueta:[a-zA-Z0-9]+\)/g;
 
         // Convert mentions and hashtags to plain text
-        text = convertToPlainText(text, mentionRegex, "@");
+        text = convertToPlainText(text, mentionGrupoRegex, "@");
+        text = convertToPlainText(text, mentionUserRegex, "@");
         text = convertToPlainText(text, tagRegex, "#");
 
         // Remove HTML tags and get first 120 characters
@@ -150,7 +172,6 @@ export const PublicadasYNoBorradas: Access = ({ req }) => {
     if (reqIsAdminSite) {
         return true;
     }
-
     return {
         isDeleted: {
             not_equals: true,
@@ -173,74 +194,139 @@ export const PublicadasYNoBorradas: Access = ({ req }) => {
     };
 }
 
-export const SoftDelete  = (collection: string) => {
- return async (req, res) => {
-      const { id } = req.params;
-      const { user } = req;
-      if (!user) {
-        res.status(401).json({
-          message: 'Unauthorized no user',
-        });
-        return;
-      }
+export const SoftDelete = (collection: string) => {
+    try {
+        return async (req, res) => {
+            const { id } = req.params;
+            const { user } = req;
+            if (!user) {
+                res.status(401).json({
+                    message: 'Unauthorized no user',
+                });
+                return;
+            }
 
-      const reqIsAdminSite = req.headers?.referer?.includes('/admin') === true;
-      if(reqIsAdminSite){
-          // Lo borramos en serio
-          await req.payload.delete({
-              collection,
-              id,
-          });
-          return;
-      }
-      
-      const doc = await req.payload.findByID({
-          collection,
-          id,
-      });
-      if(!doc){
-          res.status(404).json({
-              message: 'Document not found',
-          });
-          return;
-      }
-      if(doc.isDeleted){
-          res.status(404).json({
-              message: 'Document already deleted',
-          });
-          return;
-      }
-      if(doc.autoriaGrupal){
-            const integrantesIds = doc.grupo?.integrantes?.map(i => i.id);
-          if(!integrantesIds.includes(user.id)){
-              res.status(401).json({
-                  message: 'Unauthorized not integrante',
-              });
-              return;
-          }
-      }else{
-          if(doc.autor.id != user.id){
-              res.status(401).json({
-                  message: 'Unauthorized not autor',
-              });
-              return;
-          }
-      }
-      
-      await req.payload.update({
-        collection,
-        id,
-        data: {
-          isDeleted: true,
-          deletedAt: new Date(),
-          deletedBy: req.user?.id,
-        },
-      });
-      
-      res.status(200).json({
-        message: 'Document deleted successfully',
-        doc: { id }
-      });
+            const reqIsAdminSite = req.headers?.referer?.includes('/admin') === true;
+            if (reqIsAdminSite) {
+                // Lo borramos en serio
+                await req.payload.delete({
+                    collection,
+                    id,
+                });
+                return;
+            }
+
+            const doc = await req.payload.findByID({
+                collection,
+                id,
+                overrideAccess: false,
+                user: req.user,
+            });
+            if (!doc) {
+                res.status(404).json({
+                    message: 'Document not found',
+                });
+                return;
+            }
+            if (doc.isDeleted) {
+                res.status(404).json({
+                    message: 'Document already deleted',
+                });
+                return;
+            }
+            if (doc.autoriaGrupal) {
+                const integrantesIds = doc.grupo?.integrantes?.map(i => i.value.id);
+                if (!integrantesIds.includes(user.id)) {
+                    res.status(401).json({
+                        message: 'Unauthorized not integrante',
+                    });
+                    return;
+                }
+            } else {
+                if (doc.autor.id != user.id) {
+                    res.status(401).json({
+                        message: 'Unauthorized not autor',
+                    });
+                    return;
+                }
+            }
+            
+            await req.payload.update({
+                collection,
+                id,
+                overrideAccess: false,
+                user: req.user,
+                data: {
+                    isDeleted: true,
+                    deletedAt: new Date(),
+                    deletedBy: req.user?.id,
+                },
+            });
+            
+            // Si es una entrada, borramos si esta fijada
+            if (collection == 'entradas') {
+                await req.payload.delete({
+                    collection: 'fijadas',
+                    where: {
+                        entrada: {equals: id},
+                    },
+                });
+            }
+
+            res.status(200).json({
+                message: 'Document deleted successfully',
+                doc: { id }
+            });
+        }
+    } catch (e) {
+        console.log("Error en soft delete", e);
     }
 }
-  
+
+
+export const PopulateComentarios = async ({ doc, context, req }) => {
+    // Fetch de los comentarios
+    if (context.skipHooks) return;
+    if(!req.user) return;
+    
+    var comentarios = await payload.find({
+        collection: 'comentarios',
+        where: {
+            entrada: {
+                equals: doc.id,
+            },
+        },
+        overrideAccess: false,
+        user: req.user,
+        limit: 3,
+        sort: '-createdAt',
+    });
+    comentarios.docs = comentarios.docs.length ? comentarios.docs.reverse() : [];
+    doc.comentarios = comentarios;
+}
+
+export const PopulateAprecios = async ({ doc, context, req }) => {
+    if(!req.user) return;
+    if (context.skipHooks) return;
+
+    var aprecios = await payload.find({
+        collection: 'aprecio',
+        where: {
+            contenidoid: {
+                equals: doc.id,
+            },
+        },
+        overrideAccess: false,
+        user: req.user,
+        limit: 3,
+        depth: 1,
+        sort: '-createdAt',
+    });
+    // console.log("populate aprecios", doc.id);
+    aprecios.docs.forEach((aprecio) => {
+        // Reducimos el objeto
+        const autor = aprecio.autor as { id: string; nombre: string };
+        aprecio.autor = { id: autor.id, nombre: autor.nombre };
+    });
+    doc.aprecios = aprecios;
+}
