@@ -659,10 +659,12 @@ function ReplaceImgTags(htmlString, imagenesImportadas) {
         if (src && src.startsWith("file-guid:")) {
             const fileGuid = src.split(":")[1];
             const image = imagenesImportadas.find(i => i.hhguid == fileGuid);
-            const replacement = `[image:${image.id}]` // Formato propio de salon
-            // console.log(`Found image with src: ${src}`, image.id, replacement);
-            // Replace the entire <img> tag with the replacement content
-            $(img).replaceWith(replacement);
+            if(image){
+                const replacement = `[image:${image.id}]` // Formato propio de salon
+                // console.log(`Found image with src: ${src}`, image.id, replacement);
+                // Replace the entire <img> tag with the replacement content
+                $(img).replaceWith(replacement);
+            }
         }
     });
 
