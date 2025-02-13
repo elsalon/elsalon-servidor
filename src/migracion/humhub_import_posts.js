@@ -76,6 +76,7 @@ import payload from 'payload'
 import 'dotenv/config';
 import axios from 'axios'
 import path from 'path';
+import { mongooseAdapter } from '@payloadcms/db-mongodb'
 
 import fs from 'fs'; // Import the standard fs module
 import fsPromises from 'fs/promises'; // Import fs/promises for async operations
@@ -117,6 +118,9 @@ const init = async () => {
             fromName: 'Test',
             fromAddress: 'test@test.com',
         },
+        db: mongooseAdapter({
+            url: process.env.DATABASE_URI,
+        }),
         onInit: StartImport,
     })
 }

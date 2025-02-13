@@ -37,6 +37,9 @@ volumes:
 # Script migracion HumHub
 # docker-compose run --rm payload yarn migrate:humhub
 
+# Entrar a mongo shell
+# docker exec -it {my_mongo_container} mongosh
+
 # Script backup db
 # ./backup_db.sh
 
