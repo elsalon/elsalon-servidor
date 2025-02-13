@@ -12,10 +12,17 @@ async function BuscarComentarios(entradaid) {
   });
 }
 
-function Mensaje ({identidad, link, comentarios, comentario}) {
-    if(comentarios.totalDocs == 0) return `<strong>${identidad.nombre}</strong> comentó a tu grupo <strong>${link.grupo.nombre}</strong>: <strong>${comentario.extracto}</strong>`;
-    if(comentarios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> y alguien más comentaron a tu grupo <strong>${link.grupo.nombre}</strong>: <strong>${comentario.extracto}</strong>`;
-    return `<strong>${identidad.nombre}</strong> y ${comentarios.totalDocs - 1} más comentaron a tu grupo <strong>${link.grupo.nombre}</strong>: <strong>${comentario.extracto}</strong>`;
+function MensajeGrupo ({identidad, link, comentarios}) {
+    console.log({link})
+    if(comentarios.totalDocs == 0) return `<strong>${identidad.nombre}</strong> comentó a tu grupo <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
+    if(comentarios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> y alguien más comentaron a tu grupo <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
+    return `<strong>${identidad.nombre}</strong> y ${comentarios.totalDocs - 1} más comentaron a tu grupo <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
+}
+
+function MensajeUsuario({identidad, link, comentarios}){
+    if(comentarios.totalDocs == 0) return `<strong>${identidad.nombre}</strong> comentó <strong>${link.extracto}</strong>`;
+    if(comentarios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> y alguien más comentaron <strong>${link.extracto}</strong>`;
+    return `<strong>${identidad.nombre}</strong> y ${comentarios.totalDocs - 1} más comentaron <strong>${link.extracto}</strong>`;
 }
 
 /************************************************************
@@ -43,7 +50,7 @@ export class ComentarioGrupalEntradaGrupalHandler extends BaseNotificationHandle
         return { value: identidad.id, relationTo: 'grupos' };
     }
 
-    createMessage = Mensaje;
+    createMessage = MensajeGrupo;
 
     createLink({ link }) {
         return { value: link.id, relationTo: 'entradas' };
@@ -74,7 +81,7 @@ export class ComentarioUsuarioEntradaGrupalHandler extends BaseNotificationHandl
         return { value: identidad.id, relationTo: 'users' };
     }
 
-    createMessage = Mensaje;
+    createMessage = MensajeGrupo;
     
     createLink({ link }) {
         return { value: link.id, relationTo: 'entradas' };
@@ -101,7 +108,7 @@ export class ComentarioGrupalEntradaUsuarioHandler extends BaseNotificationHandl
         return { value: identidad.id, relationTo: 'grupos' };
     }
 
-    createMessage = Mensaje;
+    createMessage = MensajeUsuario;
     
     createLink({ link }) {
         return { value: link.id, relationTo: 'entradas' };
@@ -129,7 +136,7 @@ export class ComentarioUsuarioEntradaUsuarioHandler extends BaseNotificationHand
         return { value: identidad.id, relationTo: 'users' };
     }
 
-    createMessage = Mensaje;
+    createMessage = MensajeUsuario;
     
     createLink({ link }) {
         return { value: link.id, relationTo: 'entradas' };
