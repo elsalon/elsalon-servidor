@@ -158,7 +158,7 @@ const Users = {
       defaultValue: false,
     },
     {
-      name: 'lectura_notificaciones',
+      name: 'lecturaNotificaciones',
       type: 'date',
       admin: {
         date: {
@@ -168,6 +168,21 @@ const Users = {
       access: {
         read: isAdminOrSelf,
         update: isAdminOrSelf,
+      },
+    },
+    {
+      name: 'fechaOnboarding',
+      type: 'date',
+      // default to 0
+      defaultValue: () => new Date('1989-01-02').toISOString(),
+      access: {
+        read: isAdminOrSelf,
+        update: isAdminOrSelf,
+      },
+      admin: {
+        date: {
+          pickerAppearance: 'dayAndTime',
+        },
       },
     },
     {

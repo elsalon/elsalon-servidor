@@ -2,7 +2,7 @@ import { BaseNotificationHandler } from '../BaseNotificationHandler'
 import payload from 'payload';
 
 async function BuscarEnlazados(id) {
-    console.log("Buscando enlazados a", id)
+    // console.log("Buscando enlazados a", id)
     return payload.find({
         collection: 'enlaces',
         limit: 999,
@@ -52,7 +52,6 @@ export class EventoModificadoHandler extends BaseNotificationHandler{
         // Busco todos los enlazados a esta sala
         const salaId = typeof baseContext.evento.sala.id == 'object' ? baseContext.evento.sala.id.id : baseContext.evento.sala.id;
         const enlazados = await BuscarEnlazados(salaId);
-        console.log(enlazados)
         baseContext.enlazados = enlazados.docs;
         return baseContext;
     }
