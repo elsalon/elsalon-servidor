@@ -160,6 +160,7 @@ const CreateFileIfNotExists = async (filePath) => {
                 
                 // Create empty file
                 await fsPromises.writeFile(filePath, JSON.stringify([]));
+                console.log("Creado archivo", filePath)
             });
 
         const data = await fsPromises.readFile(filePath, 'utf8');
@@ -225,6 +226,8 @@ const LoadContainerToSala = async () => {
 const LoadLogsCreatedPosts = async () => {
     const filename = `humhub_importlogs_posts.json`
     const filePath = `src/migracion/logs/${filename}`;
+
+    await CreateFileIfNotExists(filePath);
 
     try {
         const data = await fsPromises.readFile(filePath, 'utf8');
