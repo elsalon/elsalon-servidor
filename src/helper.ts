@@ -331,13 +331,13 @@ export const PopulateAprecios = async ({ doc, context, req }) => {
     doc.aprecios = aprecios;
 }
 
-export const ActualizarActividadEntrada = (entrada) => {
-    console.log("Actualizanod lastActivity", entrada.id)
+export const ActualizarActividadEntrada = ({doc}, entrada) => {
     payload.update({
         collection: 'entradas',
         id: entrada.id,
+        context: {skipHooks: true},
         data:{
-            lastActivity: new Date()
+            lastActivity: doc.createdAt
         }
     })
 }

@@ -33,7 +33,7 @@ const Comentarios: CollectionConfig = {
                 NotificarGrupoNuevoComentario(c, entrada),
                 NotificarMencionComentario(c, entrada)
                 NotificarMailComentario(c, entrada);
-                ActualizarActividadEntrada(entrada);
+                ActualizarActividadEntrada(c, entrada);
             },
         ],
         afterRead: [
