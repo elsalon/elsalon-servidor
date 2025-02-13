@@ -207,6 +207,7 @@ const LoadContainerToSala = async () => {
                 }else{
                     // No se encontro sala, la creo
                     const res = await payload.create({
+                        context: {skipHooks:true},
                         collection: 'salones',
                         data: {
                             nombre: sala.slugpayload,
@@ -343,6 +344,7 @@ const ImportPost = async (post) => {
 
     try {
         const response = await payload.create({
+            context: {skipHooks:true},
             collection: 'entradas',
             data,
         });
@@ -396,6 +398,7 @@ async function ImportAprecios(hhpost, salonpost) {
             autor = await ImportUser(aprecio.createdBy);
         }
         await payload.create({
+            context: {skipHooks:true},
             collection: 'aprecio',
             data: {
                 contenidoid: salonpost.id,
@@ -472,6 +475,7 @@ async function ImportComment(hhcomment, salonpost) {
 
     try {
         const response = await payload.create({
+            context: {skipHooks:true},
             collection: 'comentarios',
             data,
         });
@@ -512,6 +516,7 @@ async function ProcessUploads(entry, autor) {
             // GUARDO Y SUBO LA IMAGEN
             try{
                 const res = await payload.create({
+                    context: {skipHooks:true},
                     collection: 'imagenes',
                     filePath: tempFilePath,
                     data: {
@@ -536,6 +541,7 @@ async function ProcessUploads(entry, autor) {
             // GUARDO Y SUBO EL ARCHIVO
             try{
                 const res = await payload.create({
+                    context: {skipHooks:true},
                     collection: 'archivos',
                     filePath: tempFilePath,
                     data: {
@@ -810,6 +816,7 @@ async function ImportUser(user) {
             await DownloadAvatarSalon(imageUrl, tempFilePath);
             console.log("File downloaded", tempFilePath);
             const res = await payload.create({
+                context: {skipHooks:true},
                 collection: 'avatares',
                 filePath: tempFilePath,
                 data: {
@@ -829,6 +836,7 @@ async function ImportUser(user) {
 
         // Creo el usuario
         const response = await payload.create({
+            context: {skipHooks:true},
             collection: 'users',
             data: userData,
         });
