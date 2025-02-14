@@ -6,7 +6,7 @@ import {
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
   // Migration code
   const entries = await payload.find({
-    collection: 'entradas',
+    collection: 'comentarios',
     limit: 0,
     depth: 0,
   })
@@ -18,7 +18,7 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
     contenido = contenido.replace(/\(mencion:/g, "(usuario:")
     try{
       await payload.update({
-        collection: 'entradas',
+        collection: 'comentarios',
         id: entry.id,
         context: {
           skipHooks: true
