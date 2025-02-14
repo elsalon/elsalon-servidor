@@ -772,9 +772,9 @@ async function ReplaceMencionados(htmlString) {
         }
         mencionados.push({value: user.id, relationTo: 'users'});
         // Formato de menciones salon: 
-        // [nombre](mencion:id)
-        // [gonza](mencion:66dce3b5d0a303ddc377b366)
-        const replacement = `[${user.nombre}](mencion:${user.id})`;
+        // [nombre](usuario:id)
+        // [gonza](usuario:66dce3b5d0a303ddc377b366)
+        const replacement = `[${user.nombre}](usuario:${user.id})`;
         // console.log(`Found mention with href: ${href}`, replacement);
         // Replace the entire <a> tag with the replacement content
         $(a).replaceWith(replacement);
