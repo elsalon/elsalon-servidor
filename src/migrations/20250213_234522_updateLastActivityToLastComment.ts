@@ -33,8 +33,8 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
     });
     
     for(const comentario of comentarios.docs){
-      const commentDate = new Date(comentario.createdAt).getTime();
-      const currentLastActivity = new Date(lastActivity).getTime();
+      const commentDate = new Date(comentario.createdAt as string).getTime();
+      const currentLastActivity = new Date(lastActivity as string).getTime();
       if(commentDate > currentLastActivity) {
         lastActivity = comentario.createdAt;
       }
