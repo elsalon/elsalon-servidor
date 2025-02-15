@@ -86,7 +86,8 @@ var showdown = require('showdown'),
     converter = new showdown.Converter();
 
 const args = process.argv;
-const hardLimit = args[2] || -1;
+const hardLimit = -1;
+const startingPage = args[2] || 1;
 var imported = 0;
 const endpoint = "post";
 
@@ -134,7 +135,6 @@ const StartImport = async () => {
     await LoadContainerToSala();
     await LoadLogsCreatedPosts();
     // Una vez cargado el archivo, empiezo a descargar los datos
-    const startingPage = 1;
     RetrieveNextPage(startingPage);
 }
 
