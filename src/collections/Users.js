@@ -1,6 +1,7 @@
 import { isAdminOrSelf, SacarEmojis } from '../helper';
 import { SlugField } from '../SlugField'
 import { simpleEmailTemplate } from '../emailTemplates'
+import payload from 'payload';
 
 const mailVerify = {
   generateEmailSubject: ({ req, user }) => {
@@ -247,6 +248,74 @@ const Users = {
       }
     },
   ],
+  endpoints: [
+    {
+      path: '/:id/cambiar-rol',
+      method: 'patch',
+      handler: async (req, res, next) => {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        if (!req.user.rol === 'docente') return res.status(401).json({ error: 'Unauthorized rol' });
+        const rol = req.body.rol;
+        if (!rol) {
+          return res.status(404).json({ error: 'Rol no proporcionado' });
+        }
+
+        try {
+          const { id } = req.params;
+          const user = await payload.findByID({
+            collection: 'users',
+            id,
+          })
+          if (!user) {
+            return res.status(404).json({ error: 'No se encontró ese usuario' });
+          }
+          payload.logger.info("Cambiando rol usuario " +  user.nombre + " - " + user.id + " - " + rol);
+          const result = await payload.update({
+            collection: 'users',
+            id,
+            data: { rol },
+            limit: 1,
+          })
+          return res.status(200).json(result)
+
+        } catch (e) {
+          payload.logger.warn("Error cambiando rol: " + e)
+        }
+      }
+    },
+    {
+      path: '/:id/toggle-admin',
+      method: 'patch',
+      handler: async (req, res, next) => {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+        if (!req.user.isAdmin) return res.status(401).json({ error: 'Unauthorized not admin' });
+        
+        try {
+          const { id } = req.params;
+          const user = await payload.findByID({
+            collection: 'users',
+            id,
+          })
+          if (!user) {
+            return res.status(404).json({ error: 'No se encontró ese usuario' });
+          }
+          const isAdmin = !user.isAdmin // Toggle
+          payload.logger.info("Cambiando status admin " + user.nombre + " " + user.id + " " + isAdmin);
+          let result = await payload.update({
+            collection: 'users',
+            id,
+            data: { isAdmin },
+            limit: 1,
+          })
+          result.isAdmin = isAdmin
+          return res.status(200).json(result)
+
+        } catch (e) {
+          payload.logger.warn("Error toggle admin: " + e)
+        }
+      }
+    }
+  ]
 }
 
 export default Users
