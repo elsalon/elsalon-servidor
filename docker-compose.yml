@@ -36,6 +36,9 @@ volumes:
 
 # Script migracion HumHub
 # docker-compose run --rm payload yarn migrate:humhub
+# docker-compose run --rm payload yarn migrate:humhub 11 #arranca desde pagina 11 de la api
+# Script migracion nativa Payload
+# docker-compose run --rm payload yarn payload migrate
 
 # Entrar a mongo shell
 # docker exec -it {my_mongo_container} mongosh

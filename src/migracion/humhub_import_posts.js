@@ -318,7 +318,7 @@ const ImportPost = async (post) => {
     if (!autor) {
         console.log("No se encontro el autor del post", post.id, post.content.metadata.created_by.display_name, post.content.metadata.created_by.id);
         autor = await ImportUser(post.content.metadata.created_by);
-        console.log("Autor importado", autor.nombre, autor.id)
+        console.log("Autor importado", autor?.nombre, autor.id)
     }
 
     console.log("--- Importando post", post.id, post.content.metadata.created_by.display_name, sala?.slugpayload)
@@ -767,9 +767,18 @@ async function ReplaceMencionados(htmlString) {
             // Usuario no encontrado por guid, buscar por username
             const username = $(a).attr('title').split("/")[2];
             if(username){
-                const response = await fetchHumhub.get(`/user/get-by-username?username=${username}`);
-                const _user = response.data;
-                user = await ImportUser(_user);
+                try {
+                    const response = await fetchHumhub.get(`/user/get-by-username?username=${username}`);
+                    const _user = response.data;
+                    user = await ImportUser(_user);
+                } catch (error) {
+                    if (error.response && error.response.status === 404) {
+                        // Handle user not found specifically
+                        console.log(`User ${username} not found`);
+                    } else {                        
+                        console.error('Error fetching user:', error);
+                    }
+                }
             }
         }
         if(user){
