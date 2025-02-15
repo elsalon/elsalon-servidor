@@ -806,7 +806,8 @@ async function ImportUser(user) {
     // Get account
     const response = await fetchHumhub.get(`/user/${id}`);
     const _user = response.data;
-    const { email, username, contentcontainer_id } = _user.account;
+    let { email, username, contentcontainer_id } = _user.account;
+    email = email.toLowerCase()
     console.log("---- Importando usuario", display_name, email, contentcontainer_id, id, guid)
     const userExists = await payload.find({
         collection: 'users',
