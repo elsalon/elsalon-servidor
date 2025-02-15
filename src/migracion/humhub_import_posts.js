@@ -349,7 +349,7 @@ const ImportPost = async (post) => {
 
     try {
         const response = await payload.create({
-            context: {skipHooks:true},
+            context: {skipHooks:true, crearExtracto:true}, // salteo todos los hooks menos crearExtracto
             collection: 'entradas',
             data,
         });

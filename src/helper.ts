@@ -115,7 +115,7 @@ export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
 
 
 export const CrearExtracto = async ({ operation, data, req, context }) => {
-    if (context.skipHooks) return data;
+    if (context.skipHooks && !context.crearExtracto) return data; // skiphook generico pero habilito especialmente crearExtracto
     if (operation === 'create' || operation === 'update') {
         let text = data.contenido;
 
