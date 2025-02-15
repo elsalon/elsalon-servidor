@@ -318,7 +318,10 @@ const ImportPost = async (post) => {
     if (!autor) {
         console.log("No se encontro el autor del post", post.id, post.content.metadata.created_by.display_name, post.content.metadata.created_by.id);
         autor = await ImportUser(post.content.metadata.created_by);
-        if(autor) return;
+        if(!autor || !autor.id) {
+            console.warn("Autor no es valido")
+            return;
+        }
         console.log("Autor importado", autor?.nombre, autor.id)
     }
 
@@ -830,8 +833,11 @@ async function ImportUser(user) {
             password: HUMHUB_DEFAULTPASS,
             _verified: true,
         }
+        if(!userData.email){
+            console.warn("Usuario no tiene email");
+            return null;  
+        } 
         console.log("Creando usuario", userData.email)
-        if(!userData.email) return null;
         const imageUrl = "https://elsalon.org/uploads/profile_image/" + guid + ".jpg"
         const filename = username + ".jpg"
         const tempFilePath = path.resolve("temp", filename);
