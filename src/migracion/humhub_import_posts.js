@@ -87,7 +87,7 @@ var showdown = require('showdown'),
 
 const args = process.argv;
 const hardLimit = -1;
-const startingPage = args[2] || 1;
+const startingPage = parseInt(args[2]) || 1;
 var imported = 0;
 const endpoint = "post";
 
