@@ -1,7 +1,7 @@
 // import payload from "payload"
 import { GetNuevosMencionados } from "../../helper";
-import { NotificationService } from "./NotificationService"
-const notificationService = new NotificationService();
+// const { notificationService } = require('../../globals');
+import { notificationService } from "../../globals";
 
 export const NotificarEvento = async ({
     doc,

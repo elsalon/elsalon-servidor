@@ -2,6 +2,7 @@ import express from 'express'
 import payload from 'payload'
 const path = require('path');
 const globals = require('./globals');
+import { NotificationService } from "./hooks/Notificaciones/NotificationService"
 import { JobManager } from './Jobs/JobsManager'
 const { initializeMailQueue, cleanupFailedEmails } = require('./MailQueueProcessor');
 
@@ -35,6 +36,7 @@ const start = async () => {
       payload.logger.info(`Payload Admin URL: ${payload.getAdminURL()}`)
       const elsalon = await LoadSalonPrincipal(payload);
       globals.elSalonId = elsalon.id;
+      globals.notificationService = new NotificationService();
 
       // Initialize mail queue
       const mailQueue = initializeMailQueue(payload);
