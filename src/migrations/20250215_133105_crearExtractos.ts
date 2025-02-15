@@ -4,8 +4,8 @@ import {
 } from "@payloadcms/db-mongodb";
 
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
+  console.log("Migrate Crear Extractos")
   // Migration code
-  console.log("Migrate Crear Last activity")
   const entries = await payload.find({
     collection: 'entradas',
     limit: 0,
@@ -13,17 +13,16 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
   })
 
   for (const entry of entries.docs) {
-    console.log("updating lastActivity of", entry.id)
+    console.log("updating extracto of", entry.id)
     try{
       await payload.update({
         collection: 'entradas',
         id: entry.id,
         context: {
-          skipHooks: true
+          skipHooks: true,
+          crearExtracto:true,
         },
-        data: {
-          lastActivity: entry.createdAt
-        }
+        data: {}
       })
     }catch(e){
       console.warn("No se pudo actualizar", entry.id)

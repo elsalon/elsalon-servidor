@@ -4,6 +4,7 @@ import {
 } from "@payloadcms/db-mongodb";
 
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
+  console.log("Migrate Update Last Activity")
   // Migration code
   const entries = await payload.find({
     collection: 'comentarios',

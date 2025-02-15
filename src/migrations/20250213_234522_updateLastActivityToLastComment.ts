@@ -13,6 +13,7 @@ type Comment = {
 }
 
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
+  console.log("Migrate Update Last activity to last comment")
    // Migration code
    const entries = await payload.find({
     collection: 'entradas',

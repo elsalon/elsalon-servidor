@@ -115,7 +115,7 @@ export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
 
 
 export const CrearExtracto = async ({ operation, data, req, context }) => {
-    if (context.skipHooks && !context.crearExtracto) return data; // skiphook generico pero habilito especialmente crearExtracto
+    if (context.skipHooks && !context.crearExtracto) return data;
     if (operation === 'create' || operation === 'update') {
         let text = data.contenido;
 
@@ -137,12 +137,22 @@ export const CrearExtracto = async ({ operation, data, req, context }) => {
         text = convertToPlainText(text, mentionUserRegex, "@");
         text = convertToPlainText(text, tagRegex, "#");
 
-        // Remove HTML tags and get first 120 characters
-        text = text?.replace(/<[^>]*>?/gm, '').substring(0, 120);
+        // First replace common block elements with space-padded versions
+        text = text.replace(/<\/(p|div|h[1-6]|br)>/gi, ' </p> ');
+        
+        // Remove HTML tags while preserving spaces
+        text = text.replace(/<[^>]*>?/gm, ' ');
+        
+        // Normalize spaces: replace multiple spaces with single space
+        text = text.replace(/\s+/g, ' ');
+        
+        // Trim and get first 120 characters
+        text = text.trim().substring(0, 120);
 
         data.extracto = text;
         return data;
     }
+    return data;
 }
 
 export const ValidarEntradaVacia = async ({ context, operation, data, req }) => {

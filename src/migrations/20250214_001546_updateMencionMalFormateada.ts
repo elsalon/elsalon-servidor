@@ -4,6 +4,7 @@ import {
 } from "@payloadcms/db-mongodb";
 
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
+  console.log("Migrate Update Mencion Mal Formateada")
   // Migration code
   const entries = await payload.find({
     collection: 'entradas',
