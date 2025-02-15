@@ -766,18 +766,22 @@ async function ReplaceMencionados(htmlString) {
         } else {
             // Usuario no encontrado por guid, buscar por username
             const username = $(a).attr('title').split("/")[2];
-            const response = await fetchHumhub.get(`/user/get-by-username?username=${username}`);
-            const _user = response.data;
-            user = await ImportUser(_user);
+            if(username){
+                const response = await fetchHumhub.get(`/user/get-by-username?username=${username}`);
+                const _user = response.data;
+                user = await ImportUser(_user);
+            }
         }
-        mencionados.push({value: user.id, relationTo: 'users'});
-        // Formato de menciones salon: 
-        // [nombre](usuario:id)
-        // [gonza](usuario:66dce3b5d0a303ddc377b366)
-        const replacement = `[${user.nombre}](usuario:${user.id})`;
-        // console.log(`Found mention with href: ${href}`, replacement);
-        // Replace the entire <a> tag with the replacement content
-        $(a).replaceWith(replacement);
+        if(user){
+            mencionados.push({value: user.id, relationTo: 'users'});
+            // Formato de menciones salon: 
+            // [nombre](usuario:id)
+            // [gonza](usuario:66dce3b5d0a303ddc377b366)
+            const replacement = `[${user.nombre}](usuario:${user.id})`;
+            // console.log(`Found mention with href: ${href}`, replacement);
+            // Replace the entire <a> tag with the replacement content
+            $(a).replaceWith(replacement);
+        }
 
     }
     return {
