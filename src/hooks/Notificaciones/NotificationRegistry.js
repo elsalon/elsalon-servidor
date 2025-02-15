@@ -49,6 +49,10 @@ const {
   EventoModificadoHandler,
 } = require('./handlers/Eventos');
 
+const {
+  OtorgoRolDocenteHandler,
+} = require('./handlers/RolYAdmin')
+
 const handlers = {
   // Aprecio
   'aprecio-entrada-usuario':     AprecioEntradaUsuarioHandler,
@@ -91,6 +95,9 @@ const handlers = {
   // Eventos
   'evento-nuevo':       EventoNuevoHandler,
   'evento-modificado':  EventoModificadoHandler,
+
+  // Roles
+  'otorgo-docente': OtorgoRolDocenteHandler
 
 };
 

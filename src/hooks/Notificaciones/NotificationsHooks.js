@@ -1,6 +1,4 @@
-// import payload from "payload"
 import { GetNuevosMencionados } from "../../helper";
-// const { notificationService } = require('../../globals');
 import { notificationService } from "../../globals";
 
 export const NotificarEvento = async ({

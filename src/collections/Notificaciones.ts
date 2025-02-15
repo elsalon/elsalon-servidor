@@ -38,7 +38,7 @@ const Notificaciones: CollectionConfig = {
         {
             name: 'categoria',
             type: 'select',
-            options: ['aprecio', 'comentario', 'mencion', 'actividad-grupo', 'acciones-grupo', 'enlace', 'evento']
+            options: ['aprecio', 'comentario', 'mencion', 'actividad-grupo', 'acciones-grupo', 'enlace', 'evento', 'rol-docente', 'rol-admin']
         },
         {
             name: 'leida',

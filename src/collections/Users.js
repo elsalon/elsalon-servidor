@@ -2,6 +2,7 @@ import { isAdminOrSelf, SacarEmojis } from '../helper';
 import { SlugField } from '../SlugField'
 import { simpleEmailTemplate } from '../emailTemplates'
 import payload from 'payload';
+import { notificationService } from '../globals';
 
 const mailVerify = {
   generateEmailSubject: ({ req, user }) => {
@@ -276,6 +277,9 @@ const Users = {
             data: { rol },
             limit: 1,
           })
+          if(result.rol === 'docente'){
+            notificationService.triggerNotification('otorgo-docente', {identidad: req.user, link: req.user, usuario: result})
+          }
           return res.status(200).json(result)
 
         } catch (e) {
