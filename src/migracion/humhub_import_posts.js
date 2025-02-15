@@ -318,6 +318,7 @@ const ImportPost = async (post) => {
     if (!autor) {
         console.log("No se encontro el autor del post", post.id, post.content.metadata.created_by.display_name, post.content.metadata.created_by.id);
         autor = await ImportUser(post.content.metadata.created_by);
+        if(autor) return;
         console.log("Autor importado", autor?.nombre, autor.id)
     }
 
