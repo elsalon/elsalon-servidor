@@ -830,6 +830,7 @@ async function ImportUser(user) {
             _verified: true,
         }
         console.log("Creando usuario", userData.email)
+        if(!userData.email) return null;
         const imageUrl = "https://elsalon.org/uploads/profile_image/" + guid + ".jpg"
         const filename = username + ".jpg"
         const tempFilePath = path.resolve("temp", filename);
