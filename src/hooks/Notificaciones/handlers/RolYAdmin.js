@@ -8,7 +8,7 @@ export class OtorgoRolDocenteHandler extends BaseNotificationHandler{
   }
 
   createIdentidad({ identidad }) {
-    return { value: identidad.id, relationTo: 'grupos' };
+    return { value: identidad.id, relationTo: 'users' };
   }
 
   createMessage({ identidad }) {
