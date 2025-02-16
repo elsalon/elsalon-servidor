@@ -1,5 +1,13 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminAutorOrIntegrante, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios, LimpiarContenido } from '../helper'
+import {    isAdminAutorOrIntegrante, 
+            CrearExtracto, 
+            ValidarEntradaVacia, 
+            PublicadasYNoBorradas, 
+            SoftDelete, 
+            PopulateComentarios, 
+            PopulateAprecios, 
+            LimpiarContenido,
+            DestacarEntrada } from '../helper'
 import { NotificarGrupoNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
 import { Campos } from './CamposEntradasYComentarios'
 
@@ -68,6 +76,11 @@ const Entradas: CollectionConfig = {
             path: '/:id',
             method: 'delete',
             handler: SoftDelete('entradas'),
+        },
+        {
+            path: '/:id/destacar',
+            method: 'patch',
+            handler: DestacarEntrada
         }
     ]
 }

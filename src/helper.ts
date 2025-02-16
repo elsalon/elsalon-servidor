@@ -60,7 +60,6 @@ export const isAdminOrIntegrante: Access = ({ req: { user } }) => {
 export const isAdminAutorOrIntegrante: Access = ({ req: { user } }) => {
     if (!user) return false;
     if (user.isAdmin) return true;
-    if (user.isAdmin) return true;
     return {
         or: [
             {
@@ -192,6 +191,46 @@ export const PublicadasYNoBorradas: Access = ({ req }) => {
         //     }
         // ]
     };
+}
+export const DestacarEntrada = async (req, res, next) => {
+    try{
+        const { id } = req.params;
+        const { user } = req;
+        console.log("Destacar", user.nombre, user.rol, user.isAdmin, id)
+        if (!user) {
+            return res.status(401).json({
+                message: 'Unauthorized no user',
+            });
+        }
+
+        if(user.rol !== 'docente' && !user.isAdmin){
+            return res.status(401).json({
+                message: 'Unauthorized usuario no es admin ni docente',
+            });
+        }
+
+        const entrada:any = await payload.findByID({
+            collection: 'entradas',
+            id
+        })
+        if(!entrada){
+            return res.status(500).json({
+                message: `Entrada ${id} no encontrada`
+            })
+        }
+        const update = await payload.update({
+            collection: 'entradas',
+            id,
+            data: {
+                destacada: !entrada.destacada
+            }
+        })
+        payload.logger.info(`Entrada destacada ${id} por ${req.user.nombre}`)
+        return res.status(200).json(update);
+    
+    }catch(e){
+        payload.logger.error("Error destacando entrada: " + e)
+    }
 }
 
 export const SoftDelete = (collection: string) => {
