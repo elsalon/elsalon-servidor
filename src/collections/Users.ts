@@ -2,13 +2,14 @@ import { isAdminOrSelf, SacarEmojis } from '../helper';
 import { SlugField } from '../SlugField'
 import { simpleEmailTemplate } from '../emailTemplates'
 import payload from 'payload';
+import { CollectionConfig } from 'payload/types';
 import { notificationService } from '../globals';
 
 const mailVerify = {
   generateEmailSubject: ({ req, user }) => {
     return `Verificá tu cuenta de El Salón`;
   },
-  generateEmailHTML: ({ req, token, user }) => {
+  generateEmailHTML: ({ req, token, user }: { req: any, token: string, user: { nombre: string } }) => {
     // Use the token provided to allow your user to verify their account
     const backendUrl = `${req.protocol}://${req.get('host')}`; // Dynamically obtain the backend URL
     const frontUrl = req.headers.origin;
@@ -22,7 +23,7 @@ const mailVerify = {
   },
 }
 
-const Users = {
+const Users:CollectionConfig = {
   slug: 'users',
   auth: {
     // 1 mes
@@ -34,7 +35,7 @@ const Users = {
       generateEmailSubject: ({ req, user }) => {
         return `Restablacé tu contraseña de El Salón`;
       },
-      generateEmailHTML: ({ req, token, user }) => {
+      generateEmailHTML: ({ req, token, user }: { req: any, token: string, user: { nombre: string } }) => {
         const backendUrl = `${req.protocol}://${req.get('host')}`; // Dynamically obtain the backend URL
         const frontUrl = req.headers.origin;
 
@@ -252,10 +253,10 @@ const Users = {
   endpoints: [
     {
       path: '/:id/cambiar-rol',
-      method: 'patch',
-      handler: async (req, res, next) => {
+      method: "patch",
+      handler: async (req, res) => {
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-        if (!req.user.rol === 'docente') return res.status(401).json({ error: 'Unauthorized rol' });
+        if (!req.user.rol as any === 'docente') return res.status(401).json({ error: 'Unauthorized rol' });
         const rol = req.body.rol;
         if (!rol) {
           return res.status(404).json({ error: 'Rol no proporcionado' });
@@ -275,8 +276,7 @@ const Users = {
             collection: 'users',
             id,
             data: { rol },
-            limit: 1,
-          })
+          });
           if(result.rol === 'docente'){
             notificationService.triggerNotification('otorgo-docente', {identidad: req.user, link: req.user, usuario: result})
           }
@@ -289,8 +289,8 @@ const Users = {
     },
     {
       path: '/:id/toggle-admin',
-      method: 'patch',
-      handler: async (req, res, next) => {
+      method: "patch",
+      handler: async (req, res) => {
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
         if (!req.user.isAdmin) return res.status(401).json({ error: 'Unauthorized not admin' });
         
@@ -309,7 +309,6 @@ const Users = {
             collection: 'users',
             id,
             data: { isAdmin },
-            limit: 1,
           })
           result.isAdmin = isAdmin
           return res.status(200).json(result)
