@@ -155,6 +155,15 @@ export const CrearExtracto = async ({ operation, data, req, context }) => {
     return data;
 }
 
+export const SetAutor = async ({ data, req }) => {
+    if (req.user) {
+        const reqIsAdminSite = req.headers?.referer?.includes('/admin') === true;
+        if(reqIsAdminSite) return data;
+        data.autor = req.user.id; // El autor es el usuario actual
+        return data;
+    }
+}
+
 export const ValidarEntradaVacia = async ({ context, operation, data, req }) => {
     if (context.skipHooks) return data;
     var entradaVacia = true;
