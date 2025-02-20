@@ -529,8 +529,12 @@ async function ProcessUploads(entry, autor) {
             console.log("Mime type no permitido", mime_type)
             continue;
         }
-
-        await DownloadFileSalon(`/file/download/${id}`, tempFilePath);
+        try{
+            await DownloadFileSalon(`/file/download/${id}`, tempFilePath);
+        }catch(e){
+            console.log("Error al descargar archivo", e)
+            continue;
+        }
         // console.log("File downloaded")
 
         if (mime_type?.includes("image")) {
