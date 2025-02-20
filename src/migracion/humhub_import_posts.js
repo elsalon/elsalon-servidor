@@ -88,12 +88,17 @@ var showdown = require('showdown'),
 const args = process.argv;
 const hardLimit = -1;
 const startingPage = parseInt(args[2]) || 1;
+const skipPost = parseInt(args[3]) || null;
 var imported = 0;
 const endpoint = "post";
 
 console.log("Import El Salon humhub. Descargando endpoint", endpoint, "con limite", hardLimit);
 const filename = `humhub_importlogs_${endpoint}.json`
 const { PAYLOAD_SECRET, HUMHUB_TOKEN, HUMHUB_DEFAULTPASS } = process.env
+
+if(skipPost){
+    console.log("Salteando post", skipPost);
+}
 
 const fetchHumhub = axios.create({
     baseURL: 'https://elsalon.org/api/v1',
@@ -268,7 +273,9 @@ const onWriteFile = (err) => {
 var pages = 0;
 const RetrieveNextPage = async (page) => {
     try {
+        console.log(`*******************************************************`);
         console.log(`Downloading endpoint ${endpoint} page: ${page}/${pages}`);
+        console.log(`*******************************************************`);
         const response = await fetchHumhub.get(`/${endpoint}?page=${page}`);
         const results = response.data.results;
         pages = response.data.pages;
@@ -294,6 +301,11 @@ const RetrieveNextPage = async (page) => {
 };
 
 const ImportPost = async (post) => {
+    // Me fijo si no esta para ser salteado
+    if (skipPost && post.id == skipPost) {
+        console.log("Salteando post", post.id);
+        return;
+    }
     // Primero verifico si el post ya fue importado
     const _imported = importedPosts.find(p => p.hhid == post.id);
     if (_imported) {
