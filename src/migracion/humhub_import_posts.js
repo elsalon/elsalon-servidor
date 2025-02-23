@@ -693,7 +693,7 @@ function ReplaceImgTags(htmlString, imagenesImportadas) {
 }
 
 const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com\/)(\d+)/;
+const vimeoRegex = /(?:https?:\/\/)?(?:www\.|player\.)?vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|video\/|)(\d+)(?:[a-zA-Z0-9_-]+)?/i;
 
 function getYoutubeVideoId(url) {
     const match = url.match(youtubeRegex);
