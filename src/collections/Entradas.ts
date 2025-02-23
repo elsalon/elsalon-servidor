@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload/types'
+<<<<<<< HEAD
 import {    isAdminAutorOrIntegrante, 
             CrearExtracto, 
             ValidarEntradaVacia, 
@@ -8,6 +9,9 @@ import {    isAdminAutorOrIntegrante,
             PopulateAprecios, 
             LimpiarContenido,
             DestacarEntrada } from '../helper'
+=======
+import { isAdminAutorOrIntegrante, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios, LimpiarContenido, SetAutor } from '../helper'
+>>>>>>> main
 import { NotificarGrupoNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
 import { Campos } from './CamposEntradasYComentarios'
 
@@ -26,12 +30,7 @@ const Entradas: CollectionConfig = {
             ValidarEntradaVacia,
             LimpiarContenido,
             CrearExtracto,
-            async ({ data, req }) => {
-                if (req.user) {
-                    data.autor = req.user.id; // El autor es el usuario actual
-                    return data;
-                }
-            },
+            SetAutor,
             // TODO revisar que si se esta fijando/desfijando o destacando/desdestacando, se chequee que el usuario sea admin o docente
         ],
         afterChange: [
@@ -60,12 +59,12 @@ const Entradas: CollectionConfig = {
         {
             // Usada para ordenar las entradas y poder actualizarlo cuando alguien comenta
             // Y vaya para arriba. Pero no quiero usar updatedAt para no subir las que fueron editadas
-            name: 'lastActivity', 
+            name: 'lastActivity',
             defaultValue: () => new Date(),
             type: 'date',
             admin: {
                 date: {
-                  pickerAppearance: 'dayAndTime',
+                    pickerAppearance: 'dayAndTime',
                 },
             },
         }

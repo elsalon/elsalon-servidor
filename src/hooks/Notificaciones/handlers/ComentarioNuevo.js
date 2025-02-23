@@ -5,9 +5,9 @@ async function BuscarComentarios(entradaid) {
   return payload.find({
     collection: 'comentarios',
     limit: 2,
+    depth: 0,
     where: {
       entrada: {equals: entradaid},
-      depth: 0,
     }
   });
 }

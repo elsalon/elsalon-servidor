@@ -4,25 +4,28 @@ import {
 } from "@payloadcms/db-mongodb";
 
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
+  console.log("Migrate Update Last Activity")
   // Migration code
-  console.log("Migrate Crear Last activity")
   const entries = await payload.find({
-    collection: 'entradas',
+    collection: 'comentarios',
     limit: 0,
     depth: 0,
   })
 
   for (const entry of entries.docs) {
-    console.log("updating lastActivity of", entry.id)
+    console.log("updating mencion de contenido of", entry.id)
+    let contenido = entry.contenido as String;
+    // Reemplazar texto Mencion
+    contenido = contenido.replace(/\(mencion:/g, "(usuario:")
     try{
       await payload.update({
-        collection: 'entradas',
+        collection: 'comentarios',
         id: entry.id,
         context: {
           skipHooks: true
         },
         data: {
-          lastActivity: entry.createdAt
+          contenido
         }
       })
     }catch(e){

@@ -86,13 +86,19 @@ var showdown = require('showdown'),
     converter = new showdown.Converter();
 
 const args = process.argv;
-const hardLimit = args[2] || -1;
+const hardLimit = -1;
+const startingPage = parseInt(args[2]) || 1;
+const skipPost = parseInt(args[3]) || null;
 var imported = 0;
 const endpoint = "post";
 
 console.log("Import El Salon humhub. Descargando endpoint", endpoint, "con limite", hardLimit);
 const filename = `humhub_importlogs_${endpoint}.json`
 const { PAYLOAD_SECRET, HUMHUB_TOKEN, HUMHUB_DEFAULTPASS } = process.env
+
+if(skipPost){
+    console.log("Salteando post", skipPost);
+}
 
 const fetchHumhub = axios.create({
     baseURL: 'https://elsalon.org/api/v1',
@@ -134,7 +140,6 @@ const StartImport = async () => {
     await LoadContainerToSala();
     await LoadLogsCreatedPosts();
     // Una vez cargado el archivo, empiezo a descargar los datos
-    const startingPage = 1;
     RetrieveNextPage(startingPage);
 }
 
@@ -268,7 +273,9 @@ const onWriteFile = (err) => {
 var pages = 0;
 const RetrieveNextPage = async (page) => {
     try {
+        console.log(`*******************************************************`);
         console.log(`Downloading endpoint ${endpoint} page: ${page}/${pages}`);
+        console.log(`*******************************************************`);
         const response = await fetchHumhub.get(`/${endpoint}?page=${page}`);
         const results = response.data.results;
         pages = response.data.pages;
@@ -294,6 +301,11 @@ const RetrieveNextPage = async (page) => {
 };
 
 const ImportPost = async (post) => {
+    // Me fijo si no esta para ser salteado
+    if (skipPost && post.id == skipPost) {
+        console.log("Salteando post", post.id);
+        return;
+    }
     // Primero verifico si el post ya fue importado
     const _imported = importedPosts.find(p => p.hhid == post.id);
     if (_imported) {
@@ -318,7 +330,11 @@ const ImportPost = async (post) => {
     if (!autor) {
         console.log("No se encontro el autor del post", post.id, post.content.metadata.created_by.display_name, post.content.metadata.created_by.id);
         autor = await ImportUser(post.content.metadata.created_by);
-        console.log("Autor importado", autor.nombre, autor.id)
+        if(!autor || !autor.id) {
+            console.warn("Autor no es valido")
+            return;
+        }
+        console.log("Autor importado", autor?.nombre, autor.id)
     }
 
     console.log("--- Importando post", post.id, post.content.metadata.created_by.display_name, sala?.slugpayload)
@@ -349,7 +365,7 @@ const ImportPost = async (post) => {
 
     try {
         const response = await payload.create({
-            context: {skipHooks:true},
+            context: {skipHooks:true, crearExtracto:true}, // salteo todos los hooks menos crearExtracto
             collection: 'entradas',
             data,
         });
@@ -513,8 +529,12 @@ async function ProcessUploads(entry, autor) {
             console.log("Mime type no permitido", mime_type)
             continue;
         }
-
-        await DownloadFileSalon(`/file/download/${id}`, tempFilePath);
+        try{
+            await DownloadFileSalon(`/file/download/${id}`, tempFilePath);
+        }catch(e){
+            console.log("Error al descargar archivo", e)
+            continue;
+        }
         // console.log("File downloaded")
 
         if (mime_type?.includes("image")) {
@@ -659,10 +679,12 @@ function ReplaceImgTags(htmlString, imagenesImportadas) {
         if (src && src.startsWith("file-guid:")) {
             const fileGuid = src.split(":")[1];
             const image = imagenesImportadas.find(i => i.hhguid == fileGuid);
-            const replacement = `[image:${image.id}]` // Formato propio de salon
-            // console.log(`Found image with src: ${src}`, image.id, replacement);
-            // Replace the entire <img> tag with the replacement content
-            $(img).replaceWith(replacement);
+            if(image){
+                const replacement = `[image:${image.id}]` // Formato propio de salon
+                // console.log(`Found image with src: ${src}`, image.id, replacement);
+                // Replace the entire <img> tag with the replacement content
+                $(img).replaceWith(replacement);
+            }
         }
     });
 
@@ -671,7 +693,7 @@ function ReplaceImgTags(htmlString, imagenesImportadas) {
 }
 
 const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com\/)(\d+)/;
+const vimeoRegex = /(?:https?:\/\/)?(?:www\.|player\.)?vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|video\/|)(\d+)(?:[a-zA-Z0-9_-]+)?/i;
 
 function getYoutubeVideoId(url) {
     const match = url.match(youtubeRegex);
@@ -733,9 +755,6 @@ function ReplaceEmbebidos(htmlString) {
             console.log(`Unrecognized video URL format: ${url}`);
         }
     });
-    
-    embedsYoutube = embedsYoutube.join(",");
-    embedsVimeo = embedsVimeo.join(",");
 
     return {html: $.html(), embedsVimeo, embedsYoutube};
 }
@@ -764,18 +783,31 @@ async function ReplaceMencionados(htmlString) {
         } else {
             // Usuario no encontrado por guid, buscar por username
             const username = $(a).attr('title').split("/")[2];
-            const response = await fetchHumhub.get(`/user/get-by-username?username=${username}`);
-            const _user = response.data;
-            user = await ImportUser(_user);
+            if(username){
+                try {
+                    const response = await fetchHumhub.get(`/user/get-by-username?username=${username}`);
+                    const _user = response.data;
+                    user = await ImportUser(_user);
+                } catch (error) {
+                    if (error.response && error.response.status === 404) {
+                        // Handle user not found specifically
+                        console.log(`User ${username} not found`);
+                    } else {                        
+                        console.error('Error fetching user:', error);
+                    }
+                }
+            }
         }
-        mencionados.push({value: user.id, relationTo: 'users'});
-        // Formato de menciones salon: 
-        // [nombre](mencion:id)
-        // [gonza](mencion:66dce3b5d0a303ddc377b366)
-        const replacement = `[${user.nombre}](mencion:${user.id})`;
-        // console.log(`Found mention with href: ${href}`, replacement);
-        // Replace the entire <a> tag with the replacement content
-        $(a).replaceWith(replacement);
+        if(user){
+            mencionados.push({value: user.id, relationTo: 'users'});
+            // Formato de menciones salon: 
+            // [nombre](usuario:id)
+            // [gonza](usuario:66dce3b5d0a303ddc377b366)
+            const replacement = `[${user.nombre}](usuario:${user.id})`;
+            // console.log(`Found mention with href: ${href}`, replacement);
+            // Replace the entire <a> tag with the replacement content
+            $(a).replaceWith(replacement);
+        }
 
     }
     return {
@@ -792,7 +824,7 @@ async function ImportUser(user) {
     const response = await fetchHumhub.get(`/user/${id}`);
     const _user = response.data;
     let { email, username, contentcontainer_id } = _user.account;
-    email = email.toLowerCase()
+    email = email?.toLowerCase()
     console.log("---- Importando usuario", display_name, email, contentcontainer_id, id, guid)
     const userExists = await payload.find({
         collection: 'users',
@@ -814,6 +846,10 @@ async function ImportUser(user) {
             password: HUMHUB_DEFAULTPASS,
             _verified: true,
         }
+        if(!userData.email){
+            console.warn("Usuario no tiene email");
+            return null;  
+        } 
         console.log("Creando usuario", userData.email)
         const imageUrl = "https://elsalon.org/uploads/profile_image/" + guid + ".jpg"
         const filename = username + ".jpg"

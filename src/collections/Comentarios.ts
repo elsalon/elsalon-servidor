@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminAutorOrIntegrante, CrearExtracto, PublicadasYNoBorradas, SoftDelete, PopulateAprecios, LimpiarContenido, ActualizarActividadEntrada} from '../helper'
+import { isAdminAutorOrIntegrante, CrearExtracto, PublicadasYNoBorradas, SoftDelete, PopulateAprecios, LimpiarContenido, ActualizarActividadEntrada, SetAutor} from '../helper'
 import { NotificarNuevoComentario, NotificarGrupoNuevoComentario, NotificarMencionComentario } from '../hooks/Notificaciones/NotificationsHooks'
 import { NotificarMailComentario } from '../GeneradorNotificacionesMail'
 import { Campos } from './CamposEntradasYComentarios'
@@ -18,13 +18,7 @@ const Comentarios: CollectionConfig = {
         beforeChange: [
             LimpiarContenido,
             CrearExtracto,
-            async ({data, req }) => {
-                if (req.user) {
-                    // console.log('New entry created', data);
-                    data.autor = req.user.id; // El autor es el usuario actual
-                    return data;
-                }
-            }
+            SetAutor,
         ],
         afterChange: [
             async (c) => {
@@ -33,7 +27,7 @@ const Comentarios: CollectionConfig = {
                 NotificarGrupoNuevoComentario(c, entrada),
                 NotificarMencionComentario(c, entrada)
                 NotificarMailComentario(c, entrada);
-                ActualizarActividadEntrada(entrada);
+                ActualizarActividadEntrada(c, entrada);
             },
         ],
         afterRead: [

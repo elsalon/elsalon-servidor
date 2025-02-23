@@ -4,8 +4,8 @@ import {
 } from "@payloadcms/db-mongodb";
 
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
+  console.log("Migrate Update Mencion Mal Formateada")
   // Migration code
-  console.log("Migrate Crear Last activity")
   const entries = await payload.find({
     collection: 'entradas',
     limit: 0,
@@ -13,7 +13,10 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
   })
 
   for (const entry of entries.docs) {
-    console.log("updating lastActivity of", entry.id)
+    console.log("updating mencion de contenido of", entry.id)
+    let contenido = entry.contenido as String;
+    // Reemplazar texto Mencion
+    contenido = contenido.replace(/\(mencion:/g, "(usuario:")
     try{
       await payload.update({
         collection: 'entradas',
@@ -22,7 +25,7 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
           skipHooks: true
         },
         data: {
-          lastActivity: entry.createdAt
+          contenido
         }
       })
     }catch(e){
