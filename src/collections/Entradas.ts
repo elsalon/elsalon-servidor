@@ -1,5 +1,4 @@
 import { CollectionConfig } from 'payload/types'
-<<<<<<< HEAD
 import {    isAdminAutorOrIntegrante, 
             CrearExtracto, 
             ValidarEntradaVacia, 
@@ -7,11 +6,8 @@ import {    isAdminAutorOrIntegrante,
             SoftDelete, 
             PopulateComentarios, 
             PopulateAprecios, 
-            LimpiarContenido,
+            LimpiarContenido, SetAutor,
             DestacarEntrada } from '../helper'
-=======
-import { isAdminAutorOrIntegrante, CrearExtracto, ValidarEntradaVacia, PublicadasYNoBorradas, SoftDelete, PopulateComentarios, PopulateAprecios, LimpiarContenido, SetAutor } from '../helper'
->>>>>>> main
 import { NotificarGrupoNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
 import { Campos } from './CamposEntradasYComentarios'
 
