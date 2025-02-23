@@ -755,9 +755,6 @@ function ReplaceEmbebidos(htmlString) {
             console.log(`Unrecognized video URL format: ${url}`);
         }
     });
-    
-    embedsYoutube = embedsYoutube.join(",");
-    embedsVimeo = embedsVimeo.join(",");
 
     return {html: $.html(), embedsVimeo, embedsYoutube};
 }

@@ -1,5 +1,5 @@
 import { CollectionConfig, Field } from 'payload/types'
-
+import { StringToArray, ArrayToString } from '../helper'
 export const Campos: Field[] = [
     {
         name: 'autor',
@@ -62,10 +62,18 @@ export const Campos: Field[] = [
     {
         name: 'embedsYoutube',
         type: 'text',
+        hooks:{
+            beforeValidate: [ArrayToString],
+            afterRead: [StringToArray]
+        }
     },
     {
         name: 'embedsVimeo',
         type: 'text',
+        hooks:{
+            beforeValidate: [ArrayToString],
+            afterRead: [StringToArray]
+        }
     },
     {
         type: 'row',

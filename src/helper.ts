@@ -1,5 +1,5 @@
 // Helper functions
-import { Access, FieldAccess } from 'payload/types';
+import { Access, FieldAccess, FieldHook } from 'payload/types';
 import payload from 'payload';
 
 const trimHtml = (html) => {
@@ -139,13 +139,13 @@ export const CrearExtracto = async ({ operation, data, req, context }) => {
 
         // First replace common block elements with space-padded versions
         text = text.replace(/<\/(p|div|h[1-6]|br)>/gi, ' </p> ');
-        
+
         // Remove HTML tags while preserving spaces
         text = text.replace(/<[^>]*>?/gm, ' ');
-        
+
         // Normalize spaces: replace multiple spaces with single space
         text = text.replace(/\s+/g, ' ');
-        
+
         // Trim and get first 120 characters
         text = text.trim().substring(0, 120);
 
@@ -158,7 +158,7 @@ export const CrearExtracto = async ({ operation, data, req, context }) => {
 export const SetAutor = async ({ data, req }) => {
     if (req.user) {
         const reqIsAdminSite = req.headers?.referer?.includes('/admin') === true;
-        if(reqIsAdminSite) return data;
+        if (reqIsAdminSite) return data;
         data.autor = req.user.id; // El autor es el usuario actual
         return data;
     }
@@ -269,7 +269,7 @@ export const SoftDelete = (collection: string) => {
                     return;
                 }
             }
-            
+
             await req.payload.update({
                 collection,
                 id,
@@ -281,13 +281,13 @@ export const SoftDelete = (collection: string) => {
                     deletedBy: req.user?.id,
                 },
             });
-            
+
             // Si es una entrada, borramos si esta fijada
             if (collection == 'entradas') {
                 await req.payload.delete({
                     collection: 'fijadas',
                     where: {
-                        entrada: {equals: id},
+                        entrada: { equals: id },
                     },
                 });
             }
@@ -306,8 +306,8 @@ export const SoftDelete = (collection: string) => {
 export const PopulateComentarios = async ({ doc, context, req }) => {
     // Fetch de los comentarios
     if (context.skipHooks) return;
-    if(!req.user) return;
-    
+    if (!req.user) return;
+
     var comentarios = await payload.find({
         collection: 'comentarios',
         where: {
@@ -325,7 +325,7 @@ export const PopulateComentarios = async ({ doc, context, req }) => {
 }
 
 export const PopulateAprecios = async ({ doc, context, req }) => {
-    if(!req.user) return;
+    if (!req.user) return;
     if (context.skipHooks) return;
 
     var aprecios = await payload.find({
@@ -350,13 +350,29 @@ export const PopulateAprecios = async ({ doc, context, req }) => {
     doc.aprecios = aprecios;
 }
 
-export const ActualizarActividadEntrada = ({doc}, entrada) => {
+export const ActualizarActividadEntrada = ({ doc }, entrada) => {
     payload.update({
         collection: 'entradas',
         id: entrada.id,
-        context: {skipHooks: true},
-        data:{
+        context: { skipHooks: true },
+        data: {
             lastActivity: doc.createdAt
         }
     })
+}
+
+export const StringToArray:FieldHook = ({ value }) => {
+    if (!value) return [];
+    if (typeof value === 'string') {
+        return value.includes(',') ? value.split(',').map(item => item.trim()) : [value.trim()];
+    }
+    return [];
+}
+
+export const ArrayToString:FieldHook = ({ value }) => {
+    if (!value) return '';
+    if (Array.isArray(value)) {
+        return value.join(',');
+    }
+    return value;
 }
