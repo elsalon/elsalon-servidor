@@ -47,6 +47,8 @@ volumes:
 
 # Entrar a mongo shell
 # docker exec -it {my_mongo_container} mongosh
+# show dbs
+# use elsalon-test / use elsalon-prod
 
 # Script backup db
 # ./backup_db.sh
