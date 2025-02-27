@@ -14,7 +14,7 @@ export const NotificarEvento = async ({
         const rawData = {
             identidad: req.user,
             link: doc,
-            linkCollection: 'salones',
+            linkCollection: 'salas',
             evento: doc,
         }
         notificationService.triggerNotification('evento-nuevo', rawData);
@@ -24,7 +24,7 @@ export const NotificarEvento = async ({
             const rawData = {
                 identidad: req.user,
                 link: doc,
-                linkCollection: 'salones',
+                linkCollection: 'salas',
                 evento: doc,
             }
             notificationService.triggerNotification('evento-modificado', rawData);

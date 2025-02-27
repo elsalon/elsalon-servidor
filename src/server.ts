@@ -60,7 +60,7 @@ start()
 
 const LoadSalonPrincipal = async (payload) => {
   const salon = await payload.find({
-    collection: 'salones',
+    collection: 'salas',
     where:{
       slug: {
         equals: 'el-salon'
@@ -71,7 +71,7 @@ const LoadSalonPrincipal = async (payload) => {
     return salon.docs[0];
   }else{
     const res = await payload.create({
-      collection: 'salones',
+      collection: 'salas',
       data: {
         nombre: 'El Salón',
         slug: 'el-salon',

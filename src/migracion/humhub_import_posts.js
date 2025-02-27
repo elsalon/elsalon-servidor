@@ -204,7 +204,7 @@ const LoadContainerToSala = async () => {
             if(!sala.id){
                 // console.log("Buscando id de sala", sala.slugpayload)
                 const response = await payload.find({
-                    collection: 'salones',
+                    collection: 'salas',
                     where: {
                         slug: {
                             equals: sala.slugpayload
@@ -217,7 +217,7 @@ const LoadContainerToSala = async () => {
                     // No se encontro sala, la creo
                     const res = await payload.create({
                         context: {skipHooks:true},
-                        collection: 'salones',
+                        collection: 'salas',
                         data: {
                             nombre: sala.slugpayload,
                             slug: sala.slugpayload,

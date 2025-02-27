@@ -39,7 +39,7 @@ const Comisiones: CollectionConfig = {
         {
             name: 'contexto',
             type: 'relationship',
-            relationTo: 'salones',
+            relationTo: 'salas',
         },
         SlugField(),
     ],

@@ -28,12 +28,12 @@ const Notificaciones: CollectionConfig = {
         {
             name: 'identidad',
             type: 'relationship',
-            relationTo: ['users', 'grupos', 'salones'],
+            relationTo: ['users', 'grupos', 'salas'],
         },
         {
             name: 'link',
             type: 'relationship',
-            relationTo: ['entradas', 'grupos', 'salones', 'users'],
+            relationTo: ['entradas', 'grupos', 'salas', 'users'],
         },
         {
             name: 'categoria',

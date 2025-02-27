@@ -46,7 +46,7 @@ const Entradas: CollectionConfig = {
         {
             name: 'sala',
             type: 'relationship',
-            relationTo: 'salones',
+            relationTo: 'salas',
         },
         {
             name: 'destacada',

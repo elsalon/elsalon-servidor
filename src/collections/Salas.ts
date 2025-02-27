@@ -6,8 +6,8 @@ import { Where } from 'payload/types';
 
 const globals = require('../globals');
 
-const Salones: CollectionConfig = {
-    slug: 'salones',
+const Salas: CollectionConfig = {
+    slug: 'salas',
     admin: {
         useAsTitle: 'nombre',
     },
@@ -114,7 +114,7 @@ const Salones: CollectionConfig = {
 
                     const user = req.user;
 
-                    let idsSalonesEnlazado: string[] = [globals.elSalonId]; // Incluyo el salon principal
+                    let idsSalasEnlazado: string[] = [globals.elSalonId]; // Incluyo el salon principal
                     let idsUsuariosEnlazado: string[] = [];
                     let idsGruposEnlazado: string[] = [];
 
@@ -128,7 +128,7 @@ const Salones: CollectionConfig = {
                     enlaces.docs.forEach((enlace) => {
                         switch (enlace.tipo) {
                             case 'salon':
-                                idsSalonesEnlazado.push(enlace.idEnlazado as string);
+                                idsSalasEnlazado.push(enlace.idEnlazado as string);
                                 break;
                             case 'bitacora':
                                 idsUsuariosEnlazado.push(enlace.idEnlazado as string);
@@ -145,7 +145,7 @@ const Salones: CollectionConfig = {
                                 autor: { equals: user.id }
                             },
                             {
-                                sala: { in: idsSalonesEnlazado }
+                                sala: { in: idsSalasEnlazado }
                             },
                             {
                                 autor: { in: idsUsuariosEnlazado }
@@ -212,4 +212,4 @@ const Salones: CollectionConfig = {
     ]
 };
 
-export default Salones;
+export default Salas;

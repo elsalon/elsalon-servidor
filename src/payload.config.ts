@@ -17,7 +17,7 @@ import Users from './collections/Users';
 import Grupos from './collections/Grupos';
 import Entradas from './collections/Entradas';
 import Comentarios from './collections/Comentarios'
-import Salones from './collections/Salones';
+import Salas from './collections/Salas';
 import Comisiones from './collections/Comisiones'
 import Imagenes from './collections/Imagenes';
 import Archivos from './collections/Archivos';
@@ -68,7 +68,7 @@ export default buildConfig({
   collections: [
     Users,
     Grupos,
-    Salones,
+    Salas,
     Comisiones,
     Entradas,
     Comentarios,

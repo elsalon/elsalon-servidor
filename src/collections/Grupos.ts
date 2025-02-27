@@ -50,7 +50,7 @@ const Grupos: CollectionConfig = {
         {
             name: 'contexto',
             type: 'relationship',
-            relationTo: 'salones',
+            relationTo: 'salas',
         },
         {
             name: 'desc',

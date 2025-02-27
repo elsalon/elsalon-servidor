@@ -40,7 +40,7 @@ const Eventos: CollectionConfig = {
         {
             name: 'sala',
             type: 'relationship',
-            relationTo: 'salones',
+            relationTo: 'salas',
         },
         {
             name: 'autor',

@@ -32,7 +32,7 @@ export class EventoNuevoHandler extends BaseNotificationHandler{
     }
     
     createIdentidad({ evento }) {
-        return { value: evento.sala.id, relationTo: 'salones' };
+        return { value: evento.sala.id, relationTo: 'salas' };
     }
     
     createMessage({ identidad, evento }) {
@@ -40,7 +40,7 @@ export class EventoNuevoHandler extends BaseNotificationHandler{
     }
     
     createLink({ evento }) {
-        return { value: evento.sala.id, relationTo: 'salones' };
+        return { value: evento.sala.id, relationTo: 'salas' };
     }
 }
 
@@ -63,7 +63,7 @@ export class EventoModificadoHandler extends BaseNotificationHandler{
     }
     
     createIdentidad({ evento }) {
-        return { value: evento.sala.id, relationTo: 'salones' };
+        return { value: evento.sala.id, relationTo: 'salas' };
     }
     
     createMessage({ identidad, evento }) {
@@ -71,6 +71,6 @@ export class EventoModificadoHandler extends BaseNotificationHandler{
     }
     
     createLink({ evento }) {
-        return { value: evento.sala.id, relationTo: 'salones' };
+        return { value: evento.sala.id, relationTo: 'salas' };
     }
 }
