@@ -1,13 +1,13 @@
 /**
  * Function to create an email template with a logo.
  * @param {Object} params - Parameters for the email.
- * @param {string} params.backendUrl - The base URL of the backend server.
+ * @param {string} params.baseUrl - The base URL of the backend server.
  * @param {string} params.title - The title of the email.
  * @param {string} params.content - The email content.
  * @returns {string} - The HTML email template.
  */
-export const simpleEmailTemplate = ({ backendUrl, title, content }) => {
-    const logoUrl = `${backendUrl}/public/salon_logo_lg_600x80.png`;
+export const simpleEmailTemplate = ({ baseUrl, title, content }) => {
+    const logoUrl = `${baseUrl}/salon_logo_lg_600x80.png`;
     return `
     <!DOCTYPE html>
     <html lang="en">

@@ -11,11 +11,10 @@ const mailVerify = {
   },
   generateEmailHTML: ({ req, token, user }: { req: any, token: string, user: { nombre: string } }) => {
     // Use the token provided to allow your user to verify their account
-    const backendUrl = `${req.protocol}://${req.get('host')}`; // Dynamically obtain the backend URL
     const frontUrl = req.headers.origin;
 
     return simpleEmailTemplate({
-      backendUrl: backendUrl,
+      baseUrl: frontUrl,
       title: `Hola ${user.nombre}, verifica tu cuenta`,
       content: `<p>Para verificar tu cuenta de El Salón, clickeá en este link</p>
       <p><a target="_blank" href="${frontUrl}/verificar?t=${token}">Verificar cuenta</a></p>`
@@ -36,11 +35,10 @@ const Users:CollectionConfig = {
         return `Restablacé tu contraseña de El Salón`;
       },
       generateEmailHTML: ({ req, token, user }: { req: any, token: string, user: { nombre: string } }) => {
-        const backendUrl = `${req.protocol}://${req.get('host')}`; // Dynamically obtain the backend URL
         const frontUrl = req.headers.origin;
 
         return simpleEmailTemplate({
-          backendUrl: backendUrl,
+          baseUrl: frontUrl,
           title: `Hola ${user.nombre}, restablacé tu contraseña`,
           content: `<p>Para restablecer tu contraseña de El Salón, clickeá en este link</p>
             <p><a target="_blank" href="${frontUrl}/recuperar?t=${token}">Restablecer contraseña</a></p>`
