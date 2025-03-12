@@ -1,6 +1,6 @@
 import payload from 'payload';
 import { SignJWT, jwtVerify  } from 'jose';
-const logoUrl = `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/public/salon_logo_lg_600x80.png`;
+const logoUrl = `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/salon_logo_lg_600x80.png`;
 
 // generate jwt
 async function generateToken(payload) {
