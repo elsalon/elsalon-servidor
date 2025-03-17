@@ -5,10 +5,10 @@ import payload from 'payload';
 const trimHtml = (html) => {
     return html
         // Remove empty paragraphs or paragraphs with just a line break
-        .replace(/<p>\s*<br>\s*<\/p>/g, '')
-        .replace(/<p>\s*<\/p>/g, '')
+        .replace(/<p[^>]*>\s*<br>\s*<\/p>/g, '')
+        .replace(/<p[^>]*>\s*<\/p>/g, '')
         // Remove leading/trailing whitespace within paragraphs
-        .replace(/<p>\s+/g, '<p>')
+        .replace(/<p[^>]*>\s+/g, '<p>')
         .replace(/\s+<\/p>/g, '</p>')
         // Trim the whole string
         .trim();
