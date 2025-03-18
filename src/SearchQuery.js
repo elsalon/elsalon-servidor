@@ -1,55 +1,79 @@
-// !!!!! TODO
 // Implementar con este plugin: https://payloadcms.com/docs/plugins/search
 export const searchQuery = async (req, res, next) => {
     const { payload } = req;
-    let { query, categorias } = req.query;
+    let { query, categorias, page = 1, limit = 8 } = req.query;
 
-    if(!query || query == undefined || !categorias || categorias == undefined){
-        res.status(400).json({error: 'Missing required parameters: query, categorias'});
+    if (!query || !categorias) {
+        res.status(400).json({ error: 'Missing required parameters: query, categorias' });
         return;
     }
     categorias = categorias.split(',');
-    
+
     try {
         const results = {};
+        let hasMore = false;
 
         if (categorias.includes('entradas')) {
-            results.entradas = await payload.find({
+            const entradasResult = await payload.find({
                 collection: 'entradas',
                 where: {
                     extracto: {
                         like: query,
                     },
                 },
-                limit: 8,
+                page: parseInt(page),
+                limit: parseInt(limit),
             });
+            results.entradas = entradasResult.docs;
+            if (entradasResult.totalDocs > page * limit) hasMore = true;
+        }
+
+        if (categorias.includes('comentarios')) {
+            const comentariosResult = await payload.find({
+                collection: 'comentarios',
+                where: {
+                    extracto: {
+                        like: query,
+                    },
+                },
+                page: parseInt(page),
+                limit: parseInt(limit),
+            });
+            results.comentarios = comentariosResult.docs;
+            if (comentariosResult.totalDocs > page * limit) hasMore = true;
         }
 
         if (categorias.includes('usuarios')) {
-            results.usuarios = await payload.find({
+            const usuariosResult = await payload.find({
                 collection: 'users',
                 where: {
                     nombre: {
                         like: query,
                     },
                 },
-                limit: 8,
+                page: parseInt(page),
+                limit: parseInt(limit),
             });
+            results.usuarios = usuariosResult.docs;
+            if (usuariosResult.totalDocs > page * limit) hasMore = true;
         }
 
         if (categorias.includes('grupos')) {
-            results.grupos = await payload.find({
+            const gruposResult = await payload.find({
                 collection: 'grupos',
                 where: {
                     nombre: {
                         like: query,
                     },
                 },
-                limit: 8,
+                page: parseInt(page),
+                limit: parseInt(limit),
             });
+            results.grupos = gruposResult.docs;
+            if (gruposResult.totalDocs > page * limit) hasMore = true;
         }
 
-        res.status(200).json(results);
+        res.status(200).json({ results, hasMore });
     } catch (error) {
         console.error('Search error:', error);
         res.status(500).json({ error: 'An error occurred during search' });
