@@ -11,7 +11,7 @@ const { PAYLOAD_SECRET } = process.env
 const { HUMHUB_TOKEN } = process.env
 
 const fetchHumhub = axios.create({
-  baseURL: 'https://elsalon.org/api/v1',
+  baseURL: 'https://backup.elsalon.org/api/v1',
   timeout: 1000,
   headers: {'Authorization': `Bearer ${HUMHUB_TOKEN}`}
 });

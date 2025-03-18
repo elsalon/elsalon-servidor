@@ -49,5 +49,9 @@
     {
         "slugpayload": "tecnicas-audiovisuales",
         "content_ids": [629,2899, 3970]
+    },
+    {
+        "slugpayload": "idis",
+        "content_ids": [7]
     }
 ]

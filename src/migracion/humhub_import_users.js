@@ -26,7 +26,7 @@ const filename = `humhub_importlogs_users.json`
 const {PAYLOAD_SECRET, HUMHUB_TOKEN, HUMHUB_DEFAULTPASS } = process.env
 
 const fetchHumhub = axios.create({
-    baseURL: 'https://elsalon.org/api/v1',
+    baseURL: 'https://backup.elsalon.org/api/v1',
     timeout: 100000,
     headers: { 'Authorization': `Bearer ${HUMHUB_TOKEN}` }
 });

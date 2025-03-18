@@ -101,7 +101,7 @@ if(skipPost){
 }
 
 const fetchHumhub = axios.create({
-    baseURL: 'https://elsalon.org/api/v1',
+    baseURL: 'https://backup.elsalon.org/api/v1',
     timeout: 100000,
     headers: { 'Authorization': `Bearer ${HUMHUB_TOKEN}` }
 });
@@ -110,6 +110,8 @@ var importedUsers = [];
 var importedPosts = [];
 var containerToSala = [];
 var emojis = [];
+
+let salaIdisId = null;
 
 
 const init = async () => {
@@ -139,8 +141,25 @@ const StartImport = async () => {
     await LoadLogsCreatedUsers();
     await LoadContainerToSala();
     await LoadLogsCreatedPosts();
+    await LoadSalaIdis();
     // Una vez cargado el archivo, empiezo a descargar los datos
     RetrieveNextPage(startingPage);
+}
+
+const LoadSalaIdis = async () => {
+    const response = await payload.find({
+        collection: 'salas',
+        where: {
+            slug: {
+                equals: 'idis'
+            }
+        }
+    });
+    if(response.docs.length > 0){
+        salaIdisId = response.docs[0].id;
+    }else{
+        console.log("No se encontro sala IDIS")
+    }
 }
 
 
@@ -284,6 +303,7 @@ const RetrieveNextPage = async (page) => {
         for (const post of results) {
             if (hardLimit == -1 || imported < hardLimit) { // Check if you should import
                 await ImportPost(post);
+                await HardCodeMigrateIdis(post);
             }
         }
 
@@ -299,6 +319,30 @@ const RetrieveNextPage = async (page) => {
         console.log("Error", error);
     }
 };
+
+const HardCodeMigrateIdis = async (post) => {
+    // Hardcode para migrar ids de humhub a salon
+    if (!post.content.metadata.contentcontainer_id) {
+        console.log("Post sin contentcontainer_id", post.id);
+        return;
+    }
+    // 7 es el id del container de IDIS
+    if(post.content.metadata.contentcontainer_id == 7){
+        console.log("Encontrado POST de IDIS")
+        const _imported = importedPosts.find(p => p.hhid == post.id);
+        if(_imported){
+            console.log("Post IDIS ya importado. Actualizamos sala", post.id);
+            const response = await payload.update({
+                collection: 'entradas',
+                id: _imported.id,
+                data: {
+                    sala: salaIdisId
+                }
+            });
+            console.log("Sala actualizada", response.id)
+        }
+    }
+}
 
 const ImportPost = async (post) => {
     // Me fijo si no esta para ser salteado

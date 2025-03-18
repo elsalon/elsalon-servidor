@@ -18,7 +18,7 @@ const filename = `humhub_${endpoint}.json`
 const { HUMHUB_TOKEN } = process.env
 
 const fetchHumhub = axios.create({
-  baseURL: 'https://elsalon.org/api/v1',
+  baseURL: 'https://backup.elsalon.org/api/v1',
   timeout: 100000,
   headers: {'Authorization': `Bearer ${HUMHUB_TOKEN}`}
 });
