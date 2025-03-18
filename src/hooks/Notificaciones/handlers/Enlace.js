@@ -21,8 +21,8 @@ export class EnlaceGrupoHandler extends BaseNotificationHandler{
         return `<strong>${identidad.nombre}</strong> enlazó con el grupo <strong>${link.nombre}</strong>`;
     }
     
-    createLink({ link }) {
-        return { value: link.id, relationTo: 'grupos' };
+    createLink({ identidad }) {
+        return { value: identidad.id, relationTo: 'users' };
     }
 }
 
