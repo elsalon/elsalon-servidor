@@ -31,7 +31,7 @@ async function GenerarMailDesuscripcion(email){
       
     // const token = jwt.sign(data, process.env.PAYLOAD_SECRET);
     const url = process.env.PAYLOAD_PUBLIC_SERVER_URL + `/api/desuscribir?token=${token}`;
-    return `<p>Para dejar de recibir mails de El Salón, podés <a href="${url}">desuscribirte acá</a>.</p>`;
+    return `<p>Para dejar de recibir mails de El Salón, <a href="${url}">desuscribite acá</a>.</p>`;
 }
 
 export const DesuscribirUsuario = async (req, res, next) => {
