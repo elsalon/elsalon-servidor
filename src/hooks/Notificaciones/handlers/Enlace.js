@@ -40,11 +40,11 @@ export class EnlaceUsuarioHandler extends BaseNotificationHandler{
         return { value: identidad.id, relationTo: 'users' };
     }
     
-    createMessage({ link, identidad }) {
+    createMessage({ identidad }) {
         return `<strong>${identidad.nombre}</strong> enlazó con vos`;
     }
     
-    createLink({ link }) {
-        return { value: link.id, relationTo: 'users' };
+    createLink({ identidad }) {
+        return { value: identidad.id, relationTo: 'users' };
     }
 }
