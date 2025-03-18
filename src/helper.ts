@@ -383,8 +383,8 @@ export const PopulateAprecios = async ({ doc, context, req }) => {
     // console.log("populate aprecios", doc.id);
     aprecios.docs.forEach((aprecio) => {
         // Reducimos el objeto
-        const autor = aprecio.autor as { id: string; nombre: string };
-        aprecio.autor = { id: autor.id, nombre: autor.nombre };
+        const autor = aprecio.autor as { id: string; nombre: string, slug: string };
+        aprecio.autor = { id: autor.id, nombre: autor.nombre, slug: autor.slug };
     });
     doc.aprecios = aprecios;
 }
