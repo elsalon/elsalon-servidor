@@ -1,7 +1,7 @@
 import { CollectionConfig } from 'payload/types'
 import {    isAdminAutorOrIntegrante, 
             CrearExtracto, 
-            ValidarEntradaVacia, 
+            ValidarContenidoVacio, 
             PublicadasYNoBorradas, 
             SoftDelete, 
             PopulateComentarios, 
@@ -23,7 +23,7 @@ const Entradas: CollectionConfig = {
     },
     hooks: {
         beforeChange: [
-            ValidarEntradaVacia,
+            ValidarContenidoVacio,
             LimpiarContenido,
             CrearExtracto,
             SetAutor,

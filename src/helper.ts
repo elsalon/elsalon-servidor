@@ -163,7 +163,7 @@ export const SetAutor = async ({ data, req }) => {
     }
 }
 
-export const ValidarEntradaVacia = async ({ context, operation, data, req }) => {
+export const ValidarContenidoVacio = async ({ context, operation, data, req }) => {
     if (context.skipHooks) return data;
     var entradaVacia = true;
     if (data.contenido == "<p><br></p>") {
