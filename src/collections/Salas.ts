@@ -13,7 +13,8 @@ const Salas: CollectionConfig = {
     },
     access: {
         create: isAdmin,
-        update: isAdminOrDocente,
+        // update: isAdminOrDocente,
+        update: () => true,
         read: () => true,
     },
     fields: [
@@ -88,6 +89,12 @@ const Salas: CollectionConfig = {
                 }
             ]
         },
+        {
+            name: 'secciones',
+            type: 'relationship',
+            hasMany: true,
+            relationTo: ['linksExternos'],
+        }
     ],
 
     endpoints: [

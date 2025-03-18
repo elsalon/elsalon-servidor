@@ -27,6 +27,7 @@ import Aprecio from './collections/Aprecio'
 import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
 import Etiquetas from './collections/Etiquetas'
+import LinksExternos from './collections/LinksExternos'
 import MailQueue from './collections/MailQueue'
 import Eventos from './collections/Eventos'
 
@@ -81,6 +82,7 @@ export default buildConfig({
     Fijadas,
     Eventos,
     Etiquetas,
+    LinksExternos,
     MailQueue,
   ],
   typescript: {
