@@ -231,6 +231,16 @@ const Users:CollectionConfig = {
         }
       ],
     },
+      type: 'group',
+      access: {
+        read: isAdminOrSelf,
+        update: isAdminOrSelf,
+      },
+      fields: [
+        {
+        }
+      ]
+    },
     SlugField(),
     {
       name: 'isAdmin',
