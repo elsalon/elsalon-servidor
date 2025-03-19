@@ -231,6 +231,8 @@ const Users:CollectionConfig = {
         }
       ],
     },
+    {
+      name: 'opciones',
       type: 'group',
       access: {
         read: isAdminOrSelf,
@@ -238,6 +240,9 @@ const Users:CollectionConfig = {
       },
       fields: [
         {
+          name: 'ocultarContadorPalabras',
+          type: 'checkbox',
+          defaultValue: false,
         }
       ]
     },
