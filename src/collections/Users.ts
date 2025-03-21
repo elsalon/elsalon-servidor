@@ -240,7 +240,7 @@ const Users:CollectionConfig = {
       },
       fields: [
         {
-          name: 'ocultarContadorPalabras',
+          name: 'mostrarContadorPalabras',
           type: 'checkbox',
           defaultValue: false,
         }
