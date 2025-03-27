@@ -1,13 +1,15 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrDocente } from '../helper'
+import { SlugField } from '../SlugField'
+import { Campos } from './CamposEntradasYComentarios'
 
-const LinksExternos: CollectionConfig = {
-    slug: 'linksExternos',
+const Paginas: CollectionConfig = {
+    slug: 'paginas',
     versions: {
         drafts: false,
     },
     admin: {
-        useAsTitle: 'label',
+        useAsTitle: 'titulo',
     },
     access: {
         read: () => true, // Importante para que el cache tenga acceso
@@ -21,25 +23,25 @@ const LinksExternos: CollectionConfig = {
     },
     fields: [
         {
-            name: 'url',
+            name: 'titulo',
             type: 'text',
         },
-        {
-            name: 'label',
-            type: 'textarea',
-        },
+        SlugField({
+            sourceField: 'titulo',
+            slugField: 'slug',
+            slugify: (input: string) => input.toLowerCase().replace(/\s+/g, '-'),
+            admin: {
+                position: 'sidebar',
+            },
+        }),
         {
             name: 'orden',
             type: 'number',
             defaultValue: 0,
         },
-        {
-            name: 'autor',
-            type: 'relationship',
-            relationTo: 'users',
-        },
+        ...Campos,
     ],
     endpoints: []
 }
 
-export default LinksExternos;
+export default Paginas;

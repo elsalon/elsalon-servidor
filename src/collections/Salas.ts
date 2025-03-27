@@ -89,12 +89,6 @@ const Salas: CollectionConfig = {
                 }
             ]
         },
-        {
-            name: 'secciones',
-            type: 'relationship',
-            hasMany: true,
-            relationTo: ['linksExternos'],
-        }
     ],
 
     endpoints: [

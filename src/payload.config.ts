@@ -27,8 +27,11 @@ import Aprecio from './collections/Aprecio'
 import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
 import Etiquetas from './collections/Etiquetas'
-import LinksExternos from './collections/LinksExternos'
+// import LinksExternos from './collections/LinksExternos'
+// import Paginas from './collections/Paginas'
+import Secciones from './collections/Secciones'
 import MailQueue from './collections/MailQueue'
+
 import Eventos from './collections/Eventos'
 
 // DigitalOcean Spaces
@@ -82,7 +85,8 @@ export default buildConfig({
     Fijadas,
     Eventos,
     Etiquetas,
-    LinksExternos,
+    // LinksExternos,
+    Secciones,
     MailQueue,
   ],
   typescript: {
