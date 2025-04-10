@@ -168,7 +168,8 @@ export class NotificationService {
         data: {
           ...notificationData,
           autor: recipient,
-          leida: false
+          leida: false,
+          actualizacion: new Date().toISOString()
         }
       })
     } catch (e) {

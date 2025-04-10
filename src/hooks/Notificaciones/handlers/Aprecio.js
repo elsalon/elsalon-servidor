@@ -38,8 +38,8 @@ export class AprecioEntradaUsuarioHandler extends BaseNotificationHandler {
   }
 
   createMessage({ identidad, link, aprecios }) {
-    if(aprecios.totalDocs == 0) return `<strong>${identidad.nombre}</strong> aprecia tu entrada <strong>${link.extracto}</strong>`;
-    if(aprecios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> y alguien más aprecian tu entrada <strong>${link.extracto}</strong>`;
+    if(aprecios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> aprecia tu entrada <strong>${link.extracto}</strong>`;
+    if(aprecios.totalDocs > 1) return `<strong>${identidad.nombre}</strong> y alguien más aprecian tu entrada <strong>${link.extracto}</strong>`;
     return `<strong>${identidad.nombre}</strong> y ${aprecios.totalDocs - 1} más aprecian tu entrada <strong>${link.extracto}</strong>`;
   }
 
@@ -77,8 +77,8 @@ export class AprecioEntradaGrupalHandler extends BaseNotificationHandler{
   }
 
   createMessage({ identidad, link, aprecios }) {
-    if(aprecios.totalDocs == 0) return `<strong>${identidad.nombre}</strong> aprecia tu entrada grupal <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
-    if(aprecios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> y alguien más aprecian tu entrada grupal <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
+    if(aprecios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> aprecia tu entrada grupal <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
+    if(aprecios.totalDocs > 1) return `<strong>${identidad.nombre}</strong> y alguien más aprecian tu entrada grupal <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
     return `<strong>${identidad.nombre}</strong> y ${aprecios.totalDocs - 1} más aprecian tu entrada grupal <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
   }
 
@@ -114,8 +114,8 @@ export class AprecioComentarioUsuarioHandler extends BaseNotificationHandler {
   }
 
   createMessage({ identidad, link, aprecios }) {
-    if(aprecios.totalDocs == 0) return `<strong>${identidad.nombre}</strong> aprecia tu comentario <strong>${link.extracto}</strong>`;
-    if(aprecios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> y alguien más aprecian tu comentario <strong>${link.extracto}</strong>`;
+    if(aprecios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> aprecia tu comentario <strong>${link.extracto}</strong>`;
+    if(aprecios.totalDocs > 1) return `<strong>${identidad.nombre}</strong> y alguien más aprecian tu comentario <strong>${link.extracto}</strong>`;
     return `<strong>${identidad.nombre}</strong> y ${aprecios.totalDocs - 1} más aprecian tu comentario <strong>${link.extracto}</strong>`;
   }
 
@@ -152,8 +152,8 @@ export class AprecioComentarioGrupalHandler extends BaseNotificationHandler{
   }
 
   createMessage({ identidad, link, aprecios }) {
-    if(aprecios.totalDocs == 0) return `<strong>${identidad.nombre}</strong> aprecia tu comentario grupal <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
-    if(aprecios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> y alguien más aprecian tu comentario grupal <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
+    if(aprecios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> aprecia tu comentario grupal <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
+    if(aprecios.totalDocs > 1) return `<strong>${identidad.nombre}</strong> y alguien más aprecian tu comentario grupal <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
     return `<strong>${identidad.nombre}</strong> y ${aprecios.totalDocs - 1} más aprecian tu comentario grupal <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
   }
 

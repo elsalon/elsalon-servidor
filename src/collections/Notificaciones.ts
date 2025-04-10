@@ -45,6 +45,11 @@ const Notificaciones: CollectionConfig = {
             type: 'checkbox',
             defaultValue: false,
         },
+        {
+            name: 'actualizacion',
+            type: 'date',
+            defaultValue: () => new Date(),
+        }
     ],
     endpoints:[
         {
@@ -54,6 +59,7 @@ const Notificaciones: CollectionConfig = {
                 if(!req.user) return res.status(401).json({ error: 'Unauthorized' });
                 try {
                     const userId = req.user?.id; // Obteniendo el ID del usuario actual
+                    
                     // Marcar todas las notificaciones como leídas
                     const result = await req.payload.update({
                         collection: 'notificaciones',
@@ -85,7 +91,7 @@ const Notificaciones: CollectionConfig = {
                     const where = {
                         and: [
                             { autor: { equals: userId } },
-                            { updatedAt: { greater_than_equal: fechaLecturaNotificaciones } },
+                            { actualizacion: { greater_than_equal: fechaLecturaNotificaciones } },
                         ]
                     }
                     if(includeDocs){
@@ -93,7 +99,7 @@ const Notificaciones: CollectionConfig = {
                         result = await req.payload.find({
                             collection: 'notificaciones',
                             where,
-                            sort: 'updatedAt',
+                            sort: 'actualizacion',
                             limit: 10,
                         });
                         // Asumo que la ventana está abierta asi que si hay notificaciones, actualizo la fecha de lectura
