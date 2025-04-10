@@ -3,10 +3,10 @@ import { Access, FieldAccess, FieldHook } from 'payload/types';
 import payload from 'payload';
 
 const trimHtml = (html) => {
+    console.log(html)
     return html
         // Remove paragraphs with only zero-width space
-        .replace(/<p[^>]*>\s*&ZeroWidthSpace;\s*<\/p>/g, '')
-        .replace(/<p[^>]*>\s*&#8203;\s*<\/p>/g, '')
+        .replace("<p>​</p>", '') // el caracter raro acá está bien es un espacio en blanco &#8203;
         // Remove empty paragraphs or paragraphs with just a line break
         .replace(/<p[^>]*>\s*<br>\s*<\/p>/g, '')
         .replace(/<p[^>]*>\s*<\/p>/g, '')
