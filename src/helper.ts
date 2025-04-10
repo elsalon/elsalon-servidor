@@ -4,6 +4,9 @@ import payload from 'payload';
 
 const trimHtml = (html) => {
     return html
+        // Remove paragraphs with only zero-width space
+        .replace(/<p[^>]*>\s*&ZeroWidthSpace;\s*<\/p>/g, '')
+        .replace(/<p[^>]*>\s*&#8203;\s*<\/p>/g, '')
         // Remove empty paragraphs or paragraphs with just a line break
         .replace(/<p[^>]*>\s*<br>\s*<\/p>/g, '')
         .replace(/<p[^>]*>\s*<\/p>/g, '')
