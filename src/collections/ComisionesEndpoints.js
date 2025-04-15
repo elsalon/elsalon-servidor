@@ -104,12 +104,11 @@ export const feed = async (req, res, next) => {
         });
         if (!comision) return res.status(404).json({ error: 'Comisión no encontrada' });
 
+        let queryWhere = req.query.where; // Base query
+
         const integrantes = comision.integrantes || [];
         const docentes = comision.docentes || [];
-
-        // Parse possible time filters
-        const createdGreaterThan = req.query.createdGreaterThan || null;
-        const createdLessThan = req.query.createdLessThan || null;
+        
 
         // Base filters
         const andFilters = [
@@ -127,24 +126,8 @@ export const feed = async (req, res, next) => {
             },
         ];
 
-        // Validate and add date filters
-        if (createdGreaterThan) {
-            const dateValue = new Date(createdGreaterThan);
-            if (isNaN(dateValue.getTime())) {
-                return res.status(400).json({ error: 'Invalid date format for createdGreaterThan' });
-            }
-            andFilters.push({ lastActivity: { greater_than: dateValue } });
-        }
-        if (createdLessThan) {
-            const dateValue = new Date(createdLessThan);
-            if (isNaN(dateValue.getTime())) {
-                return res.status(400).json({ error: 'Invalid date format for createdLessThan' });
-            }
-            andFilters.push({ lastActivity: { less_than: dateValue } });
-        }
+        queryWhere.and.push(...andFilters)
 
-        // Final where object
-        const where = { and: andFilters };
 
         // Pagination parameters
         const page = parseInt(req.query.page, 10) || 1;
@@ -152,7 +135,7 @@ export const feed = async (req, res, next) => {
 
         const feed = await req.payload.find({
             collection: 'entradas',
-            where,
+            where: queryWhere,
             sort: '-lastActivity',
             limit,
             page,
