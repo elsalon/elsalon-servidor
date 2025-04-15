@@ -28,18 +28,18 @@ export const unirme = async (req, res, next) => {
             },
         });
 
-        if(yaEstaEnOtraComision.totalDocs > 0){
-            return res.status(208).json({error: `Para unirte tenés que dejar la comisión ${yaEstaEnOtraComision.docs[0].nombre}`});
+        if (yaEstaEnOtraComision.totalDocs > 0) {
+            return res.status(208).json({ error: `Para unirte tenés que dejar la comisión ${yaEstaEnOtraComision.docs[0].nombre}` });
         }
-        
+
         const esAlumno = req.user.rol === 'alumno';
         if (esAlumno) {
             // Si es alumno, se le agrega a los integrantes
-            if(!comision.integrantes){ comision.integrantes = [] }
+            if (!comision.integrantes) { comision.integrantes = [] }
             comision.integrantes.push(userId);
         } else {
             // Si es docente, se le agrega a los docentes
-            if(!comision.docentes){ comision.docentes = [] }
+            if (!comision.docentes) { comision.docentes = [] }
             comision.docentes.push(userId);
         }
 
@@ -77,7 +77,7 @@ export const abandonar = async (req, res, next) => {
             // Si es docente, se lo saca de docentes
             comision.docentes = comision.docentes.filter(d => d !== userId);
         }
-        
+
         const update = await req.payload.update({
             collection: 'comisiones',
             id: comisionid,
@@ -91,100 +91,78 @@ export const abandonar = async (req, res, next) => {
 };
 
 export const feed = async (req, res, next) => {
-    try{
+    try {
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
-        const {startDate, endDate, page, createdGreaterThan} = req.query;
-        
+        const { comisionid } = req.params;
         const comision = await req.payload.findByID({
             collection: 'comisiones',
-            id: req.params.comisionid,
+            id: comisionid,
             depth: 0,
             overrideAccess: false,
             user: req.user,
         });
-
         if (!comision) return res.status(404).json({ error: 'Comisión no encontrada' });
 
-        let integrantes = comision.integrantes || [];
-        let docentes = comision.docentes || [];
+        const integrantes = comision.integrantes || [];
+        const docentes = comision.docentes || [];
 
+        // Parse possible time filters
+        const createdGreaterThan = req.query.createdGreaterThan || null;
+        const createdLessThan = req.query.createdLessThan || null;
 
-        /*
-        Cosas que vamos a buscar en este feed:
+        // Base filters
+        const andFilters = [
+            {
+                or: [
+                    { sala: { equals: comision.contexto } },
+                    { sala: { exists: false } },
+                ],
+            },
+            {
+                or: [
+                    { autor: { in: [...integrantes, ...docentes] } },
+                    { 'grupo.integrantes': { in: integrantes } },
+                ],
+            },
+        ];
 
-        SALA
-        * Entradas al espacio donde está esta comision (comision.contexto)
-        ó 
-        * Entradas sin espacio, que son las bitácoras
-        
-        FECHA
-        * Que estén en el rango de fechas (startDate, endDate) que son del actual periodo (cuatri o anual)
-        
-        AUTOR
-        * De usuarios que estén en la comisión (comision.integrantes & docentes)
-        ó
-        * De grupos cuyos integrantes estén en la comision 
-        
-        */
-        const docentesYAlumnos = [...integrantes, ...docentes]
-
-        let query = {
-            and:[
-                {
-                    lastActivity: { greater_than_equal: startDate },
-                },
-                {
-                    lastActivity: { less_than_equal: endDate },
-                },
-                {
-                    or: [
-                        {
-                            sala: { equals: comision.contexto } // o fue publicado en la sala de la comisión
-                        },
-                        {
-                            sala: { exists: false } // O fue publicado en la bitacora
-                        },
-                    ]
-                },
-                {
-                    or: [
-                        {
-                            autor: { in: docentesYAlumnos } // escrito por alguien de la comisión
-                        },
-                        {
-                            'grupo.integrantes': { in: integrantes } // o publicado por un grupo de alguien que esta en la comision
-                        },
-                    ]
-                }
-            ]
-        }
-
-        if(createdGreaterThan){
-            // Agrego la fecha de creación como criterio de busqueda
-            query = {
-                and: [
-                    query,
-                    {
-                        lastActivity: { greater_than: new Date(createdGreaterThan) }
-                    }
-                ]
+        // Validate and add date filters
+        if (createdGreaterThan) {
+            const dateValue = new Date(createdGreaterThan);
+            if (isNaN(dateValue.getTime())) {
+                return res.status(400).json({ error: 'Invalid date format for createdGreaterThan' });
             }
+            andFilters.push({ lastActivity: { greater_than: dateValue } });
         }
+        if (createdLessThan) {
+            const dateValue = new Date(createdLessThan);
+            if (isNaN(dateValue.getTime())) {
+                return res.status(400).json({ error: 'Invalid date format for createdLessThan' });
+            }
+            andFilters.push({ lastActivity: { less_than: dateValue } });
+        }
+
+        // Final where object
+        const where = { and: andFilters };
+
+        // Pagination parameters
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 12;
 
         const feed = await req.payload.find({
             collection: 'entradas',
-            where: query,
-            sort: "-lastActivity",  // Ordenar por fecha de creación, de más reciente a más antigua
-            limit: 5,
-            page: parseInt(page) || 1,
+            where,
+            sort: '-lastActivity',
+            limit,
+            page,
             overrideAccess: false,
             user: req.user,
         });
 
         return res.status(200).json(feed);
-    }catch(err){
+    } catch (err) {
         console.error(err);
         return res.status(500).json({ error: 'Error interno' });
     }
-}
+};
