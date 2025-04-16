@@ -31,6 +31,7 @@ const Archivos: CollectionConfig = {
             'application/vnd.rar',
             'application/x-rar-compressed',
             'application/pdf',
+            'application/epub',
             'application/x-7z-compressed',
             'application/x-tar',
             'application/octet-stream',
