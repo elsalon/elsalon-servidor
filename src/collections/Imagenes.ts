@@ -25,7 +25,7 @@ const Imagenes: CollectionConfig = {
         imageSizes: [
             {
                 name: 'medium',
-                width: 500,
+                width: 640,
                 height: undefined,
                 withoutEnlargement: true,
             },
