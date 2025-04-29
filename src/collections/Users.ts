@@ -243,6 +243,11 @@ const Users:CollectionConfig = {
           name: 'mostrarContadorPalabras',
           type: 'checkbox',
           defaultValue: false,
+        },
+        {
+          name: 'mostrarPlaylistVideos',
+          type: 'checkbox',
+          defaultValue: false,
         }
       ]
     },
