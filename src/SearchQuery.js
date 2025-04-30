@@ -43,12 +43,13 @@ export const searchQuery = async (req, res, next) => {
             if (comentariosResult.totalDocs > page * limit) hasMore = true;
         }
 
+        const nombre = query.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         if (categorias.includes('usuarios')) {
             const usuariosResult = await payload.find({
                 collection: 'users',
                 where: {
-                    nombre: {
-                        like: query,
+                    slug: {
+                        like: nombre,
                     },
                 },
                 page: parseInt(page),
