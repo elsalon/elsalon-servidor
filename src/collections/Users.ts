@@ -25,8 +25,8 @@ const mailVerify = {
 const Users:CollectionConfig = {
   slug: 'users',
   auth: {
-    // 1 mes
-    tokenExpiration: 1000 * 60 * 60 * 24 * 30,
+    // 2 meses
+    tokenExpiration: 1000 * 60 * 60 * 24 * 60,
     maxLoginAttempts: 7,
     lockTime: 1000 * 60, // 1 minute
     verify: process.env.DISABLE_EMAIL_VERIFICATION ? false : mailVerify,
