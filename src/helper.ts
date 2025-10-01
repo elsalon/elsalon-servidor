@@ -6,10 +6,10 @@ const trimHtml = (html) => {
     console.log(html)
     return html
         // Remove paragraphs with only zero-width space
-        .replace("<p>​</p>", '') // el caracter raro acá está bien es un espacio en blanco &#8203;
+        // .replace("<p>​</p>", '') // el caracter raro acá está bien es un espacio en blanco &#8203;
         // Remove empty paragraphs or paragraphs with just a line break
-        .replace(/<p[^>]*>\s*<br>\s*<\/p>/g, '')
-        .replace(/<p[^>]*>\s*<\/p>/g, '')
+        // .replace(/<p[^>]*>\s*<br>\s*<\/p>/g, '')
+        // .replace(/<p[^>]*>\s*<\/p>/g, '')
         // Remove leading/trailing whitespace within paragraphs
         .replace(/<p[^>]*>\s+/g, '<p>')
         .replace(/\s+<\/p>/g, '</p>')
