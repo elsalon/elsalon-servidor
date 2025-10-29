@@ -1,5 +1,6 @@
 const globals = {
     elSalonId: null,
+    bibliotecaId: null,
     notificationService: null,
   };
   

@@ -115,7 +115,7 @@ const Salas: CollectionConfig = {
 
                     const user = req.user;
 
-                    let idsSalasEnlazado: string[] = [globals.elSalonId]; // Incluyo el salon principal
+                    let idsSalasEnlazado: string[] = [globals.elSalonId, globals.bibliotecaId]; // Incluyo el salon principal y la biblioteca
                     let idsUsuariosEnlazado: string[] = [];
                     let idsGruposEnlazado: string[] = [];
 

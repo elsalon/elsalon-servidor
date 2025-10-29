@@ -36,6 +36,10 @@ const start = async () => {
       payload.logger.info(`Payload Admin URL: ${payload.getAdminURL()}`)
       const elsalon = await LoadSalonPrincipal(payload);
       globals.elSalonId = elsalon.id;
+      const biblioteca = await LoadBiblioteca(payload);
+      globals.bibliotecaId = biblioteca.id;
+      payload.logger.info(`El Salon ID: ${globals.elSalonId}`);
+      payload.logger.info(`Biblioteca ID: ${globals.bibliotecaId}`);
       globals.notificationService = new NotificationService();
 
       // Initialize mail queue
@@ -75,6 +79,29 @@ const LoadSalonPrincipal = async (payload) => {
       data: {
         nombre: 'El Salón',
         slug: 'el-salon',
+      }
+    })
+    return res;
+  }
+}
+
+const LoadBiblioteca = async (payload) => {
+  const sala = await payload.find({
+    collection: 'salas',
+    where: {
+      slug: {
+        equals: 'biblioteca'
+      }
+    }
+  })
+  if(sala.docs.length > 0){
+    return sala.docs[0];
+  }else{
+    const res = await payload.create({
+      collection: 'salas',
+      data: {
+        nombre: 'Biblioteca',
+        slug: 'biblioteca',
       }
     })
     return res;
