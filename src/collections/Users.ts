@@ -248,6 +248,25 @@ const Users:CollectionConfig = {
           name: 'mostrarPlaylistVideos',
           type: 'checkbox',
           defaultValue: false,
+        },
+        {
+          name: 'theme',
+          type: 'select',
+          options: [
+            {
+              label: 'Sistema',
+              value: 'system',
+            },
+            {
+              label: 'Claro',
+              value: 'light',
+            },
+            {              
+              label: 'Oscuro',
+              value: 'dark',
+            },
+          ],
+          defaultValue: 'system',
         }
       ]
     },
