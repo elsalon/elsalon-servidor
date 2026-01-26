@@ -3,6 +3,7 @@ import { colorPickerField } from '@innovixx/payload-color-picker-field';
 import { SlugField } from '../SlugField';
 import { isAdmin, isAdminOrDocente } from '../helper';
 import { Where } from 'payload/types';
+import { generateICS, filterEventsBySalaTimeframe } from '../utils/icsGenerator';
 
 const globals = require('../globals');
 
@@ -86,6 +87,33 @@ const Salas: CollectionConfig = {
                 {
                     name: 'activar',
                     type: 'checkbox',
+                },
+                {
+                    name: 'calendarioUrl',
+                    type: 'text',
+                    admin: {
+                        readOnly: true,
+                    },
+                    hooks: {
+                        afterRead : [
+                            async ({ data, req, siblingData }) => {
+                                // Generate the calendar URL based on current period and sala type
+                                const now = new Date();
+                                const currentYear = now.getFullYear();
+                                const isCuatrimestral = data.archivo?.frecuencia === 'cuatrimestral' || req.body?.archivo?.frecuencia === 'cuatrimestral';
+                                
+                                let period: string;
+                                if (isCuatrimestral) {
+                                    const currentCuatri = now.getMonth() < 7 ? 1 : 2;
+                                    period = `${currentYear}-c${currentCuatri}`;
+                                } else {
+                                    period = `${currentYear}`;
+                                }
+                                
+                                return `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/api/salas/${req.body?.id || 'ID'}/calendar/${period}.ics`;
+                            }
+                        ]
+                    }
                 }
             ]
         },
@@ -207,6 +235,76 @@ const Salas: CollectionConfig = {
                 } catch (error) {
                     console.error('Error fetching dashboard', error);
                     res.status(500).json({ error: 'Error fetching dashboard' });
+                }
+            }
+        },
+        {
+            path: '/:id/calendar/:period.ics',
+            method: 'get' as const,
+            handler: async (req, res, next) => {
+                try {
+                    const salaId = req.params.id;
+                    const period = req.params.period;
+
+                    // Parse period: can be "2025" or "2025-c1" or "2025-c2"
+                    const periodRegex = /^(\d{4})(?:-c([12]))?$/;
+                    const match = period.match(periodRegex);
+
+                    if (!match) {
+                        return res.status(400).json({ error: 'Invalid period format. Use YYYY or YYYY-c1 or YYYY-c2 (e.g., 2026 or 2026-c1)' });
+                    }
+
+                    const year = parseInt(match[1], 10);
+                    const cuatrimestre = match[2] ? parseInt(match[2], 10) as 1 | 2 : undefined;
+
+                    // Fetch the sala to get its name and timeframe config
+                    const sala = await req.payload.findByID({
+                        collection: 'salas',
+                        id: salaId,
+                    });
+
+                    if (!sala) {
+                        return res.status(404).json({ error: 'Sala not found' });
+                    }
+
+                    // Validate cuatrimestre usage
+                    const frecuencia = (sala as any).archivo?.frecuencia as string | undefined;
+                    if (cuatrimestre && frecuencia !== 'cuatrimestral') {
+                        return res.status(400).json({ error: 'This is an annual sala. Use just the year (e.g., 2026) without cuatrimestre' });
+                    }
+
+                    if (!cuatrimestre && frecuencia === 'cuatrimestral') {
+                        return res.status(400).json({ error: 'This is a cuatrimestral sala. Include cuatrimestre in the period (e.g., 2026-c1)' });
+                    }
+
+                    // Fetch all eventos for this sala
+                    const eventos = await req.payload.find({
+                        collection: 'eventos',
+                        where: {
+                            sala: { equals: salaId }
+                        },
+                        limit: 1000,
+                        sort: 'fecha',
+                    });
+
+                    // Filter events based on period
+                    const filteredEvents = filterEventsBySalaTimeframe(eventos.docs as any[], sala as any, year, cuatrimestre);
+
+                    // Generate ICS content
+                    const calendarName = cuatrimestre 
+                        ? `El Salon - ${sala.nombre} (${year} C${cuatrimestre})`
+                        : `El Salon - ${sala.nombre} (${year})`;
+                    const icsContent = generateICS(filteredEvents, calendarName);
+
+                    // Set appropriate headers for calendar file
+                    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+                    res.setHeader('Content-Disposition', `inline; filename="${sala.slug || sala.nombre}-${period}.ics"`);
+                    res.setHeader('Cache-Control', 'public, max-age=3600');
+                    
+                    res.status(200).send(icsContent);
+                } catch (error) {
+                    console.error('Error generating calendar:', error);
+                    res.status(500).json({ error: 'Error generating calendar' });
                 }
             }
         }
