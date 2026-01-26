@@ -109,8 +109,7 @@ const Salas: CollectionConfig = {
                                 } else {
                                     period = `${currentYear}`;
                                 }
-                                
-                                return `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/api/salas/${req.body?.id || 'ID'}/calendar/${period}.ics`;
+                                return `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/api/salas/${data.id}/calendar/${period}.ics`;
                             }
                         ]
                     }
