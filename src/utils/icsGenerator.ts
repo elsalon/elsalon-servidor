@@ -111,8 +111,7 @@ export function generateICS(events: ICSEvent[], calendarName: string): string {
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${escapeICSText(calendarName)}`,
-    'X-WR-TIMEZONE:America/Argentina/Buenos_Aires',
-    ''
+    'X-WR-TIMEZONE:America/Argentina/Buenos_Aires'
   ];
 
   events.forEach(event => {
@@ -136,7 +135,6 @@ export function generateICS(events: ICSEvent[], calendarName: string): string {
     }
     
     ics.push('END:VEVENT');
-    ics.push('');
   });
 
   ics.push('END:VCALENDAR');
