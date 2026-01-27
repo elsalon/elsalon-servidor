@@ -410,7 +410,7 @@ export const PopulateGuardado = async ({ doc, context, req }) => {
         limit: 1,
         depth: 0,
     });
-    const guardadoPorUsuario = userGuardo.totalDocs > 0;
+    const guardadoPorUsuario = userGuardo.totalDocs > 0 ? userGuardo.docs[0].categoria : null;
     doc.guardadoPorUsuario = guardadoPorUsuario;
 }
 

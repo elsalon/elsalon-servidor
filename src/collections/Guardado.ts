@@ -28,6 +28,11 @@ const Guardado: CollectionConfig = {
     {
       name: 'contenidotipo',
       type: 'text',
+    },
+    {
+      name: 'categoria',
+      type: 'select',
+      options: ['referencias', 'tecnicas', 'ideas', 'lecturas'],
     }
   ],
 }
