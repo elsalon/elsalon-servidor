@@ -24,6 +24,7 @@ import Archivos from './collections/Archivos';
 import Avatares from './collections/Avatares';
 import Enlaces from './collections/Enlaces';
 import Aprecio from './collections/Aprecio'
+import Guardado from './collections/Guardado'
 import Notificaciones from './collections/Notificaciones'
 import Fijadas from './collections/Fijadas'
 import Etiquetas from './collections/Etiquetas'
@@ -78,6 +79,7 @@ export default buildConfig({
     Comentarios,
     Enlaces,
     Aprecio,
+    Guardado,
     Imagenes,
     Archivos,
     Avatares,

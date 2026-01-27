@@ -392,6 +392,28 @@ export const PopulateAprecios = async ({ doc, context, req }) => {
     doc.aprecios = aprecios;
 }
 
+export const PopulateGuardado = async ({ doc, context, req }) => {
+    if (!req.user) return;
+    if (context.skipHooks) return;
+
+    // Los guardados solo pueden ser leidos por su autor
+    // Con que aparezca uno ya sabemos que el usuario lo guardó
+    var userGuardo = await payload.find({
+        collection: 'guardado',
+        where: {
+            contenidoid: {
+                equals: doc.id,
+            },
+        },
+        overrideAccess: false,
+        user: req.user,
+        limit: 1,
+        depth: 0,
+    });
+    const guardadoPorUsuario = userGuardo.totalDocs > 0;
+    doc.guardadoPorUsuario = guardadoPorUsuario;
+}
+
 export const ActualizarActividadEntrada = ({ doc }, entrada) => {
     payload.update({
         collection: 'entradas',

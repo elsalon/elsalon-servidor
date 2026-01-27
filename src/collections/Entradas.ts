@@ -7,6 +7,7 @@ import {    isAdminAutorOrIntegrante,
             PopulateComentarios, 
             PopulateAprecios, 
             LimpiarContenido, SetAutor,
+            PopulateGuardado,
             DestacarEntrada } from '../helper'
 import { NotificarGrupoNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
 import { Campos } from './CamposEntradasYComentarios'
@@ -36,6 +37,7 @@ const Entradas: CollectionConfig = {
         afterRead: [
             PopulateComentarios,
             PopulateAprecios,
+            PopulateGuardado,
         ],
     },
     admin: {
