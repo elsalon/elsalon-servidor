@@ -1,7 +1,7 @@
 // Implementar con este plugin: https://payloadcms.com/docs/plugins/search
 export const searchQuery = async (req, res, next) => {
     const { payload } = req;
-    let { query, categorias, page = 1, limit = 8 } = req.query;
+    let { query, categorias, page = 1, limit = 12 } = req.query;
 
     if (!query || !categorias) {
         res.status(400).json({ error: 'Missing required parameters: query, categorias' });
