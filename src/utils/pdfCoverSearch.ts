@@ -1,5 +1,4 @@
 import axios from 'axios';
-import FormData from 'form-data';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -10,10 +9,10 @@ interface ArchivoDoc {
 }
 
 interface EntradaDoc {
-    id: string;
+    id?: string; // Optional - won't exist in beforeChange hooks
     sala: string | { id: string };
     autor: string | { id: string };
-    archivos?: Array<{ archivo: string | ArchivoDoc }>;
+    archivos?: Array<{ archivo: string | { id: string } | ArchivoDoc }>;
     imagenes?: Array<{ imagen: string | { id: string } }>;
     extracto?: string;
     contenido?: string;
@@ -24,12 +23,15 @@ interface EntradaDoc {
 /**
  * Cleans a PDF filename into a human-readable search query.
  *   "Historia_del_Arte_Moderno.pdf" → "Historia del Arte Moderno"
+ *   "My Book (1).pdf" → "My Book"
+ *   "My Book-3.pdf" → "My Book"
  */
 function cleanFilenameForSearch(filename: string): string {
     return filename
         .replace(/\.pdf$/i, '')
         .replace(/[_\-\.]/g, ' ')
         .replace(/\(\d+\)/g, '')         // remove "(1)", "(2)" duplicates
+        .replace(/\s+\d+$/g, '')          // remove trailing " -1", " -2", "-3" style duplicates
         .replace(/\b\d{4,}\b/g, '')      // remove year-like or long numbers
         .replace(/\s+/g, ' ')
         .trim();
@@ -37,30 +39,74 @@ function cleanFilenameForSearch(filename: string): string {
 
 /**
  * Builds an ordered list of search queries to try against Open Library.
- * First entry = cleaned filename (most specific), second = extracto / contenido.
+ * Tries different variations to maximize chance of finding a cover.
+ * 1. Cleaned filename (most specific)
+ * 2. Title part only (before " - ")
+ * 3. Author part only (after " - ")
+ * 4. First N words from extracto/contenido
+ * 5. Progressive shorter versions of each
  */
 function buildSearchQueries(entry: EntradaDoc, pdfArchivos: ArchivoDoc[]): string[] {
     const queries: string[] = [];
+    const seen = new Set<string>();
 
-    // 1. From the first PDF filename
-    if (pdfArchivos.length > 0) {
-        const cleaned = cleanFilenameForSearch(pdfArchivos[0].filename);
-        if (cleaned.length > 3) queries.push(cleaned);
+    function addQuery(q: string) {
+        const normalized = q.toLowerCase().trim();
+        if (normalized.length > 3 && !seen.has(normalized)) {
+            queries.push(q);
+            seen.add(normalized);
+        }
     }
 
-    // 2. From the extracto (auto-generated short excerpt of contenido)
+    // ── 1. From PDF filename ─────────────────────────────────────
+    if (pdfArchivos.length > 0) {
+        const filename = pdfArchivos[0].filename;
+        const cleaned = cleanFilenameForSearch(filename);
+
+        // Try full cleaned name first
+        addQuery(cleaned);
+
+        // If filename has " - ", try title and author separately
+        if (filename.includes(' - ')) {
+            const [title, author] = filename.split(' - ').map(s => cleanFilenameForSearch(s));
+            if (title) addQuery(title);
+            if (author) addQuery(author);
+        }
+
+        // Try progressively shorter versions (first 5, 4, 3 words)
+        const words = cleaned.split(' ').filter(Boolean);
+        if (words.length > 2) {
+            for (let len = Math.min(5, words.length); len >= 3; len--) {
+                addQuery(words.slice(0, len).join(' '));
+            }
+        }
+    }
+
+    // ── 2. From extracto (most reliable text) ────────────────────
     if (entry.extracto && entry.extracto.length > 5) {
         const text = entry.extracto
             .substring(0, 150)
-            .replace(/https?:\/\/\S+/g, '')   // strip URLs
-            .replace(/[@#]\w+/g, '')           // strip mentions / hashtags
-            .replace(/<[^>]*>/g, '')           // strip any stray HTML
+            .replace(/https?:\/\/\S+/g, '')
+            .replace(/[@#]\w+/g, '')
+            .replace(/<[^>]*>/g, '')
             .replace(/\s+/g, ' ')
             .trim();
-        if (text.length > 5) queries.push(text);
+        
+        if (text.length > 5) {
+            // Full extracto first
+            addQuery(text);
+            
+            // Then try progressively shorter (first 6, 5, 4 words)
+            const words = text.split(' ').filter(Boolean);
+            if (words.length > 2) {
+                for (let len = Math.min(6, words.length); len >= 3; len--) {
+                    addQuery(words.slice(0, len).join(' '));
+                }
+            }
+        }
     }
 
-    // 3. From contenido (full text, trimmed) – only if different from extracto
+    // ── 3. From contenido (full text) ────────────────────────────
     if (entry.contenido && entry.contenido.length > 5 && entry.contenido !== entry.extracto) {
         const text = entry.contenido
             .substring(0, 200)
@@ -69,7 +115,16 @@ function buildSearchQueries(entry: EntradaDoc, pdfArchivos: ArchivoDoc[]): strin
             .replace(/<[^>]*>/g, '')
             .replace(/\s+/g, ' ')
             .trim();
-        if (text.length > 5 && !queries.includes(text)) queries.push(text);
+        
+        if (text.length > 5 && !seen.has(text.toLowerCase())) {
+            // Try first 5 words from contenido
+            const words = text.split(' ').filter(Boolean);
+            if (words.length > 0) {
+                for (let len = Math.min(5, words.length); len >= 3; len--) {
+                    addQuery(words.slice(0, len).join(' '));
+                }
+            }
+        }
     }
 
     return queries;
@@ -163,12 +218,10 @@ async function extractFirstPageFromPdf(pdfUrl: string): Promise<{ buffer: Buffer
 
         const pdfBuffer = Buffer.from(pdfResponse.data);
 
-        // Create form data with the PDF
+        // Create form data with the PDF – convert buffer to Uint8Array for Blob
         const form = new FormData();
-        form.append('file', pdfBuffer, {
-            filename: 'document.pdf',
-            contentType: 'application/pdf',
-        });
+        const uint8Array = new Uint8Array(pdfBuffer);
+        form.append('file', new Blob([uint8Array], { type: 'application/pdf' }), 'document.pdf');
 
         // Call ApyHub API
         const response = await axios.post(
@@ -177,7 +230,7 @@ async function extractFirstPageFromPdf(pdfUrl: string): Promise<{ buffer: Buffer
             {
                 headers: {
                     'apy-token': apyToken,
-                    ...form.getHeaders(),
+                    ...(form as any).getHeaders?.() || {},
                 },
                 responseType: 'arraybuffer',
                 timeout: 90000, // 90 seconds - PDF processing can take time
@@ -211,12 +264,10 @@ export function necesitaPortada(entry: any, bibliotecaId: string): boolean {
     const salaId = typeof entry.sala === 'string' ? entry.sala : entry.sala?.id;
     if (salaId !== bibliotecaId) return false;
 
-    const hasPdfArchivo =
-        Array.isArray(entry.archivos) && entry.archivos.length > 0;
     const hasImagenes =
         Array.isArray(entry.imagenes) && entry.imagenes.length > 0;
 
-    return hasPdfArchivo && !hasImagenes;
+    return !hasImagenes;
 }
 
 /**
@@ -233,26 +284,24 @@ export function necesitaPortada(entry: any, bibliotecaId: string): boolean {
  */
 export async function buscarYAsignarPortada(
     payload: any,
-    entry: EntradaDoc,
-): Promise<boolean> {
+    doc: EntradaDoc,
+): Promise<EntradaDoc> {
     try {
         const autorId =
-            typeof entry.autor === 'string' ? entry.autor : entry.autor?.id;
+            typeof doc.autor === 'string' ? doc.autor : doc.autor?.id;
 
-        // ── 1. Resolve archivo documents ────────────────────────────
-        const archivoIds: string[] = (entry.archivos || [])
+        // ── 1. Resolve archivo documents (if any) ──────────────────
+        const archivoIds: string[] = (doc.archivos || [])
             .map((a) =>
                 typeof a.archivo === 'string' ? a.archivo : (a.archivo as any)?.id,
             )
             .filter(Boolean) as string[];
 
-        if (archivoIds.length === 0) return false;
-
         const archivoDocs: ArchivoDoc[] = [];
         for (const id of archivoIds) {
             try {
-                const doc = await payload.findByID({ collection: 'archivos', id, depth: 0 });
-                if (doc) archivoDocs.push(doc);
+                const archivo = await payload.findByID({ collection: 'archivos', id, depth: 0 });
+                if (archivo) archivoDocs.push(archivo);
             } catch {
                 /* skip broken refs */
             }
@@ -261,13 +310,12 @@ export async function buscarYAsignarPortada(
         const pdfArchivos = archivoDocs.filter(
             (a) => a.mimeType === 'application/pdf',
         );
-        if (pdfArchivos.length === 0) return false;
 
         // ── 2. Build search queries ─────────────────────────────────
-        const queries = buildSearchQueries(entry, pdfArchivos);
+        const queries = buildSearchQueries(doc, pdfArchivos);
         if (queries.length === 0) {
-            console.log(`[PortadaPDF] No search terms for entry ${entry.id}`);
-            return false;
+            console.log(`[PortadaPDF] No search terms`);
+            return doc;
         }
 
         // ── 3. Search Open Library (try each query in order) ────────
@@ -286,29 +334,27 @@ export async function buscarYAsignarPortada(
             imageData = await downloadCoverImage(coverUrl);
         }
 
-        // ── 5. Fallback: Extract first page from PDF ───────────────
-        if (!imageData) {
+        // ── 5. Fallback: Extract first page from PDF (if exists) ───
+        if (!imageData && pdfArchivos.length > 0) {
             console.log(`[PortadaPDF] No online cover found, extracting first page from PDF...`);
             
-            // Construct the S3 CDN URL directly
             const cdnUrl = process.env.DO_SPACES_CDN_URL;
             if (!cdnUrl) {
                 console.warn('[PortadaPDF] DO_SPACES_CDN_URL not configured');
-                return false;
+            } else {
+                const pdfUrl = `${cdnUrl}/media/archivos/${pdfArchivos[0].filename}`;
+                imageData = await extractFirstPageFromPdf(pdfUrl);
             }
+        }
 
-            const pdfUrl = `${cdnUrl}/media/archivos/${pdfArchivos[0].filename}`;
-            imageData = await extractFirstPageFromPdf(pdfUrl);
-
-            if (!imageData) {
-                console.log(`[PortadaPDF] Failed to extract cover for entry ${entry.id}`);
-                return false;
-            }
+        if (!imageData) {
+            console.log(`[PortadaPDF] Failed to find or generate cover`);
+            return doc;
         }
 
         // ── 6. Upload to imagenes collection ────────────────────────
         const ext = imageData.mimetype.includes('png') ? 'png' : 'jpg';
-        const fileName = `portada-${entry.id}.${ext}`;
+        const fileName = `portada-biblioteca-${Date.now()}.${ext}`;
 
         const uploadedImage = await payload.create({
             collection: 'imagenes',
@@ -323,30 +369,41 @@ export async function buscarYAsignarPortada(
             },
         });
 
-        // ── 7. Attach image to the entry ────────────────────────────
-        const existingImages = (entry.imagenes || []).map((img) => ({
+        // ── 7. Attach image directly to doc.imagenes array ──────────
+        // Just modify doc in place – no need for payload.update() in afterChange hook
+        const existingImages = (doc.imagenes || []).map((img) => ({
             imagen:
                 typeof img.imagen === 'string'
                     ? img.imagen
                     : (img.imagen as any)?.id,
         }));
 
-        await payload.update({
-            collection: 'entradas',
-            id: entry.id,
-            context: {
-                skipHooks: true,
-                skipPortadaSearch: true,
-            },
-            data: {
-                imagenes: [...existingImages, { imagen: uploadedImage.id }],
-            },
-        });
+        doc.imagenes = [...existingImages, { imagen: uploadedImage.id }];
 
-        console.log(`[PortadaPDF] ✓ Cover assigned to entry ${entry.id}`);
-        return true;
+        console.log(`[PortadaPDF] ✓ Cover assigned`);
+        return doc;
     } catch (error) {
-        console.error(`[PortadaPDF] Error on entry ${entry.id}:`, error);
-        return false;
+        console.error(`[PortadaPDF] Error:`, error);
+        return doc;
     }
 }
+
+/**
+ * Payload afterChange hook for Biblioteca entries.
+ * Searches for and assigns book covers to entries without images.
+ * Modifies doc in place and returns the modified doc.
+ */
+export const BuscarPortadaBiblioteca = async ({ doc, req, operation, context }, bibliotecaId: string) => {
+    if (context?.skipHooks || context?.skipPortadaSearch) return doc;
+    if (operation !== 'create') return doc;
+
+    if (necesitaPortada(doc, bibliotecaId)) {
+        const modifiedDoc = await buscarYAsignarPortada(req.payload, doc).catch((err) => {
+            console.error('[PortadaPDF] Background error:', err);
+            return doc;
+        });
+        return modifiedDoc;
+    }
+
+    return doc;
+};

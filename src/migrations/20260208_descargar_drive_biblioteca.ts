@@ -2,10 +2,10 @@ import {
     MigrateUpArgs,
     MigrateDownArgs,
 } from "@payloadcms/db-mongodb";
-import { buscarYAsignarPortada } from "../utils/pdfCoverSearch";
+import { descargarArchivosDrive } from "../utils/googleDriveDownloader";
 
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
-    console.log("[Migration] Buscando portadas para entradas de Biblioteca sin imágenes");
+    console.log("[Migration] Descargando archivos de Google Drive en Biblioteca");
 
     // Find the Biblioteca sala
     const biblioteca = await payload.find({
@@ -39,21 +39,22 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
             depth: 0,
         });
 
+        console.log(`[Migration] Page ${page}: Found ${entries.docs.length} entries`);
+
         for (const entry of entries.docs) {
-            // Skip entries that already have images
-            if (entry.imagenes && (entry.imagenes as any[]).length > 0) continue;
+            if (!entry.contenido) continue;
 
             processed++;
             console.log(`[Migration] (${processed}) Processing entry ${entry.id}`);
 
             try {
-                await buscarYAsignarPortada(payload, entry as any);
+                await descargarArchivosDrive(payload, entry as any);
             } catch (error) {
                 console.error(`[Migration] Failed to process entry ${entry.id}:`, error);
             }
 
-            // Be polite to the Open Library API – 1 s between requests
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            // Be polite to Google Drive – 2 seconds between entries
+            await new Promise((resolve) => setTimeout(resolve, 2000));
         }
 
         hasMore = entries.hasNextPage;
@@ -66,6 +67,6 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
 }
 
 export async function down({ payload }: MigrateDownArgs): Promise<void> {
-    // Portadas assigned by this migration are regular imagenes docs.
+    // Files downloaded by this migration are regular archivos docs.
     // No automatic rollback – remove them manually if needed.
 }

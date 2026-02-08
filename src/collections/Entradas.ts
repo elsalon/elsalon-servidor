@@ -11,28 +11,41 @@ import {    isAdminAutorOrIntegrante,
             DestacarEntrada } from '../helper'
 import { NotificarGrupoNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
 import { Campos } from './CamposEntradasYComentarios'
-import { buscarYAsignarPortada, necesitaPortada } from '../utils/pdfCoverSearch'
+import { BuscarPortadaBiblioteca, buscarYAsignarPortada } from '../utils/pdfCoverSearch'
+import { DescargarArchivosDriveBiblioteca, descargarArchivosDrive } from '../utils/googleDriveDownloader'
 
 const globals = require('../globals');
 
 /**
- * After a new Biblioteca entry is created with PDFs but no images,
- * search Open Library for a book cover and attach it.
- * Runs in the background so it doesn't block the response.
+ * Combined hook that downloads Google Drive files first, then searches for cover.
+ * Runs in beforeChange to modify data before saving - no separate update needed!
  */
-const BuscarPortadaBiblioteca = async ({ doc, req, operation, context }) => {
-    if (context?.skipHooks || context?.skipPortadaSearch) return doc;
-    if (operation !== 'create') return doc;
-    if (!globals.bibliotecaId) return doc;
+const BibliotecaEnriquecimiento = async ({ data, operation, req, context }) => {
+    if (context?.skipHooks || context?.skipBibliotecaEnriquecimiento) return data;
+    if (operation !== 'create') return data;
+    if (!globals.bibliotecaId) return data;
 
-    if (necesitaPortada(doc, globals.bibliotecaId)) {
-        // Fire-and-forget – don't make the user wait for the API call
-        buscarYAsignarPortada(req.payload, doc).catch((err) => {
-            console.error('[PortadaPDF] Background error:', err);
-        });
+    const salaId = typeof data.sala === 'string' ? data.sala : data.sala?.id;
+    if (salaId !== globals.bibliotecaId) return data;
+
+    // Skip if no contenido (no Drive links to extract)
+    if (!data.contenido) return data;
+
+    try {
+        // Step 1: Download Google Drive files (modifies data.archivos)
+        console.log(`[BibliotecaEnriquecimiento] Downloading Drive files for new biblioteca entry`);
+        const modifiedData = await descargarArchivosDrive(req.payload, data as any);
+
+        // Step 2: Search and assign cover (modifies data.imagenes)
+        console.log(`[BibliotecaEnriquecimiento] Searching for cover for new biblioteca entry`);
+        const finalData = await buscarYAsignarPortada(req.payload, modifiedData);
+
+        console.log(`[BibliotecaEnriquecimiento] ✓ Enrichment complete`);
+        return finalData;
+    } catch (error) {
+        console.error(`[BibliotecaEnriquecimiento] Error:`, error);
+        return data;
     }
-
-    return doc;
 };
 
 const Entradas: CollectionConfig = {
@@ -51,12 +64,12 @@ const Entradas: CollectionConfig = {
             LimpiarContenido,
             CrearExtracto,
             SetAutor,
+            BibliotecaEnriquecimiento, // Download Drive + Search covers (before save)
             // TODO revisar que si se esta fijando/desfijando o destacando/desdestacando, se chequee que el usuario sea admin o docente
         ],
         afterChange: [
             NotificarGrupoNuevaEntrada, // Al resto de integrantes del grupo
             NotificarMencionEntrada,
-            BuscarPortadaBiblioteca,
         ],
         afterRead: [
             PopulateComentarios,
