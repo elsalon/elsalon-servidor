@@ -1,7 +1,8 @@
 import { CollectionConfig } from 'payload/types'
 import {
     isAdminAutorOrIntegrante,
-    ValidarContenidoVacio, CrearExtracto, PublicadasYNoBorradas, SoftDelete, PopulateAprecios, LimpiarContenido, ActualizarActividadEntrada, SetAutor
+    ValidarContenidoVacio, CrearExtracto, PublicadasYNoBorradas, SoftDelete, PopulateAprecios, LimpiarContenido, ActualizarActividadEntrada, SetAutor,
+    PopulateGuardado
 } from '../helper'
 import { NotificarNuevoComentario, NotificarGrupoNuevoComentario, NotificarMencionComentario } from '../hooks/Notificaciones/NotificationsHooks'
 import { NotificarMailComentario } from '../GeneradorNotificacionesMail'
@@ -36,6 +37,7 @@ const Comentarios: CollectionConfig = {
         ],
         afterRead: [
             PopulateAprecios,
+            PopulateGuardado,
         ],
     },
     admin: {

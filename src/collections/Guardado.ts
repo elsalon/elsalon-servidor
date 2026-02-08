@@ -36,8 +36,6 @@ const Guardado: CollectionConfig = {
           context: { skipPopulateComentarios: true },
         });
 
-        console.log('Guardados encontrados:', guardados.docs);
-
         res.status(200).json(guardados);
       },
     },
