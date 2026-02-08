@@ -11,6 +11,29 @@ import {    isAdminAutorOrIntegrante,
             DestacarEntrada } from '../helper'
 import { NotificarGrupoNuevaEntrada, NotificarMencionEntrada } from '../hooks/Notificaciones/NotificationsHooks'
 import { Campos } from './CamposEntradasYComentarios'
+import { buscarYAsignarPortada, necesitaPortada } from '../utils/pdfCoverSearch'
+
+const globals = require('../globals');
+
+/**
+ * After a new Biblioteca entry is created with PDFs but no images,
+ * search Open Library for a book cover and attach it.
+ * Runs in the background so it doesn't block the response.
+ */
+const BuscarPortadaBiblioteca = async ({ doc, req, operation, context }) => {
+    if (context?.skipHooks || context?.skipPortadaSearch) return doc;
+    if (operation !== 'create') return doc;
+    if (!globals.bibliotecaId) return doc;
+
+    if (necesitaPortada(doc, globals.bibliotecaId)) {
+        // Fire-and-forget – don't make the user wait for the API call
+        buscarYAsignarPortada(req.payload, doc).catch((err) => {
+            console.error('[PortadaPDF] Background error:', err);
+        });
+    }
+
+    return doc;
+};
 
 const Entradas: CollectionConfig = {
     slug: 'entradas',
@@ -33,6 +56,7 @@ const Entradas: CollectionConfig = {
         afterChange: [
             NotificarGrupoNuevaEntrada, // Al resto de integrantes del grupo
             NotificarMencionEntrada,
+            BuscarPortadaBiblioteca,
         ],
         afterRead: [
             PopulateComentarios,
