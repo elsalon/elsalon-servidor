@@ -1,61 +1,6 @@
 import { CollectionConfig } from 'payload/types'
 import { isAutor, isAdminOrAutor, afterCreateAssignAutorToUser } from '../helper'
 
-const feedHandler = async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  try {
-    const userId = req.user.id;
-    // const { categoria, page = 1, limit = 12 } = req.query;
-
-    // Build query for guardados
-    const whereQuery: any = {
-      autor: { equals: userId },
-      ...req.query,
-    };
-
-    // if (categoria) {
-    //   whereQuery.categoria = { equals: categoria };
-    // }
-    console.log('Guardado feed query:', whereQuery);
-
-    // Fetch guardados with pagination info
-    const guardadosResult = await req.payload.find({
-      collection: 'guardado',
-      where: whereQuery,
-      sort: 'createdAt', // older first (ascending)
-      // page: parseInt(page as string, 10),
-      // limit: parseInt(limit as string, 10),
-    });
-    
-    const entradaIds = guardadosResult.docs.map(g => g.contenidoid).filter(Boolean);
-
-    // Single query to fetch all entries
-    const entradasResult = await req.payload.find({
-      collection: 'entradas',
-      where: { id: { in: entradaIds } },
-      depth: 2,
-      limit: entradaIds.length,
-      req,
-    });
-
-    // sort entries to match the order of guardados
-    const entradasMap = new Map(entradasResult.docs.map(e => [e.id, e]));
-    const sortedEntradas = entradaIds.map(id => entradasMap.get(id)).filter(Boolean);
-
-    return res.json({
-      ...entradasResult,
-      docs: sortedEntradas,
-    });
-    
-  } catch (error) {
-    console.error('Error in guardado/feed:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-
 const Guardado: CollectionConfig = {
   slug: 'guardado',
   admin: {
@@ -71,9 +16,30 @@ const Guardado: CollectionConfig = {
   },
   endpoints: [
     {
-      path: '/feed',
+      path: '/list',
       method: 'get',
-      handler: feedHandler,
+      handler: async (req, res) => {
+        const { page = 1, limit = 10, categoria } = req.query;
+        
+        const where: any = {};
+        if (categoria) {
+          where.categoria = { equals: categoria };
+        }
+
+        const guardados = await req.payload.find({
+          collection: 'guardado',
+          where,
+          page: Number(page),
+          limit: Number(limit),
+          user: req.user,
+          depth: 3,
+          context: { skipPopulateComentarios: true },
+        });
+
+        console.log('Guardados encontrados:', guardados.docs);
+
+        res.status(200).json(guardados);
+      },
     },
   ],
   fields: [
@@ -83,13 +49,9 @@ const Guardado: CollectionConfig = {
       relationTo: 'users',
     },
     {
-      name: 'contenidoid',
-      type: 'text',
-      index: true,
-    },
-    {
-      name: 'contenidotipo',
-      type: 'text',
+      name: 'contenido',
+      type: 'relationship',
+      relationTo: ['entradas', 'comentarios'],
     },
     {
       name: 'categoria',

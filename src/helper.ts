@@ -348,6 +348,7 @@ export const SoftDelete = (collection: string) => {
 export const PopulateComentarios = async ({ doc, context, req }) => {
     // Fetch de los comentarios
     if (context.skipHooks) return;
+    if (context.skipPopulateComentarios) return;
     if (!req.user) return;
 
     var comentarios = await payload.find({
@@ -401,7 +402,7 @@ export const PopulateGuardado = async ({ doc, context, req }) => {
     var userGuardo = await payload.find({
         collection: 'guardado',
         where: {
-            contenidoid: {
+            'contenido.value': {
                 equals: doc.id,
             },
         },
@@ -412,6 +413,7 @@ export const PopulateGuardado = async ({ doc, context, req }) => {
     });
     const guardadoPorUsuario = userGuardo.totalDocs > 0 ? userGuardo.docs[0].categoria : null;
     doc.guardadoPorUsuario = guardadoPorUsuario;
+    return;
 }
 
 export const ActualizarActividadEntrada = ({ doc }, entrada) => {
