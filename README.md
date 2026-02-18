@@ -47,3 +47,26 @@ The easiest way to deploy your project is to use [Payload Cloud](https://payload
 ## Questions
 
 If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+
+## Scripts
+
+### Procesar Biblioteca
+
+Script manual para procesar todas las entradas de la sala Biblioteca. Realiza dos operaciones:
+
+1. **Descarga archivos de Google Drive**: Detecta enlaces de Drive en el contenido de las entradas y descarga los archivos PDF, adjuntándolos automáticamente.
+2. **Búsqueda de portadas**: Para entradas sin imágenes, busca y asigna portadas automáticamente desde Open Library.
+
+**Ejecutar dentro de Docker:**
+
+```bash
+docker-compose run --rm payload yarn procesar-biblioteca
+```
+
+**Guardar salida en archivo log:**
+
+```bash
+docker-compose run --rm payload yarn procesar-biblioteca > biblioteca-$(date +%Y%m%d-%H%M%S).log 2>&1
+```
+
+El script muestra progreso detallado en tiempo real y al finalizar presenta estadísticas completas de archivos descargados y portadas encontradas.

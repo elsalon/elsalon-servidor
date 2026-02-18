@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "migrate:humhub": "cross-env DISABLE_EMAIL_VERIFICATION=true npx ts-node -T ./src/migracion/humhub_import_posts.js",
+    "procesar-biblioteca": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts ts-node src/procesarBiblioteca.ts",
     "dev": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts nodemon",
     "build:payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload build",
     "build:server": "tsc",
