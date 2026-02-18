@@ -20,6 +20,8 @@ const Guardado: CollectionConfig = {
       method: 'get',
       handler: async (req, res) => {
         const { page = 1, limit = 10, categoria } = req.query;
+
+        console.log(`[Guardado List] Fetching guardados for user ${req.user?.id} with categoria=${categoria}, page=${page}, limit=${limit}`);
         
         const where: any = {};
         if (categoria) {
