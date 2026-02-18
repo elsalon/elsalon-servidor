@@ -115,7 +115,7 @@ async function procesarBiblioteca() {
                                 // Update entry with new archivos
                                 await payload.update({
                                     collection: 'entradas',
-                                    id: entry.id,
+                                    id: entry.id as string,
                                     data: {
                                         archivos: modifiedEntry.archivos,
                                     },
