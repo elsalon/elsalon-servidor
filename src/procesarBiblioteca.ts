@@ -93,7 +93,7 @@ async function procesarBiblioteca() {
                 console.log(`\n┌─ Entry ${stats.total}: ${entry.id}`);
 
                 // ═══ STEP 1: Download Google Drive files ═══
-                if (entry.contenido) {
+                if (entry.contenido && typeof entry.contenido === 'string') {
                     // Check if there are Drive links in content
                     const hasDriveLinks = /drive\.google\.com\/(file\/d\/|open\?id=)/i.test(entry.contenido);
                     
