@@ -172,52 +172,86 @@ function GenerarAvatar(autor){
             <img 
                 src="${autor.avatar.sizes.thumbnail.url}" 
                 alt="Avatar" 
-                style="max-width: 48px; height: auto;"
+                style="width: 40px; height: 40px; margin-right: 7px; display: block;"
             />`;
     }else{
         // Genero un cuadrado con las iniciales del nombre
         const initials = autor.nombre?.split(' ').map(word => word[0]).join('');
         return `
             <div 
-                style="width: 48px; height: 48px; background-color: #000; color: #fff; font-weight: bold; font-size: 20px; text-align: center; line-height: 48px;"
+                style="width: 40px; height: 40px; background-color: #3b3b3b; color: #fff; font-weight: 600; font-size: 14px; text-align: center; line-height: 40px; margin-right: 7px; display: block; 
+    text-transform: capitalize;"
             >
                 ${initials}
             </div>`;
     }
 }
 
+function FormatearFecha(datetime) {
+    const date = datetime instanceof Date ? datetime : new Date(datetime);
+    if (isNaN(date.getTime())) {
+        return 'Hace poco';
+    }
+    return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+    });
+}
+
 
 function BloqueEntrada(doc){
-    return `<table>
-    <tr>
-        <td width="48" style="vertical-align: top; padding-right: 20px;">
-            ${GenerarAvatar(doc.autor)}
-        </td>
-        <td>
-            <p style="font-weight:bold">${doc.autor.nombre}</p>
-            <p>${doc.extracto} - <a href="https://elsalon.org/entradas/${doc.id}">Ver en El Salón</a></p>
-        </td>
-    </tr>
-    </table>`;
+    return `
+    <div style="margin-bottom: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 6px;">
+        <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+            <div style="flex-shrink: 0;">
+                ${GenerarAvatar(doc.autor)}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <p style="margin: 0 0 4px 0; font-weight: 600; color: #1a1a1a; font-size: 14px;">${doc.autor.nombre}</p>
+                <p style="margin: 0; font-size: 12px; color: #6b7280;">${FormatearFecha(doc.createdAt)}</p>
+            </div>
+        </div>
+        <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.5;">${doc.extracto}</p>
+        <p style="margin: 12px 0 0 0;"><a href="https://elsalon.org/entradas/${doc.id}" style="color: #0066cc; text-decoration: none; font-size: 13px; font-weight: 500;">Ver en El Salón →</a></p>
+    </div>`;
 }
 
 function BloqueComentario(comentario, entrada){
-    return `<table>
-    <tr>
-        <td width="48" style="vertical-align: top; padding-right: 20px;">
-            ${GenerarAvatar(comentario.autor)}
-        </td>
-        <td>
-            <p style="font-weight:bold">${comentario.autor.nombre}</p>
-            <p>${comentario.extracto}</p>
-        </td>
-    </tr>
-    </table>
-
-    <p>Tu entrada:</p>
-    <p>${entrada.extracto}</p>
-
-    <a href="https://elsalon.org/entradas/${entrada.id}">Ver en El Salón</a>`;
+    return `
+    <div style="margin-bottom: 20px;">
+        <div style="padding: 15px; background-color: #f9f9f9; border-radius: 6px; margin-bottom: 12px;">
+            <p style="margin: 0 0 10px 0; font-size: 12px; color: #6b7280; font-weight: 500;">Comentario nuevo:</p>
+            <div style="display: flex; gap: 12px;">
+                <div style="flex-shrink: 0;">
+                    ${GenerarAvatar(comentario.autor)}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <p style="margin: 0 0 4px 0; font-weight: 600; color: #1a1a1a; font-size: 14px;">${comentario.autor.nombre}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">${FormatearFecha(comentario.createdAt)}</p>
+                    <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.5;">${comentario.extracto}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div style="padding: 15px; background-color: #fafafa; border-left: 3px solid #e5e7eb; border-radius: 4px;">
+            <p style="margin: 0 0 10px 0; font-size: 12px; color: #6b7280; font-weight: 500;">En la entrada:</p>
+            <div style="display: flex; gap: 12px;">
+                <div style="flex-shrink: 0;">
+                    ${GenerarAvatar(entrada.autor)}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <p style="margin: 0 0 4px 0; font-weight: 600; color: #1a1a1a; font-size: 14px;">${entrada.autor.nombre}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">${FormatearFecha(entrada.createdAt)}</p>
+                    <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.5;">${entrada.extracto}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <p style="margin: 20px 0 0 0; text-align: center;"><a href="https://elsalon.org/entradas/${entrada.id}" style="color: #0066cc; text-decoration: none; font-size: 13px; font-weight: 500;">Ver conversación completa →</a></p>`;
 }
 
 
