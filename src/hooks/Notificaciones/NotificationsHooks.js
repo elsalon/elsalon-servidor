@@ -1,5 +1,6 @@
 import { GetNuevosMencionados } from "../../helper";
 import { notificationService } from "../../globals";
+import { EnviarMailMencion, NotificarMailComentario } from "../../GeneradorNotificacionesMail";
 
 export const NotificarEvento = async ({
     doc,
@@ -237,7 +238,6 @@ export const NotificarMencionEntrada = async ({
             if (entradaGrupal && mencionAGrupo) {
                 notificationService.triggerNotification('mencion-grupo-entrada-grupal', rawContext);
             }
-
             else if (entradaGrupal && !mencionAGrupo) {
                 notificationService.triggerNotification('mencion-usuario-entrada-grupal', rawContext);
             }
@@ -248,6 +248,9 @@ export const NotificarMencionEntrada = async ({
             } else if (!entradaGrupal && !mencionAGrupo) {
                 notificationService.triggerNotification('mencion-usuario-entrada-individual', rawContext);
             }
+
+            // Fire and forget email notification
+            EnviarMailMencion(mencionado, doc, 'entradas').catch(e => console.error('Error sending mention email:', e));
         }
     } catch (e) {
         console.error("Error al notificar mencion en entrada", e);
@@ -306,6 +309,8 @@ export const NotificarMencionComentario = async ({
                 notificationService.triggerNotification('mencion-usuario-comentario-individual', rawContext);
             }
 
+            // Fire and forget email notification
+            EnviarMailMencion(mencionado, doc, 'comentarios').catch(e => console.error('Error sending mention email:', e));
         }
     } catch (e) {
         console.error("Error al notificar mencion en comentario", e);
