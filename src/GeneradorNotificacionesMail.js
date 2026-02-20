@@ -1,5 +1,6 @@
 import payload from 'payload';
 import { SignJWT, jwtVerify  } from 'jose';
+import { ResolveIdentidad, GetNotificationRecipients, NormalizeAutorData } from './helper';
 const logoUrl = `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/salon_logo_lg_600x80.png`;
 
 // generate jwt
@@ -180,7 +181,7 @@ function GenerarAvatar(autor){
         return `
             <div 
                 style="width: 40px; height: 40px; background-color: #3b3b3b; color: #fff; font-weight: 600; font-size: 14px; text-align: center; line-height: 40px; margin-right: 7px; display: block; 
-    text-transform: capitalize;"
+    text-transform: uppercase;"
             >
                 ${initials}
             </div>`;
@@ -202,15 +203,17 @@ function FormatearFecha(datetime) {
 }
 
 
-function BloqueEntrada(doc){
+function BloqueEntrada(doc, autorData = null){
+    // Use provided autor data or fall back to doc.autor for backwards compatibility
+    const autor = autorData || doc.autor;
     return `
     <div style="margin-bottom: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 6px;">
         <div style="display: flex; gap: 12px; margin-bottom: 12px;">
             <div style="flex-shrink: 0;">
-                ${GenerarAvatar(doc.autor)}
+                ${GenerarAvatar(autor)}
             </div>
             <div style="flex: 1; min-width: 0;">
-                <p style="margin: 0 0 4px 0; font-weight: 600; color: #1a1a1a; font-size: 14px;">${doc.autor.nombre}</p>
+                <p style="margin: 0 0 4px 0; font-weight: 600; color: #1a1a1a; font-size: 14px;">${autor.nombre}</p>
                 <p style="margin: 0; font-size: 12px; color: #6b7280;">${FormatearFecha(doc.createdAt)}</p>
             </div>
         </div>
@@ -219,17 +222,21 @@ function BloqueEntrada(doc){
     </div>`;
 }
 
-function BloqueComentario(comentario, entrada){
+function BloqueComentario(comentario, entrada, comentarioAutorData = null, entradaAutorData = null){
+    // Use provided author data or fall back to the document objects for backwards compatibility
+    const comentarioAutor = comentarioAutorData || comentario.autor;
+    const entradaAutor = entradaAutorData || entrada.autor;
+    
     return `
     <div style="margin-bottom: 20px;">
         <div style="padding: 15px; background-color: #f9f9f9; border-radius: 6px; margin-bottom: 12px;">
             <p style="margin: 0 0 10px 0; font-size: 12px; color: #6b7280; font-weight: 500;">Comentario nuevo:</p>
             <div style="display: flex; gap: 12px;">
                 <div style="flex-shrink: 0;">
-                    ${GenerarAvatar(comentario.autor)}
+                    ${GenerarAvatar(comentarioAutor)}
                 </div>
                 <div style="flex: 1; min-width: 0;">
-                    <p style="margin: 0 0 4px 0; font-weight: 600; color: #1a1a1a; font-size: 14px;">${comentario.autor.nombre}</p>
+                    <p style="margin: 0 0 4px 0; font-weight: 600; color: #1a1a1a; font-size: 14px;">${comentarioAutor.nombre}</p>
                     <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">${FormatearFecha(comentario.createdAt)}</p>
                     <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.5;">${comentario.extracto}</p>
                 </div>
@@ -240,10 +247,10 @@ function BloqueComentario(comentario, entrada){
             <p style="margin: 0 0 10px 0; font-size: 12px; color: #6b7280; font-weight: 500;">En la entrada:</p>
             <div style="display: flex; gap: 12px;">
                 <div style="flex-shrink: 0;">
-                    ${GenerarAvatar(entrada.autor)}
+                    ${GenerarAvatar(entradaAutor)}
                 </div>
                 <div style="flex: 1; min-width: 0;">
-                    <p style="margin: 0 0 4px 0; font-weight: 600; color: #1a1a1a; font-size: 14px;">${entrada.autor.nombre}</p>
+                    <p style="margin: 0 0 4px 0; font-weight: 600; color: #1a1a1a; font-size: 14px;">${entradaAutor.nombre}</p>
                     <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">${FormatearFecha(entrada.createdAt)}</p>
                     <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.5;">${entrada.extracto}</p>
                 </div>
@@ -256,52 +263,61 @@ function BloqueComentario(comentario, entrada){
 
 
 export const EnviarMailMencion = async (mencionado, doc, collection) => {
-    // Extract user ID from mention object (could be {value: {...}} or just the user object)
-    const userId = mencionado.value?.id || mencionado.id;
-    if (!userId) {
-        console.error('EnviarMailMencion: Could not extract user ID from mention object');
+    // Extract info from mention object (could be {value: {...}} or just the object)
+    const mencionadoId = mencionado.value?.id || mencionado.id;
+    const mencionadoCollection = mencionado.relationTo || (mencionado.value?.id ? 'users' : 'users');
+    
+    if (!mencionadoId) {
+        console.error('EnviarMailMencion: Could not extract mention info');
         return;
     }
 
-    // Fire and forget - fetch user and send email asynchronously
-    EnviarMailMencionAsync(userId, doc, collection).catch(e => 
+    // Fire and forget - resolve and send emails asynchronously
+    EnviarMailMencionAsync(mencionadoId, mencionadoCollection, doc, collection).catch(e => 
         console.error('Error in EnviarMailMencionAsync:', e)
     );
 }
 
-// Async function that actually fetches user and sends email (runs in background)
-const EnviarMailMencionAsync = async (userId, doc, collection) => {
+// Async function that handles both user and group mentions
+const EnviarMailMencionAsync = async (mencionadoId, mencionadoCollection, doc, collection) => {
     try {
-        // Fetch full user object to get notification preferences (bypasses read protection)
-        const user = await payload.findByID({
-            collection: 'users',
-            id: userId,
-        });
-
-        if (!user) {
-            console.warn('EnviarMailMencionAsync: User not found:', userId);
+        // Resolve the identity (user or group)
+        const identidad = await ResolveIdentidad(mencionadoId, mencionadoCollection);
+        if (!identidad) {
+            console.warn('EnviarMailMencionAsync: Could not resolve identity:', mencionadoCollection, mencionadoId);
             return;
         }
 
-        // Chequear si el usuario tiene notificaciones por mail habilitadas
-        if (!user.notificacionesMail?.activas || !user.notificacionesMail?.mencionNueva) {
+        // Get list of recipients (user itself or all group members)
+        const recipients = await GetNotificationRecipients(identidad, mencionadoCollection);
+        if (!Array.isArray(recipients) || recipients.length === 0) {
             return;
         }
 
-        var body = mailHeader;
-        console.log("Generando cuerpo del mail para mención en", collection);
+        // Get normalized author data for the mention source
+        const autorData = NormalizeAutorData(doc.autor, 'users');
 
-        if(collection == 'entradas'){
-            body += BloqueEntrada(doc);
-        }else{
-            body += BloqueComentario(doc, doc.entrada);
+        // Send email to each recipient
+        for (const recipient of recipients) {
+            // Check if recipient wants mention emails
+            if (!recipient.notificacionesMail?.activas || !recipient.notificacionesMail?.mencionNueva) {
+                continue;
+            }
+
+            var body = mailHeader;
+
+            if(collection == 'entradas'){
+                body += BloqueEntrada(doc, autorData);
+            }else{
+                body += BloqueComentario(doc, doc.entrada, autorData);
+            }
+            
+            body += await mailFooter(recipient.email);
+
+            AddToMailQueue(recipient.email, `El Salon - ${doc.autor.nombre} te mencionó`, body).catch(e => 
+                console.error('Error adding mention email to queue:', e)
+            );
         }
-        
-        body += await mailFooter(user.email);
-
-        AddToMailQueue(user.email, `El Salon - ${doc.autor.nombre} te mencionó`, body).catch(e => 
-            console.error('Error adding mention email to queue:', e)
-        );
     } catch (e) {
         console.error('Error al procesar mail de mención:', e);
     }
@@ -316,38 +332,50 @@ export const NotificarMailComentario = async ({
     if(operation != 'create') return;
     if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
     
-    // Fire and forget - fetch user and send email asynchronously
-    NotificarMailComentarioAsync(entrada.autor.id, doc, entrada).catch(e =>
+    // Fire and forget - fetch and send email asynchronously
+    NotificarMailComentarioAsync(entrada, doc).catch(e =>
         console.error('Error in NotificarMailComentarioAsync:', e)
     );
 }
 
-// Async function that fetches user and sends email (runs in background)
-const NotificarMailComentarioAsync = async (userId, doc, entrada) => {
+// Async function that handles both individual and group entry notifications
+const NotificarMailComentarioAsync = async (entrada, doc) => {
     try {
-        // Fetch full user object to get notification preferences
-        const user = await payload.findByID({
-            collection: 'users',
-            id: userId,
-        });
-
-        if (!user) {
-            console.warn('NotificarMailComentarioAsync: User not found:', userId);
+        // Resolve entry author (user or group)
+        const entradaAutorCollection = entrada.autoriaGrupal ? 'grupos' : 'users';
+        const entradaAutorId = entrada.autoriaGrupal ? entrada.grupo.id : entrada.autor.id;
+        
+        const entradaAutor = await ResolveIdentidad(entradaAutorId, entradaAutorCollection);
+        if (!entradaAutor) {
+            console.warn('NotificarMailComentarioAsync: Could not resolve entry author');
             return;
         }
 
-        // Chequear si el usuario tiene notificaciones por mail habilitadas
-        if (!user.notificacionesMail?.activas || !user.notificacionesMail?.comentarioNuevo) {
+        // Get list of recipients (entry author if user, or all group members if group entry)
+        const recipients = await GetNotificationRecipients(entradaAutor, entradaAutorCollection);
+        if (!Array.isArray(recipients) || recipients.length === 0) {
             return;
         }
-    
-        var body = mailHeader;
-        body += BloqueComentario(doc, entrada);
-        body += await mailFooter(user.email);
-    
-        AddToMailQueue(user.email, `El Salon - ${doc.autor.nombre} comentó una entrada tuya`, body).catch(e => 
-            console.error('Error adding comment email to queue:', e)
-        );
+
+        // Get normalized author data for the comment source and entry author
+        const comentarioAutorData = NormalizeAutorData(doc.autor, 'users');
+        const entradaAutorData = NormalizeAutorData(entradaAutor, entradaAutorCollection);
+
+        // Send email to each recipient
+        for (const recipient of recipients) {
+            // Check if recipient wants comment notification emails
+            if (!recipient.notificacionesMail?.activas || !recipient.notificacionesMail?.comentarioNuevo) {
+                continue;
+            }
+        
+            var body = mailHeader;
+            body += BloqueComentario(doc, entrada, comentarioAutorData, entradaAutorData);
+            body += await mailFooter(recipient.email);
+        
+            AddToMailQueue(recipient.email, `El Salon - ${doc.autor.nombre} comentó una entrada tuya`, body).catch(e => 
+                console.error('Error adding comment email to queue:', e)
+            );
+        }
     } catch(e){
         console.error('Error al procesar mail de comentario:', e);
     }

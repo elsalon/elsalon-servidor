@@ -27,7 +27,6 @@ export const SacarEmojis = (texto: string) => {
 
 // Helper acces function
 export const isLoggedIn: Access = ({ req: user }) => {
-    console.log("is logged in", Boolean(user));
     return Boolean(user)
 };
 
@@ -112,6 +111,65 @@ export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
     let viejosMencionados = previousDoc.mencionados.map(m => m.value);
     let nuevosMencionados = doc.mencionados.filter(m => !viejosMencionados.includes(m.value.id));
     return nuevosMencionados;
+}
+
+/**
+ * Resolve a full identity object (user or group) from ID and collection
+ * @param {string} identidadId - ID of user or group
+ * @param {string} identidadCollection - 'users' or 'grupos'
+ * @returns {Promise<object>} Full user or group document
+ */
+export const ResolveIdentidad = async (identidadId, identidadCollection) => {
+    if (!identidadId || !identidadCollection) return null;
+    
+    try {
+        const identidad = await payload.findByID({
+            collection: identidadCollection,
+            id: identidadId,
+        });
+        return identidad;
+    } catch (e) {
+        console.error(`Error resolving ${identidadCollection}/${identidadId}:`, e);
+        return null;
+    }
+}
+
+/**
+ * Get list of users who should receive a notification
+ * @param {object} identidad - User or group document
+ * @param {string} identidadCollection - 'users' or 'grupos'
+ * @returns {Promise<array>} Array of user objects to notify
+ */
+export const GetNotificationRecipients = async (identidad, identidadCollection) => {
+    if (!identidad) return [];
+    
+    if (identidadCollection === 'users') {
+        return [identidad];
+    } else if (identidadCollection === 'grupos') {
+        // Return all group members
+        return identidad.integrantes || [];
+    }
+    return [];
+}
+
+/**
+ * Normalize author data for consistent display (user or group)
+ * @param {object} identidad - User or group document
+ * @param {string} identidadCollection - 'users' or 'grupos'
+ * @returns {object} Normalized author data {nombre, email, avatar, isGroup}
+ */
+export const NormalizeAutorData = (identidad, identidadCollection) => {
+    if (!identidad) return null;
+    
+    const isGroup = identidadCollection === 'grupos';
+    
+    return {
+        nombre: identidad.nombre,
+        email: isGroup ? null : identidad.email, // Groups don't have email for "from"
+        avatar: identidad.avatar,
+        isGroup,
+        id: identidad.id
+    };
 }
 
 

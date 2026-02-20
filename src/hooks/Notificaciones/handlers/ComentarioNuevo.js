@@ -13,7 +13,6 @@ async function BuscarComentarios(entradaid) {
 }
 
 function MensajeGrupo ({identidad, link, comentarios}) {
-    console.log({link})
     if(comentarios.totalDocs == 1) return `<strong>${identidad.nombre}</strong> comentó a tu grupo <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
     if(comentarios.totalDocs > 1) return `<strong>${identidad.nombre}</strong> y alguien más comentaron a tu grupo <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
     return `<strong>${identidad.nombre}</strong> y ${comentarios.totalDocs - 1} más comentaron a tu grupo <strong>${link.grupo.nombre}</strong>: <strong>${link.extracto}</strong>`;
