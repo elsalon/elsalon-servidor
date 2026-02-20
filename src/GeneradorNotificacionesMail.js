@@ -234,7 +234,7 @@ export const EnviarMailMencion = async (mencionado, doc, collection) => {
     
     body += await mailFooter(mencionado.email);
 
-    AddToMailQueue(mencionado.email, `El Salon - ${doc.autor.nombre} te mencionó`, body);
+    AddToMailQueue(mencionado.email, `El Salon - ${doc.autor.nombre} te mencionó`, body).catch(e => console.error('Error adding mention email to queue:', e));
 }
 
 export const NotificarMailComentario = async ({
@@ -246,13 +246,13 @@ export const NotificarMailComentario = async ({
     if(operation != 'create') return;
     if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
     try{
-        if(!entrada.autor.notificacionesMail.activas || !entrada.autor.notificacionesMail.comentarioNuevo) return; // Chequear si el usuario tiene notificaciones por mail habilitadas
+        if(!entrada.autor.notificacionesMail?.activas || !entrada.autor.notificacionesMail?.comentarioNuevo) return; // Chequear si el usuario tiene notificaciones por mail habilitadas
     
         var body = mailHeader;
         body += BloqueComentario(doc, entrada);
         body += await mailFooter(entrada.autor.email);
     
-        AddToMailQueue(entrada.autor.email, `El Salon - ${doc.autor.nombre} comentó una entrada tuya`, body);
+        AddToMailQueue(entrada.autor.email, `El Salon - ${doc.autor.nombre} comentó una entrada tuya`, body).catch(e => console.error('Error adding comment email to queue:', e));
     }catch(e){
         console.error('Error al notificar por mail:', e);
     }
