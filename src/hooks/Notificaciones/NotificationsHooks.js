@@ -150,9 +150,6 @@ export const NotificarNuevoComentario = async ({
             }else if(!comentarioGrupal && !entradaGrupal){
                 notificationService.triggerNotification('comentario-usuario-entrada-usuario', rawData);
             }
-
-            // Fire and forget email notification
-            NotificarMailComentario({ doc, operation, context }, entrada).catch(e => console.error('Error sending comment email:', e));
         }
     } catch (e) {
         console.error("Error al notificar nuevo comentario", e);

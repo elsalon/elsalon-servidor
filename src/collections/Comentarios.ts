@@ -29,8 +29,8 @@ const Comentarios: CollectionConfig = {
             async (c) => {
                 const entrada = await c.req.payload.findByID({ collection: 'entradas', id: c.doc.entrada });
                 NotificarNuevoComentario(c, entrada);
-                NotificarGrupoNuevoComentario(c, entrada),
-                    NotificarMencionComentario(c, entrada)
+                NotificarGrupoNuevoComentario(c, entrada);
+                NotificarMencionComentario(c, entrada);
                 NotificarMailComentario(c, entrada);
                 ActualizarActividadEntrada(c, entrada);
             },

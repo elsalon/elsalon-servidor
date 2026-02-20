@@ -222,19 +222,55 @@ function BloqueComentario(comentario, entrada){
 
 
 export const EnviarMailMencion = async (mencionado, doc, collection) => {
-    // Chequear si el usuario tiene notificaciones por mail habilitadas
-    if (!mencionado.notificacionesMail?.activas || !mencionado.notificacionesMail?.mencionNueva) return;
-    var body = mailHeader;
-
-    if(collection == 'entradas'){
-        body += BloqueEntrada(doc);
-    }else{
-        body += BloqueComentario(doc, doc.entrada);
+    // Extract user ID from mention object (could be {value: {...}} or just the user object)
+    const userId = mencionado.value?.id || mencionado.id;
+    if (!userId) {
+        console.error('EnviarMailMencion: Could not extract user ID from mention object');
+        return;
     }
-    
-    body += await mailFooter(mencionado.email);
 
-    AddToMailQueue(mencionado.email, `El Salon - ${doc.autor.nombre} te mencionó`, body).catch(e => console.error('Error adding mention email to queue:', e));
+    // Fire and forget - fetch user and send email asynchronously
+    EnviarMailMencionAsync(userId, doc, collection).catch(e => 
+        console.error('Error in EnviarMailMencionAsync:', e)
+    );
+}
+
+// Async function that actually fetches user and sends email (runs in background)
+const EnviarMailMencionAsync = async (userId, doc, collection) => {
+    try {
+        // Fetch full user object to get notification preferences (bypasses read protection)
+        const user = await payload.findByID({
+            collection: 'users',
+            id: userId,
+        });
+
+        if (!user) {
+            console.warn('EnviarMailMencionAsync: User not found:', userId);
+            return;
+        }
+
+        // Chequear si el usuario tiene notificaciones por mail habilitadas
+        if (!user.notificacionesMail?.activas || !user.notificacionesMail?.mencionNueva) {
+            return;
+        }
+
+        var body = mailHeader;
+        console.log("Generando cuerpo del mail para mención en", collection);
+
+        if(collection == 'entradas'){
+            body += BloqueEntrada(doc);
+        }else{
+            body += BloqueComentario(doc, doc.entrada);
+        }
+        
+        body += await mailFooter(user.email);
+
+        AddToMailQueue(user.email, `El Salon - ${doc.autor.nombre} te mencionó`, body).catch(e => 
+            console.error('Error adding mention email to queue:', e)
+        );
+    } catch (e) {
+        console.error('Error al procesar mail de mención:', e);
+    }
 }
 
 export const NotificarMailComentario = async ({
@@ -245,15 +281,40 @@ export const NotificarMailComentario = async ({
     if(context.skipHooks) return;
     if(operation != 'create') return;
     if(entrada.autor.id == doc.autor.id) return; // No notificar si el autor del comentario es el mismo que el de la entrada
-    try{
-        if(!entrada.autor.notificacionesMail?.activas || !entrada.autor.notificacionesMail?.comentarioNuevo) return; // Chequear si el usuario tiene notificaciones por mail habilitadas
+    
+    // Fire and forget - fetch user and send email asynchronously
+    NotificarMailComentarioAsync(entrada.autor.id, doc, entrada).catch(e =>
+        console.error('Error in NotificarMailComentarioAsync:', e)
+    );
+}
+
+// Async function that fetches user and sends email (runs in background)
+const NotificarMailComentarioAsync = async (userId, doc, entrada) => {
+    try {
+        // Fetch full user object to get notification preferences
+        const user = await payload.findByID({
+            collection: 'users',
+            id: userId,
+        });
+
+        if (!user) {
+            console.warn('NotificarMailComentarioAsync: User not found:', userId);
+            return;
+        }
+
+        // Chequear si el usuario tiene notificaciones por mail habilitadas
+        if (!user.notificacionesMail?.activas || !user.notificacionesMail?.comentarioNuevo) {
+            return;
+        }
     
         var body = mailHeader;
         body += BloqueComentario(doc, entrada);
-        body += await mailFooter(entrada.autor.email);
+        body += await mailFooter(user.email);
     
-        AddToMailQueue(entrada.autor.email, `El Salon - ${doc.autor.nombre} comentó una entrada tuya`, body).catch(e => console.error('Error adding comment email to queue:', e));
-    }catch(e){
-        console.error('Error al notificar por mail:', e);
+        AddToMailQueue(user.email, `El Salon - ${doc.autor.nombre} comentó una entrada tuya`, body).catch(e => 
+            console.error('Error adding comment email to queue:', e)
+        );
+    } catch(e){
+        console.error('Error al procesar mail de comentario:', e);
     }
 }

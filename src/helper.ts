@@ -3,7 +3,6 @@ import { Access, FieldAccess, FieldHook } from 'payload/types';
 import payload from 'payload';
 
 const trimHtml = (html) => {
-    console.log(html)
     return html
         // Remove paragraphs with only zero-width space
         // .replace("<p>​</p>", '') // el caracter raro acá está bien es un espacio en blanco &#8203;
