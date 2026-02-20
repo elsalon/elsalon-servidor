@@ -442,3 +442,116 @@ export const ArrayToString:FieldHook = ({ value }) => {
     }
     return value;
 }
+
+// ==========================================
+// Date utilities for sala academic periods
+// ==========================================
+
+interface Sala {
+    nombre?: string;
+    slug?: string;
+    archivo?: {
+        activar?: boolean;
+        frecuencia?: 'anual' | 'cuatrimestral';
+        annoInicio?: number;
+    };
+}
+
+interface PeriodInfo {
+    year: number;
+    cuatrimestre?: 1 | 2;
+    inicio: Date;
+    fin: Date;
+}
+
+/**
+ * Detects current cuatrimestre (1 or 2)
+ * Cuatri 1: Jan 1 - Jul 31
+ * Cuatri 2: Aug 1 - Dec 31
+ */
+export function getCurrentCuatrimestre(): 1 | 2 {
+    const now = new Date();
+    const month = now.getMonth(); // 0-11
+    return month < 7 ? 1 : 2; // months 0-6 = cuatri 1, 7-11 = cuatri 2
+}
+
+/**
+ * Gets the date range for filtering based on sala's configuration and specific period
+ */
+export function getDateRangeForSala(sala: Sala, year: number, cuatrimestre?: 1 | 2): { start: Date; end: Date } {
+    const frecuencia = sala?.archivo?.frecuencia || 'anual';
+    
+    if (frecuencia === 'cuatrimestral' && cuatrimestre) {
+        if (cuatrimestre === 1) {
+            return {
+                start: new Date(`${year}-01-01`),
+                end: new Date(`${year}-07-31T23:59:59`)
+            };
+        } else {
+            return {
+                start: new Date(`${year}-08-01`),
+                end: new Date(`${year}-12-31T23:59:59`)
+            };
+        }
+    } else {
+        // Annual (default) - return entire year regardless of cuatrimestre param
+        return {
+            start: new Date(`${year}-01-01`),
+            end: new Date(`${year}-12-31T23:59:59`)
+        };
+    }
+}
+
+/**
+ * Gets the current academic period for a sala
+ */
+export function getCurrentPeriodForSala(sala: Sala): PeriodInfo {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const frecuencia = sala?.archivo?.frecuencia || 'anual';
+    
+    if (frecuencia === 'cuatrimestral') {
+        const currentCuatri = getCurrentCuatrimestre();
+        const { start, end } = getDateRangeForSala(sala, currentYear, currentCuatri);
+        return {
+            year: currentYear,
+            cuatrimestre: currentCuatri,
+            inicio: start,
+            fin: end
+        };
+    } else {
+        const { start, end } = getDateRangeForSala(sala, currentYear);
+        return {
+            year: currentYear,
+            inicio: start,
+            fin: end
+        };
+    }
+}
+
+/**
+ * Gets the academic period containing a specific date for a sala
+ */
+export function getPeriodForDate(sala: Sala, date: Date): PeriodInfo {
+    const year = date.getFullYear();
+    const frecuencia = sala?.archivo?.frecuencia || 'anual';
+    
+    if (frecuencia === 'cuatrimestral') {
+        const month = date.getMonth(); // 0-11
+        const cuatrimestre = month < 7 ? 1 : 2;
+        const { start, end } = getDateRangeForSala(sala, year, cuatrimestre);
+        return {
+            year,
+            cuatrimestre,
+            inicio: start,
+            fin: end
+        };
+    } else {
+        const { start, end } = getDateRangeForSala(sala, year);
+        return {
+            year,
+            inicio: start,
+            fin: end
+        };
+    }
+}

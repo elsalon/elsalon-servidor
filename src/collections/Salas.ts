@@ -142,7 +142,11 @@ const Salas: CollectionConfig = {
 
                     const user = req.user;
 
-                    let idsSalasEnlazado: string[] = [globals.elSalonId, globals.bibliotecaId]; // Incluyo el salon principal y la biblioteca
+                    // Build time-aware query clauses
+                    let salonClauses: any[] = [
+                        // Always include main salas (no time restriction)
+                        { sala: { in: [globals.elSalonId, globals.bibliotecaId] } }
+                    ];
                     let idsUsuariosEnlazado: string[] = [];
                     let idsGruposEnlazado: string[] = [];
 
@@ -151,19 +155,46 @@ const Salas: CollectionConfig = {
                         where: {
                             autor: { equals: user.id },
                         },
+                        limit: 1000, // Ensure we get all enlaces
                     });
 
                     enlaces.docs.forEach((enlace) => {
-                        switch (enlace.tipo) {
-                            case 'salon':
-                                idsSalasEnlazado.push(enlace.idEnlazado as string);
-                                break;
-                            case 'bitacora':
-                                idsUsuariosEnlazado.push(enlace.idEnlazado as string);
-                                break;
-                            case 'grupo':
-                                idsGruposEnlazado.push(enlace.idEnlazado as string);
-                                break;
+                        if (enlace.tipo === 'salon') {
+                            // Time-restricted sala enlaces
+                            if (enlace.inicio && enlace.fin) {
+                                // Only show posts created or active during enlace period
+                                const inicioDate = new Date(enlace.inicio as string);
+                                const finDate = new Date(enlace.fin as string);
+                                
+                                salonClauses.push({
+                                    and: [
+                                        { sala: { equals: enlace.idEnlazado } },
+                                        {
+                                            or: [
+                                                { 
+                                                    createdAt: { 
+                                                        greater_than_equal: inicioDate,
+                                                        less_than_equal: finDate
+                                                    }
+                                                },
+                                                { 
+                                                    lastActivity: { 
+                                                        greater_than_equal: inicioDate,
+                                                        less_than_equal: finDate
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                });
+                            } else {
+                                // Legacy enlace with null dates - treat as permanent
+                                salonClauses.push({ sala: { equals: enlace.idEnlazado } });
+                            }
+                        } else if (enlace.tipo === 'bitacora') {
+                            idsUsuariosEnlazado.push(enlace.idEnlazado as string);
+                        } else if (enlace.tipo === 'grupo') {
+                            idsGruposEnlazado.push(enlace.idEnlazado as string);
                         }
                     });
 
@@ -173,7 +204,7 @@ const Salas: CollectionConfig = {
                                 autor: { equals: user.id }
                             },
                             {
-                                sala: { in: idsSalasEnlazado }
+                                or: salonClauses
                             },
                             {
                                 autor: { in: idsUsuariosEnlazado }
