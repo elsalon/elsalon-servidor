@@ -245,11 +245,6 @@ const Users:CollectionConfig = {
           defaultValue: false,
         },
         {
-          name: 'mostrarPlaylistVideos',
-          type: 'checkbox',
-          defaultValue: false,
-        },
-        {
           name: 'theme',
           type: 'select',
           options: [
