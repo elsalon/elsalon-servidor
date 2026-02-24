@@ -153,6 +153,11 @@ export async function descargarArchivosDrive(
     doc: EntradaDoc,
 ): Promise<EntradaDoc> {
     try {
+        if (Array.isArray(doc.archivos) && doc.archivos.length > 0) {
+            console.log('[GoogleDrive] Archivos already present - skipping Drive download');
+            return doc;
+        }
+
         if (!doc.contenido) {
             console.log(`[GoogleDrive] No contenido`);
             return doc;

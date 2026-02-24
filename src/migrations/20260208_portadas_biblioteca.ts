@@ -47,12 +47,23 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
             console.log(`[Migration] (${processed}) Processing entry ${entry.id}`);
 
             try {
-                await buscarYAsignarPortada(payload, entry as any);
+                const result = await buscarYAsignarPortada(payload, entry as any);
+                const hasNewImage = (result?.imagenes as any[])?.length > 0;
+
+                if (hasNewImage) {
+                    await payload.update({
+                        collection: 'entradas',
+                        id: entry.id as string,
+                        data: {
+                            imagenes: result.imagenes,
+                        },
+                    });
+                }
             } catch (error) {
                 console.error(`[Migration] Failed to process entry ${entry.id}:`, error);
             }
 
-            // Be polite to the Open Library API – 1 s between requests
+            // Avoid API bursts - 1 s between requests
             await new Promise((resolve) => setTimeout(resolve, 1000));
         }
 

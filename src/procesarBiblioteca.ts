@@ -146,11 +146,21 @@ async function procesarBiblioteca() {
                     stats.coversSearched++;
 
                     try {
+                        const beforeImages = (entry.imagenes as any[])?.length || 0;
                         const result = await buscarYAsignarPortada(payload, entry as any);
-                        
-                        if (result) {
+                        const afterImages = (result?.imagenes as any[])?.length || 0;
+
+                        if (afterImages > beforeImages) {
                             stats.coversFound++;
                             console.log('│  ✅ Cover found and assigned');
+
+                            await payload.update({
+                                collection: 'entradas',
+                                id: entry.id as string,
+                                data: {
+                                    imagenes: result.imagenes,
+                                },
+                            });
                         } else {
                             console.log('│  ⚠️  No cover found');
                         }

@@ -14,159 +14,148 @@ interface EntradaDoc {
     autor: string | { id: string };
     archivos?: Array<{ archivo: string | { id: string } | ArchivoDoc }>;
     imagenes?: Array<{ imagen: string | { id: string } }>;
-    extracto?: string;
-    contenido?: string;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-/**
- * Cleans a PDF filename into a human-readable search query.
- *   "Historia_del_Arte_Moderno.pdf" → "Historia del Arte Moderno"
- *   "My Book (1).pdf" → "My Book"
- *   "My Book-3.pdf" → "My Book"
- */
-function cleanFilenameForSearch(filename: string): string {
-    return filename
-        .replace(/\.pdf$/i, '')
-        .replace(/[_\-\.]/g, ' ')
-        .replace(/\(\d+\)/g, '')         // remove "(1)", "(2)" duplicates
-        .replace(/\s+\d+$/g, '')          // remove trailing " -1", " -2", "-3" style duplicates
-        .replace(/\b\d{4,}\b/g, '')      // remove year-like or long numbers
-        .replace(/\s+/g, ' ')
-        .trim();
+const CLOUDCONVERT_POLL_INTERVAL_MS = 2500;
+const CLOUDCONVERT_MAX_WAIT_MS = 90000;
+
+type CloudConvertTask = {
+    name: string;
+    status: string;
+    result?: { files?: Array<{ url: string }> };
+};
+
+type CloudConvertJobResponse = {
+    data?: {
+        id?: string;
+        status?: string;
+        tasks?: CloudConvertTask[];
+    };
+};
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Builds an ordered list of search queries to try against Open Library.
- * Tries different variations to maximize chance of finding a cover.
- * 1. Cleaned filename (most specific)
- * 2. Title part only (before " - ")
- * 3. Author part only (after " - ")
- * 4. First N words from extracto/contenido
- * 5. Progressive shorter versions of each
- */
-function buildSearchQueries(entry: EntradaDoc, pdfArchivos: ArchivoDoc[]): string[] {
-    const queries: string[] = [];
-    const seen = new Set<string>();
-
-    function addQuery(q: string) {
-        const normalized = q.toLowerCase().trim();
-        if (normalized.length > 3 && !seen.has(normalized)) {
-            queries.push(q);
-            seen.add(normalized);
-        }
+async function createCloudConvertJob(pdfUrl: string): Promise<string | null> {
+    const apiKey = process.env.CLOUDCONVERT_API_KEY;
+    if (!apiKey) {
+        console.warn('[PortadaPDF] CLOUDCONVERT_API_KEY not configured - skipping CloudConvert');
+        return null;
     }
 
-    // ── 1. From PDF filename ─────────────────────────────────────
-    if (pdfArchivos.length > 0) {
-        const filename = pdfArchivos[0].filename;
-        const cleaned = cleanFilenameForSearch(filename);
+    try {
+        const response = await axios.post<CloudConvertJobResponse>(
+            'https://api.cloudconvert.com/v2/jobs',
+            {
+                tasks: {
+                    'import-1': {
+                        operation: 'import/url',
+                        url: pdfUrl,
+                    },
+                    'convert-1': {
+                        operation: 'convert',
+                        input: 'import-1',
+                        input_format: 'pdf',
+                        output_format: 'jpg',
+                        page_range: '1',
+                    },
+                    'export-1': {
+                        operation: 'export/url',
+                        input: 'convert-1',
+                    },
+                },
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                timeout: 15000,
+            },
+        );
 
-        // Try full cleaned name first
-        addQuery(cleaned);
-
-        // If filename has " - ", try title and author separately
-        if (filename.includes(' - ')) {
-            const [title, author] = filename.split(' - ').map(s => cleanFilenameForSearch(s));
-            if (title) addQuery(title);
-            if (author) addQuery(author);
+        const jobId = response.data?.data?.id;
+        if (!jobId) {
+            console.warn('[PortadaPDF] CloudConvert job creation returned no id');
+            return null;
         }
 
-        // Try progressively shorter versions (first 5, 4, 3 words)
-        const words = cleaned.split(' ').filter(Boolean);
-        if (words.length > 2) {
-            for (let len = Math.min(5, words.length); len >= 3; len--) {
-                addQuery(words.slice(0, len).join(' '));
-            }
+        console.log(`[PortadaPDF] CloudConvert job created: ${jobId}`);
+        return jobId;
+    } catch (error: any) {
+        const status = error?.response?.status;
+        const data = error?.response?.data;
+        if (status) {
+            console.warn(
+                `[PortadaPDF] CloudConvert job creation error: ${status} ${error.message}`,
+                data || null,
+            );
+        } else {
+            console.warn('[PortadaPDF] CloudConvert job creation error:', error.message);
         }
+        return null;
     }
-
-    // ── 2. From extracto (most reliable text) ────────────────────
-    if (entry.extracto && entry.extracto.length > 5) {
-        const text = entry.extracto
-            .substring(0, 150)
-            .replace(/https?:\/\/\S+/g, '')
-            .replace(/[@#]\w+/g, '')
-            .replace(/<[^>]*>/g, '')
-            .replace(/\s+/g, ' ')
-            .trim();
-        
-        if (text.length > 5) {
-            // Full extracto first
-            addQuery(text);
-            
-            // Then try progressively shorter (first 6, 5, 4 words)
-            const words = text.split(' ').filter(Boolean);
-            if (words.length > 2) {
-                for (let len = Math.min(6, words.length); len >= 3; len--) {
-                    addQuery(words.slice(0, len).join(' '));
-                }
-            }
-        }
-    }
-
-    // ── 3. From contenido (full text) ────────────────────────────
-    if (entry.contenido && entry.contenido.length > 5 && entry.contenido !== entry.extracto) {
-        const text = entry.contenido
-            .substring(0, 200)
-            .replace(/https?:\/\/\S+/g, '')
-            .replace(/[@#]\w+/g, '')
-            .replace(/<[^>]*>/g, '')
-            .replace(/\s+/g, ' ')
-            .trim();
-        
-        if (text.length > 5 && !seen.has(text.toLowerCase())) {
-            // Try first 5 words from contenido
-            const words = text.split(' ').filter(Boolean);
-            if (words.length > 0) {
-                for (let len = Math.min(5, words.length); len >= 3; len--) {
-                    addQuery(words.slice(0, len).join(' '));
-                }
-            }
-        }
-    }
-
-    return queries;
 }
 
-// ── Open Library API ─────────────────────────────────────────────────
+async function waitForCloudConvertExportUrl(jobId: string): Promise<string | null> {
+    const apiKey = process.env.CLOUDCONVERT_API_KEY;
+    if (!apiKey) return null;
 
-/**
- * Queries the Open Library Search API and returns the URL of the first
- * cover image found, or null.
- *
- * Uses the `lang` param to prefer Spanish editions first (without
- * excluding non-Spanish results), then falls back to a language-neutral
- * search if no cover was found.
- */
-async function searchOpenLibraryCover(query: string): Promise<string | null> {
-    // Try Spanish-preferred first, then fallback without lang preference
-    const attempts: Array<Record<string, string | number>> = [
-        { q: query, limit: 5, fields: 'key,title,author_name,cover_i', lang: 'es' },
-        { q: query, limit: 5, fields: 'key,title,author_name,cover_i' },
-    ];
-
-    for (const params of attempts) {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < CLOUDCONVERT_MAX_WAIT_MS) {
         try {
-            const response = await axios.get('https://openlibrary.org/search.json', {
-                params,
-                timeout: 10000,
-            });
+            const response = await axios.get<CloudConvertJobResponse>(
+                `https://api.cloudconvert.com/v2/jobs/${jobId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${apiKey}`,
+                    },
+                    timeout: 15000,
+                },
+            );
 
-            const docs = response.data?.docs || [];
-            for (const doc of docs) {
-                if (doc.cover_i) {
-                    const langLabel = params.lang ? ` (lang=${params.lang})` : ' (any lang)';
-                    console.log(`[PortadaPDF] Cover found via Open Library${langLabel}: "${doc.title}"`);
-                    return `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`;
+            const job = response.data?.data;
+            if (!job) {
+                console.warn('[PortadaPDF] CloudConvert job response missing data');
+                return null;
+            }
+
+            if (job.status === 'finished') {
+                const exportTask = job.tasks?.find((task) => task.name === 'export-1');
+                const exportUrl = exportTask?.result?.files?.[0]?.url;
+                if (!exportUrl) {
+                    console.warn('[PortadaPDF] CloudConvert finished without export url');
+                    return null;
                 }
+
+                return exportUrl;
+            }
+
+            if (job.status === 'error' || job.status === 'failed') {
+                console.warn(`[PortadaPDF] CloudConvert job failed: ${job.status}`);
+                return null;
             }
         } catch (error: any) {
-            console.warn('[PortadaPDF] Open Library search error:', error.message);
+            const status = error?.response?.status;
+            const data = error?.response?.data;
+            if (status) {
+                console.warn(
+                    `[PortadaPDF] CloudConvert status error: ${status} ${error.message}`,
+                    data || null,
+                );
+            } else {
+                console.warn('[PortadaPDF] CloudConvert status error:', error.message);
+            }
+            return null;
         }
+
+        await sleep(CLOUDCONVERT_POLL_INTERVAL_MS);
     }
 
+    console.warn('[PortadaPDF] CloudConvert job timed out');
     return null;
 }
 
@@ -183,9 +172,9 @@ async function downloadCoverImage(url: string): Promise<{ buffer: Buffer; mimety
         const buffer = Buffer.from(response.data);
         const mimetype = response.headers['content-type'] || 'image/jpeg';
 
-        // Open Library returns a tiny 1×1 gif for missing covers
+        // Skip tiny placeholder images
         if (buffer.length < 1000) {
-            console.warn('[PortadaPDF] Image too small – likely a placeholder, skipping');
+            console.warn('[PortadaPDF] Image too small - likely a placeholder, skipping');
             return null;
         }
 
@@ -254,6 +243,16 @@ async function extractFirstPageFromPdf(pdfUrl: string): Promise<{ buffer: Buffer
     }
 }
 
+async function generateCoverFromCloudConvert(pdfUrl: string): Promise<{ buffer: Buffer; mimetype: string } | null> {
+    const jobId = await createCloudConvertJob(pdfUrl);
+    if (!jobId) return null;
+
+    const exportUrl = await waitForCloudConvertExportUrl(jobId);
+    if (!exportUrl) return null;
+
+    return downloadCoverImage(exportUrl);
+}
+
 // ── Public API ───────────────────────────────────────────────────────
 
 /**
@@ -274,11 +273,10 @@ export function necesitaPortada(entry: any, bibliotecaId: string): boolean {
  * Core pipeline – shared between the afterChange hook and the migration.
  *
  * 1. Resolves archivo docs to get filenames / mimeTypes.
- * 2. Builds search queries from filename + entry text.
- * 3. Searches Open Library for a cover.
- * 4. Downloads the cover image (in-memory – no temp files).
- * 5. Uploads to the `imagenes` collection (S3 via Payload).
- * 6. Updates the entry's `imagenes` array.
+ * 2. Generates a cover via CloudConvert (PDF -> JPG).
+ * 3. Downloads the cover image (in-memory – no temp files).
+ * 4. Uploads to the `imagenes` collection (S3 via Payload).
+ * 5. Updates the entry's `imagenes` array.
  *
  * Returns true if a cover was successfully assigned.
  */
@@ -311,40 +309,26 @@ export async function buscarYAsignarPortada(
             (a) => a.mimeType === 'application/pdf',
         );
 
-        // ── 2. Build search queries ─────────────────────────────────
-        const queries = buildSearchQueries(doc, pdfArchivos);
-        if (queries.length === 0) {
-            console.log(`[PortadaPDF] No search terms`);
+        // ── 2. Generate cover from PDF via CloudConvert ─────────────
+        let imageData: { buffer: Buffer; mimetype: string } | null = null;
+        const cdnUrl = process.env.DO_SPACES_CDN_URL;
+        if (!cdnUrl) {
+            console.warn('[PortadaPDF] DO_SPACES_CDN_URL not configured');
             return doc;
         }
 
-        // ── 3. Search Open Library (try each query in order) ────────
-        let imageData: { buffer: Buffer; mimetype: string } | null = null;
-        let coverUrl: string | null = null;
-
-        for (const q of queries) {
-            console.log(`[PortadaPDF] Searching: "${q}"`);
-            coverUrl = await searchOpenLibraryCover(q);
-            if (coverUrl) break;
+        if (pdfArchivos.length === 0) {
+            console.log('[PortadaPDF] No PDF archivos to generate cover');
+            return doc;
         }
 
-        if (coverUrl) {
-            console.log(`[PortadaPDF] Cover found: ${coverUrl}`);
-            // ── 4. Download cover image (in-memory) ─────────────────────
-            imageData = await downloadCoverImage(coverUrl);
-        }
+        const pdfUrl = `${cdnUrl}/media/archivos/${encodeURIComponent(pdfArchivos[0].filename)}`;
+        imageData = await generateCoverFromCloudConvert(pdfUrl);
 
-        // ── 5. Fallback: Extract first page from PDF (if exists) ───
+        // ── 3. Fallback: Extract first page from PDF (if exists) ───
         if (!imageData && pdfArchivos.length > 0) {
-            console.log(`[PortadaPDF] No online cover found, extracting first page from PDF...`);
-            
-            const cdnUrl = process.env.DO_SPACES_CDN_URL;
-            if (!cdnUrl) {
-                console.warn('[PortadaPDF] DO_SPACES_CDN_URL not configured');
-            } else {
-                const pdfUrl = `${cdnUrl}/media/archivos/${pdfArchivos[0].filename}`;
-                imageData = await extractFirstPageFromPdf(pdfUrl);
-            }
+            console.log('[PortadaPDF] CloudConvert failed, extracting first page from PDF...');
+            imageData = await extractFirstPageFromPdf(pdfUrl);
         }
 
         if (!imageData) {
@@ -352,7 +336,7 @@ export async function buscarYAsignarPortada(
             return doc;
         }
 
-        // ── 6. Upload to imagenes collection ────────────────────────
+        // ── 4. Upload to imagenes collection ────────────────────────
         const ext = imageData.mimetype.includes('png') ? 'png' : 'jpg';
         const fileName = `portada-biblioteca-${Date.now()}.${ext}`;
 
@@ -369,7 +353,7 @@ export async function buscarYAsignarPortada(
             },
         });
 
-        // ── 7. Attach image directly to doc.imagenes array ──────────
+        // ── 5. Attach image directly to doc.imagenes array ──────────
         // Just modify doc in place – no need for payload.update() in afterChange hook
         const existingImages = (doc.imagenes || []).map((img) => ({
             imagen:

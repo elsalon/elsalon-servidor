@@ -55,7 +55,7 @@ If you have any issues or questions, reach out to us on [Discord](https://discor
 Script manual para procesar todas las entradas de la sala Biblioteca. Realiza dos operaciones:
 
 1. **Descarga archivos de Google Drive**: Detecta enlaces de Drive en el contenido de las entradas y descarga los archivos PDF, adjuntándolos automáticamente.
-2. **Búsqueda de portadas**: Para entradas sin imágenes, busca y asigna portadas automáticamente desde Open Library.
+2. **Generacion de portadas**: Para entradas sin imagenes, genera miniaturas desde el PDF usando CloudConvert (con fallback a ApyHub).
 
 **Ejecutar dentro de Docker:**
 
