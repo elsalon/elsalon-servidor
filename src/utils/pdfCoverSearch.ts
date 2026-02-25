@@ -73,7 +73,7 @@ async function createCloudConvertJob(pdfUrl: string): Promise<string | null> {
                     Authorization: `Bearer ${apiKey}`,
                     'Content-Type': 'application/json',
                 },
-                timeout: 15000,
+                timeout: 60000,
             },
         );
 
@@ -113,7 +113,7 @@ async function waitForCloudConvertExportUrl(jobId: string): Promise<string | nul
                     headers: {
                         Authorization: `Bearer ${apiKey}`,
                     },
-                    timeout: 15000,
+                    timeout: 60000,
                 },
             );
 
@@ -166,7 +166,7 @@ async function downloadCoverImage(url: string): Promise<{ buffer: Buffer; mimety
     try {
         const response = await axios.get(url, {
             responseType: 'arraybuffer',
-            timeout: 15000,
+            timeout: 60000,
         });
 
         const buffer = Buffer.from(response.data);
