@@ -35,7 +35,7 @@ import MailQueue from './collections/MailQueue'
 
 import Eventos from './collections/Eventos'
 
-// DigitalOcean Spaces
+// DigitalOcean/Hetzner Spaces
 const DOSpacesAdapter = s3Adapter({
   config: {
     endpoint: process.env.DO_SPACES_ENDPOINT,
