@@ -95,13 +95,13 @@ const Salas: CollectionConfig = {
                         readOnly: true,
                     },
                     hooks: {
-                        afterRead : [
+                        afterRead: [
                             async ({ data, req, siblingData }) => {
                                 // Generate the calendar URL based on current period and sala type
                                 const now = new Date();
                                 const currentYear = now.getFullYear();
                                 const isCuatrimestral = data.archivo?.frecuencia === 'cuatrimestral' || req.body?.archivo?.frecuencia === 'cuatrimestral';
-                                
+
                                 let period: string;
                                 if (isCuatrimestral) {
                                     const currentCuatri = now.getMonth() < 7 ? 1 : 2;
@@ -128,14 +128,14 @@ const Salas: CollectionConfig = {
                     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
                     // Safely parse query parameters
-                    const page = typeof req.query.page === 'string' 
-                        ? parseInt(req.query.page, 10) 
+                    const page = typeof req.query.page === 'string'
+                        ? parseInt(req.query.page, 10)
                         : 1;
 
                     const createdGreaterThan = typeof req.query.createdGreaterThan === 'string'
                         ? req.query.createdGreaterThan
                         : null;
-                    
+
                     const createdLessThan = typeof req.query.createdLessThan === 'string'
                         ? req.query.createdLessThan
                         : null;
@@ -165,20 +165,20 @@ const Salas: CollectionConfig = {
                                 // Only show posts created or active during enlace period
                                 const inicioDate = new Date(enlace.inicio as string);
                                 const finDate = new Date(enlace.fin as string);
-                                
+
                                 salonClauses.push({
                                     and: [
                                         { sala: { equals: enlace.idEnlazado } },
                                         {
                                             or: [
-                                                { 
-                                                    createdAt: { 
+                                                {
+                                                    createdAt: {
                                                         greater_than_equal: inicioDate,
                                                         less_than_equal: finDate
                                                     }
                                                 },
-                                                { 
-                                                    lastActivity: { 
+                                                {
+                                                    lastActivity: {
                                                         greater_than_equal: inicioDate,
                                                         less_than_equal: finDate
                                                     }
@@ -234,7 +234,7 @@ const Salas: CollectionConfig = {
                             ]
                         };
                     }
-                    if(createdLessThan) {
+                    if (createdLessThan) {
                         // Validate the date string before creating Date object
                         const dateValue = new Date(createdLessThan);
                         if (isNaN(dateValue.getTime())) {
@@ -276,7 +276,6 @@ const Salas: CollectionConfig = {
                     const salaId = req.params.id;
                     const period = req.params.period;
 
-                    // Parse period: can be "2025" or "2025-c1" or "2025-c2"
                     const periodRegex = /^(\d{4})(?:-c([12]))?$/;
                     const match = period.match(periodRegex);
 
@@ -287,7 +286,6 @@ const Salas: CollectionConfig = {
                     const year = parseInt(match[1], 10);
                     const cuatrimestre = match[2] ? parseInt(match[2], 10) as 1 | 2 : undefined;
 
-                    // Fetch the sala to get its name and timeframe config
                     const sala = await req.payload.findByID({
                         collection: 'salas',
                         id: salaId,
@@ -297,7 +295,6 @@ const Salas: CollectionConfig = {
                         return res.status(404).json({ error: 'Sala not found' });
                     }
 
-                    // Validate cuatrimestre usage
                     const frecuencia = (sala as any).archivo?.frecuencia as string | undefined;
                     if (cuatrimestre && frecuencia !== 'cuatrimestral') {
                         return res.status(400).json({ error: 'This is an annual sala. Use just the year (e.g., 2026) without cuatrimestre' });
@@ -307,7 +304,6 @@ const Salas: CollectionConfig = {
                         return res.status(400).json({ error: 'This is a cuatrimestral sala. Include cuatrimestre in the period (e.g., 2026-c1)' });
                     }
 
-                    // Fetch all eventos for this sala
                     const eventos = await req.payload.find({
                         collection: 'eventos',
                         where: {
@@ -317,24 +313,41 @@ const Salas: CollectionConfig = {
                         sort: 'fecha',
                     });
 
-                    // Filter events based on period
-                    const filteredEvents = filterEventsBySalaTimeframe(eventos.docs as any[], sala as any, year, cuatrimestre);
+                    const filteredEvents = filterEventsBySalaTimeframe(
+                        eventos.docs as any[],
+                        sala as any,
+                        year,
+                        cuatrimestre
+                    );
 
-                    // Generate ICS content
-                    const calendarName = cuatrimestre 
+                    const calendarName = cuatrimestre
                         ? `El Salon - ${sala.nombre} (${year} C${cuatrimestre})`
                         : `El Salon - ${sala.nombre} (${year})`;
-                    const icsContent = generateICS(filteredEvents, calendarName);
 
-                    // Set appropriate headers for calendar file
-                    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
-                    res.setHeader('Content-Disposition', `inline; filename="${sala.slug || sala.nombre}-${period}.ics"`);
-                    res.setHeader('Cache-Control', 'public, max-age=3600');
-                    
-                    res.status(200).send(icsContent);
+                    let icsContent = generateICS(filteredEvents, calendarName);
+
+                    // CRITICAL FIXES
+                    icsContent = icsContent
+                        .replace(/\r?\n/g, '\r\n')   // enforce CRLF
+                        .replace(/\r\n\r\n+/g, '\r\n'); // avoid double blank lines
+
+                    if (!icsContent.endsWith('\r\n')) {
+                        icsContent += '\r\n'; // ensure final newline
+                    }
+
+                    res.status(200);
+                    res.set({
+                        'Content-Type': 'text/calendar; charset=utf-8',
+                        'Content-Disposition': `inline; filename="${(String(sala.slug) || String(sala.nombre)).replace(/\s+/g, '-')}-${period}.ics"`,
+                        'Cache-Control': 'public, max-age=3600',
+                        'Content-Length': Buffer.byteLength(icsContent, 'utf8')
+                    });
+
+                    return res.send(icsContent);
+
                 } catch (error) {
                     console.error('Error generating calendar:', error);
-                    res.status(500).json({ error: 'Error generating calendar' });
+                    return res.status(500).json({ error: 'Error generating calendar' });
                 }
             }
         }
