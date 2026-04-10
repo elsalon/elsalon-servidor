@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdminOrAutor, afterCreateAssignAutorToUser, PopulateAprecios } from '../helper'
+import { isAdminOrAutor, afterCreateAssignAutorToUser, PreventDuplicateAprecio, PopulateAprecios } from '../helper'
 import { NotificarAprecio } from '../hooks/Notificaciones/NotificationsHooks'
 
 const Aprecio: CollectionConfig = {
@@ -12,7 +12,7 @@ const Aprecio: CollectionConfig = {
     delete: isAdminOrAutor,
   },
   hooks: {
-    beforeChange: [afterCreateAssignAutorToUser],
+    beforeChange: [PreventDuplicateAprecio, afterCreateAssignAutorToUser],
     afterChange: [NotificarAprecio],
   },
   fields: [

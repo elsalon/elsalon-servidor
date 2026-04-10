@@ -100,6 +100,34 @@ export const afterCreateAssignAutorToUser = async ({ operation, data, req }) => 
     }
 }
 
+export const PreventDuplicateAprecio = async ({ operation, data, req }) => {
+    if (operation === 'create' && req.user) {
+        const autorId = req.user.id;
+        const contenidoid = data.contenidoid;
+
+        if (!contenidoid) {
+            throw new Error('contenidoid es requerido');
+        }
+
+        // Check if an aprecio with the same autor and contenidoid already exists
+        const existing = await req.payload.find({
+            collection: 'aprecio',
+            where: {
+                and: [
+                    { autor: { equals: autorId } },
+                    { contenidoid: { equals: contenidoid } },
+                ],
+            },
+            depth: 0,
+            limit: 1,
+        });
+
+        if (existing.totalDocs > 0) {
+            throw new Error('Ya has apreciado este contenido');
+        }
+    }
+    return data;
+}
 
 export const GetNuevosMencionados = async ({ doc, previousDoc, operation }) => {
     // CREATE
