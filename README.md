@@ -70,3 +70,9 @@ docker-compose run --rm payload yarn procesar-biblioteca > biblioteca-$(date +%Y
 ```
 
 El script muestra progreso detallado en tiempo real y al finalizar presenta estadísticas completas de archivos descargados y portadas encontradas.
+
+**Export entradas a json para embeddings AI**
+
+```bash
+docker-compose run --rm payload yarn export:entradas-sample
+```
