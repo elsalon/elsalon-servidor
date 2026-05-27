@@ -10,3 +10,4 @@ node_modules
 /src/archivos
 /src/migracion/logs
 /temp
+/json-sample
