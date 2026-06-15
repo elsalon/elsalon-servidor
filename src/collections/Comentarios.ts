@@ -49,6 +49,7 @@ const Comentarios: CollectionConfig = {
             type: 'relationship',
             relationTo: 'entradas',
             maxDepth: 0,
+            index: true,
         },
         ...Campos,
 

@@ -430,6 +430,99 @@ export const SoftDelete = (collection: string) => {
 }
 
 
+// ==========================================
+// Populate helpers (afterRead)
+//
+// Payload v2 dispara los hooks afterRead UNA VEZ POR DOCUMENTO. Para evitar el
+// patrón N+1 (una query por entrada + una por cada comentario anidado), batcheamos:
+//
+// - PopulateComentarios tiene acceso a TODOS los comentarios de una entrada de una
+//   sola vez, así que poblamos sus aprecios/guardados ahí en queries batcheadas
+//   (BatchAprecios/BatchGuardado) y marcamos `context.skipPopulateAprecios` /
+//   `context.skipPopulateGuardado` para que esos comentarios anidados no vuelvan a
+//   disparar las queries por-documento.
+// - PopulateAprecios/PopulateGuardado siguen corriendo a nivel entrada, pero usan
+//   los mismos helpers batcheados (con un solo id) y respetan los flags de skip.
+// ==========================================
+
+/**
+ * Reduce el objeto autor de un aprecio a {id, nombre, slug}
+ */
+const reducirAutorAprecio = (aprecio: any) => {
+    const autor = aprecio.autor as { id: string; nombre: string, slug: string };
+    if (autor && typeof autor === 'object') {
+        aprecio.autor = { id: autor.id, nombre: autor.nombre, slug: autor.slug };
+    }
+    return aprecio;
+}
+
+/**
+ * Trae los últimos 3 aprecios para una lista de contenidoids en UNA sola query
+ * y los devuelve agrupados por contenidoid (cada grupo con la forma de payload.find).
+ */
+const BatchAprecios = async (contenidoids: string[], req: any) => {
+    const result: Record<string, { docs: any[]; totalDocs: number }> = {};
+    if (!contenidoids.length) return result;
+
+    const aprecios = await payload.find({
+        collection: 'aprecio',
+        where: {
+            contenidoid: { in: contenidoids },
+        },
+        overrideAccess: false,
+        user: req.user,
+        // Techo amplio para una página de contenidos. El front sólo muestra 3 avatares
+        // por contenido + el total; con datos reales (pocos aprecios por post) este
+        // límite no se agota. Si en el futuro un contenido superara ~40 aprecios y se
+        // necesitara el total exacto, conviene una agregación por contenidoid.
+        limit: contenidoids.length * 40,
+        depth: 1,
+        sort: '-createdAt',
+    });
+
+    contenidoids.forEach(id => { result[id] = { docs: [], totalDocs: 0 }; });
+    aprecios.docs.forEach((aprecio: any) => {
+        const grupo = result[aprecio.contenidoid];
+        if (!grupo) return;
+        grupo.totalDocs++;
+        if (grupo.docs.length < 3) {
+            grupo.docs.push(reducirAutorAprecio(aprecio));
+        }
+    });
+    return result;
+}
+
+/**
+ * Devuelve, para una lista de ids de contenido, la categoría con la que el usuario
+ * actual los guardó (o null), en UNA sola query. Los guardados son privados de su
+ * autor, así que con overrideAccess:false sólo vemos los del usuario.
+ */
+const BatchGuardado = async (contenidoids: string[], req): Promise<Record<string, string | null>> => {
+    const result: Record<string, string | null> = {};
+    if (!contenidoids.length) return result;
+    contenidoids.forEach(id => { result[id] = null; });
+
+    const guardados = await payload.find({
+        collection: 'guardado',
+        where: {
+            'contenido.value': { in: contenidoids },
+        },
+        overrideAccess: false,
+        user: req.user,
+        limit: contenidoids.length,
+        depth: 0,
+    });
+
+    guardados.docs.forEach((g: any) => {
+        // contenido es una relación polimórfica; con depth 0 viene como {value, relationTo}
+        const id = typeof g.contenido?.value === 'object' ? g.contenido.value.id : g.contenido?.value;
+        if (id && id in result) {
+            result[id] = g.categoria;
+        }
+    });
+    return result;
+}
+
 export const PopulateComentarios = async ({ doc, context, req }) => {
     // Fetch de los comentarios
     if (context.skipHooks) return;
@@ -447,57 +540,46 @@ export const PopulateComentarios = async ({ doc, context, req }) => {
         user: req.user,
         limit: 3,
         sort: '-createdAt',
+        // Evitamos que cada comentario dispare sus propias queries de aprecios/guardado:
+        // las poblamos acá en batch.
+        context: { skipPopulateAprecios: true, skipPopulateGuardado: true },
     });
     comentarios.docs = comentarios.docs.length ? comentarios.docs.reverse() : [];
+
+    // Batch aprecios + guardado de los comentarios (2 queries para los 3 comentarios)
+    const ids = comentarios.docs.map((c: any) => c.id);
+    if (ids.length) {
+        const [apreciosPorId, guardadoPorId] = await Promise.all([
+            BatchAprecios(ids, req),
+            BatchGuardado(ids, req),
+        ]);
+        comentarios.docs.forEach((c: any) => {
+            c.aprecios = apreciosPorId[c.id] || { docs: [], totalDocs: 0 };
+            c.guardadoPorUsuario = guardadoPorId[c.id] ?? null;
+        });
+    }
+
     doc.comentarios = comentarios;
 }
 
 export const PopulateAprecios = async ({ doc, context, req }) => {
     if (!req.user) return;
     if (context.skipHooks) return;
+    if (context.skipPopulateAprecios) return; // ya poblado en batch por PopulateComentarios
 
-    var aprecios = await payload.find({
-        collection: 'aprecio',
-        where: {
-            contenidoid: {
-                equals: doc.id,
-            },
-        },
-        overrideAccess: false,
-        user: req.user,
-        limit: 3,
-        depth: 1,
-        sort: '-createdAt',
-    });
-    // console.log("populate aprecios", doc.id);
-    aprecios.docs.forEach((aprecio) => {
-        // Reducimos el objeto
-        const autor = aprecio.autor as { id: string; nombre: string, slug: string };
-        aprecio.autor = { id: autor.id, nombre: autor.nombre, slug: autor.slug };
-    });
-    doc.aprecios = aprecios;
+    const apreciosPorId = await BatchAprecios([doc.id], req);
+    doc.aprecios = apreciosPorId[doc.id] || { docs: [], totalDocs: 0 };
 }
 
 export const PopulateGuardado = async ({ doc, context, req }) => {
     if (!req.user) return;
     if (context.skipHooks) return;
+    if (context.skipPopulateGuardado) return; // ya poblado en batch por PopulateComentarios
 
     // Los guardados solo pueden ser leidos por su autor
     // Con que aparezca uno ya sabemos que el usuario lo guardó
-    var userGuardo = await payload.find({
-        collection: 'guardado',
-        where: {
-            'contenido.value': {
-                equals: doc.id,
-            },
-        },
-        overrideAccess: false,
-        user: req.user,
-        limit: 1,
-        depth: 0,
-    });
-    const guardadoPorUsuario = userGuardo.totalDocs > 0 ? userGuardo.docs[0].categoria : null;
-    doc.guardadoPorUsuario = guardadoPorUsuario;
+    const guardadoPorId = await BatchGuardado([doc.id], req);
+    doc.guardadoPorUsuario = guardadoPorId[doc.id] ?? null;
     return;
 }
 
