@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-05-27T20:03:46.435Z",
+  "startedAt": "2026-05-27T20:03:34.065Z",
+  "outputDir": "C:\\Users\\gonza\\Documents\\projects\\elsalon\\elsalon-servidor\\json-sample\\20260527-170346",
+  "target": 20,
+  "selected": 20,
+  "sourceFilters": {
+    "minYear": 2018,
+    "excludeDeleted": true
+  },
+  "availableByYear": {
+    "2019": 162,
+    "2021": 23,
+    "2024": 364,
+    "2025": 242,
+    "2026": 53
+  },
+  "selectedByYear": {
+    "2019": 4,
+    "2021": 1,
+    "2024": 8,
+    "2025": 5,
+    "2026": 2
+  },
+  "selectedBySala": {
+    "sin-sala": 2,
+    "el-salon": 3,
+    "pav1": 2,
+    "pav4": 2,
+    "pav3": 2,
+    "iluminacion-y-camara-2": 1,
+    "medios-expresivos-1": 1,
+    "iluminacion-y-camara-1": 1,
+    "pav2": 3,
+    "medios-expresivos-2": 1,
+    "biblioteca": 2
+  },
+  "comentariosCount": 37,
+  "cndUrlConfigured": true
+}

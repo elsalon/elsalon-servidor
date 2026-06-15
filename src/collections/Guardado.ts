@@ -47,11 +47,13 @@ const Guardado: CollectionConfig = {
       name: 'autor',
       type: 'relationship',
       relationTo: 'users',
+      index: true,
     },
     {
       name: 'contenido',
       type: 'relationship',
       relationTo: ['entradas', 'comentarios'],
+      index: true,
     },
     {
       name: 'categoria',

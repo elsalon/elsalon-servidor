@@ -86,10 +86,12 @@ const Entradas: CollectionConfig = {
             name: 'sala',
             type: 'relationship',
             relationTo: 'salas',
+            index: true,
         },
         {
             name: 'destacada',
             type: 'checkbox',
+            index: true,
         },
         {
             // Usada para ordenar las entradas y poder actualizarlo cuando alguien comenta
@@ -97,6 +99,7 @@ const Entradas: CollectionConfig = {
             name: 'lastActivity',
             defaultValue: () => new Date(),
             type: 'date',
+            index: true,
             admin: {
                 date: {
                     pickerAppearance: 'dayAndTime',

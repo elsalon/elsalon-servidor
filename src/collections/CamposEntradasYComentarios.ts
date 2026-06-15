@@ -6,6 +6,7 @@ export const Campos: Field[] = [
         type: 'relationship',
         relationTo: 'users',
         hasMany: false,
+        index: true,
     },
     {
         name: 'autoriaGrupal',
@@ -15,6 +16,7 @@ export const Campos: Field[] = [
         name: 'grupo',
         type: 'relationship',
         relationTo: 'grupos',
+        index: true,
     },
     {
         name: 'contenido',
@@ -81,6 +83,7 @@ export const Campos: Field[] = [
             {
                 name: 'isDeleted',
                 type: 'checkbox',
+                index: true,
             },
             {
                 name: 'deletedAt',
