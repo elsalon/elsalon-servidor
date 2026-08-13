@@ -30,8 +30,12 @@ export const isLoggedIn: Access = ({ req: user }) => {
     return Boolean(user)
 };
 
-export const isAutor: Access = ({ req: { user }, id }) => {
+export const isAutor: Access = ({ req: { user, headers } }) => {
     if (!user) return false;
+
+    const reqIsAdminSite = headers?.referer?.includes('/admin') === true;
+    if (reqIsAdminSite) return true;
+
     return {
         'autor': {
             equals: user.id,

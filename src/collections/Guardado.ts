@@ -34,6 +34,7 @@ const Guardado: CollectionConfig = {
           page: Number(page),
           limit: Number(limit),
           user: req.user,
+          overrideAccess: false,
           depth: 3,
           context: { skipPopulateComentarios: true },
         });
