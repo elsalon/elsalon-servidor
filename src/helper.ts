@@ -25,6 +25,55 @@ export const SacarEmojis = (texto: string) => {
     return texto.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
 }
 
+/**
+ * Sanitiza un nombre de archivo subido para evitar problemas de encoding
+ * (ej. "pr\u00FA\u00E7e\u00F1a.zip" por mojibake de UTF-8 mal interpretado como Latin-1),
+ * espacios y caracteres especiales que pueden romper URLs o el filesystem.
+ * Conserva la extensi\u00F3n original.
+ */
+export const SanitizarNombreArchivo = (nombreOriginal: string): string => {
+    if (!nombreOriginal) return nombreOriginal;
+
+    const ultimoPunto = nombreOriginal.lastIndexOf('.');
+    const tieneExtension = ultimoPunto > 0 && ultimoPunto < nombreOriginal.length - 1;
+    const nombre = tieneExtension ? nombreOriginal.slice(0, ultimoPunto) : nombreOriginal;
+    const extension = tieneExtension ? nombreOriginal.slice(ultimoPunto + 1) : '';
+
+    const normalizarSiEsMojibake = (str: string) => {
+        // Detecta mojibake t\u00EDpico de UTF-8 interpretado como Latin-1 (aparecen \u00C3, \u00C2, etc.)
+        // y lo revierte re-interpretando los bytes correctamente.
+        if (!/[\u00C3\u00C2\u00D0][\x80-\xBF]/.test(str)) return str;
+        try {
+            const revertido = Buffer.from(str, 'latin1').toString('utf8');
+            // Si el resultado tiene caracteres de reemplazo, descartamos el intento
+            if (revertido.includes('\uFFFD')) return str;
+            return revertido;
+        } catch {
+            return str;
+        }
+    };
+
+    let nombreLimpio = normalizarSiEsMojibake(nombre)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036F]/g, '') // saca tildes/diacr\u00EDticos
+        .replace(/[^a-zA-Z0-9-_]+/g, '_') // caracteres no seguros -> guion bajo
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '');
+
+    if (!nombreLimpio) nombreLimpio = 'archivo';
+
+    const extensionLimpia = extension.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
+    return extensionLimpia ? `${nombreLimpio}.${extensionLimpia}` : nombreLimpio;
+}
+
+export const SanitizarNombreArchivoUpload = async ({ req }) => {
+    const file = req.files?.file;
+    if (file?.name) {
+        file.name = SanitizarNombreArchivo(file.name);
+    }
+}
+
 // Helper acces function
 export const isLoggedIn: Access = ({ req: user }) => {
     return Boolean(user)

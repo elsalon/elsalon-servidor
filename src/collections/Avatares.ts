@@ -1,11 +1,14 @@
 import { CollectionConfig } from 'payload/types'
+import { SanitizarNombreArchivoUpload } from '../helper'
 
 const Avatares: CollectionConfig = {
     slug: 'avatares',
     access: {
         read: () => true,
     },
-    
+    hooks: {
+        beforeOperation: [SanitizarNombreArchivoUpload],
+    },
     admin: {
       group: 'Medios',
   },

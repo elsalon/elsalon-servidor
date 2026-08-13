@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload/types'
+import { SanitizarNombreArchivoUpload } from '../helper'
 
 const Imagenes: CollectionConfig = {
     slug: 'imagenes',
@@ -6,6 +7,7 @@ const Imagenes: CollectionConfig = {
         read: () => true,
     },
     hooks:{
+        beforeOperation: [SanitizarNombreArchivoUpload],
         beforeChange: [
             async ({ operation, data, req }) => {
                 if(operation === 'create' && req.user){
