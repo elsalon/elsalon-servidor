@@ -231,3 +231,25 @@ Content-markup conventions inside `contenido` (parsed by `CrearExtracto`):
 - `.env` holds secrets (DB URI, S3/Spaces creds, SMTP, `PAYLOAD_SECRET`). Never commit it or echo values.
 - Mixed `.ts`/`.js`: collections/utils are TS; notifications, jobs, mail, globals, slug, search are JS.
 ```
+
+## Runtime, deploy & smoke tests
+
+- **Node version:** prod/test servidor runs via `docker-compose.yml` → image `node:18-alpine`
+  (compose runs `yarn build && yarn serve`). The `Dockerfile` (`node:18.8-alpine`) is **not used**
+  by the deploy. The interfaz runs on the droplet host with nvm's Node (18.20.4) under pm2
+  (`salon-interfaz-prod` / `salon-interfaz-test`). Deploy = push to `main`/`test` (`.github/workflows/deploy.yml`).
+- Node 18 is EOL (Apr 2025); upgrading to Node 22 LTS is pending (Oct 2026). Upgrade the `test`
+  environment first: bump `node:18-alpine` in `docker-compose.yml` and the nvm default on the host.
+- Security note (Oct 2026, CVE-2026-111497, Brotli decoder): low exposure here — body-parser 1.x
+  rejects `Content-Encoding: br`, no direct zlib use, and outbound axios fetches only hit trusted
+  hosts (own CDN, Google Drive, CloudConvert, ApyHub).
+- **Smoke tests:** `yarn test:smoke` (`tests/smoke.test.mjs`, built-in `node:test` + `fetch`, no deps).
+  Config in `tests/smoke.env` (gitignored; copy `tests/smoke.env.example`): `API_URL`, `FRONT_URL`,
+  `TEST_EMAIL`, `TEST_PASSWORD`. Covers DB read, login, feed/búsqueda/notificaciones, image upload
+  (S3 + sharp), create entrada/comentario/aprecio (then deletes them), and interfaz SSR +
+  `/cache/config`. Run against local or test, **never prod** (creates real content/notifications).
+- Gotcha: `POST /api/entradas` without the array fields the front sends (`mencionados`, `etiquetas`,
+  `embedsYoutube`, …) returns a generic 500 from a hook. Mirror `CrearEntradaDrawer.vue`'s body.
+  `/api/busqueda` requires both `query` and `categorias`.
+- `test.elsalon.org` is behind **Cloudflare**, which 403s non-browser requests to HTML pages (the API
+  passes). Run the interfaz checks against the front's local port (locally or on the droplet).

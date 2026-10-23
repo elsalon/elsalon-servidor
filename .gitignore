@@ -11,3 +11,5 @@ node_modules
 /src/migracion/logs
 /temp
 /json-sample
+
+tests/smoke.env
