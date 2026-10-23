@@ -238,8 +238,14 @@ Content-markup conventions inside `contenido` (parsed by `CrearExtracto`):
   (compose runs `yarn build && yarn serve`). The `Dockerfile` (`node:18.8-alpine`) is **not used**
   by the deploy. The interfaz runs on the droplet host with nvm's Node (18.20.4) under pm2
   (`salon-interfaz-prod` / `salon-interfaz-test`). Deploy = push to `main`/`test` (`.github/workflows/deploy.yml`).
-- Node 18 is EOL (Apr 2025); upgrading to Node 22 LTS is pending (Oct 2026). Upgrade the `test`
-  environment first: bump `node:18-alpine` in `docker-compose.yml` and the nvm default on the host.
+- Node 18 is EOL (Apr 2025). Target is **Node 24** (LTS to Apr 2028). Verified locally on 24.22.1
+  (Oct 2026): `yarn build`, `yarn serve`, interfaz build + smoke tests all pass, sharp/aws-crt load
+  without rebuild. Roll out to `test` first: bump `node:18-alpine` → `node:24-alpine` in
+  `docker-compose.yml` and the nvm default on the host, then run the smoke tests.
+- Local Windows gotchas: `nvm use` (nvm-windows) may fail to create its symlink without admin;
+  fix with `mklink /J C:\nvm4w\nodejs %LOCALAPPDATA%\nvm\v<version>`. On a fresh Node, use Yarn 1
+  (`corepack install -g yarn@1.22.22`), not corepack's default Yarn 4.
+
 - Security note (Oct 2026, CVE-2026-111497, Brotli decoder): low exposure here — body-parser 1.x
   rejects `Content-Encoding: br`, no direct zlib use, and outbound axios fetches only hit trusted
   hosts (own CDN, Google Drive, CloudConvert, ApyHub).
